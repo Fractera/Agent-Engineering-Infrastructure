@@ -1857,13 +1857,23 @@
           "The schedule today lives in a notebook, a chat or a spreadsheet"
         ],
         "questions": [
-          "What exactly gets booked: a person, a room, a table, a car, equipment, a suite?",
-          "How many such resources are there, and how do they differ from one another?",
-          "How is working time arranged: hours, breaks, days off, seasons, a minimum booking length?",
-          "How long does one service take, and is a gap needed between bookings?",
-          "Does the client pay upfront or leave a deposit — and what happens on cancellation?",
-          "Who keeps the schedule today, and what must it stay in sync with?",
-          "How do you remind people about a booking, and how long before it?"
+          "What is booked: what exactly does the client take (a specialist's personal time, a room or equipment, a table or a seat, a hotel room, a place at an event, an online consultation)? One kind of resource or several at once?",
+          "Both sides: who books and who receives bookings? Describe each side — clients and those providing the service: practitioners, doctors, administrators, the owner. Which of them will work in the system every day?",
+          "The pain on each side: what do you solve for the client (cannot get through by phone, booking is awkward, no way to see what is free) and for the receiving side (bookings scattered across chats, empty slots from no-shows, two bookings for one time, reminders by hand)?",
+          "How they book today: how does it happen without your system (calling the front desk, messaging on a messenger, a paper diary, another service that did not fit)?",
+          "The ideal outcome: what booking experience makes the client happy with how simple it was, and rids the business of empty slots? Describe it from both sides.",
+          "Competitors and models: which services do you take your bearings from? Name them with links, say what you must have from how they work and what you consider unnecessary.",
+          "What sets you apart: convenience, flexible scheduling, automation, knowing your industry, price, connections to other systems?",
+          "The booking flow: how does it run from choosing to confirming (picking the service, the specialist or the resource, the date and time, extra requests, confirmation, payment)? What does the person see afterwards — their upcoming and past visits, rebooking in one tap, the chance to leave a review?",
+          "Slots and schedules: how is available time formed (a fixed length or one per service, working hours and breaks, a gap between clients for cleaning or preparation, each practitioner's own schedule, days off and holidays, several rooms or chairs)?",
+          "Group bookings: should several people share one slot — a class of ten, a hall rented by a company, two clients seen at once? How is the remaining capacity counted, and what happens when the group does not fill?",
+          "Money at booking: is payment needed upfront (full payment online, a non-refundable deposit against no-shows, holding an amount on the card, paying on arrival)? What happens to that money when either side cancels?",
+          "Cancellations, moves and no-shows: until when may a client cancel or reschedule themselves? Is there a limit on rescheduling and a penalty for cancelling late? What happens to the slot when it is freed — is it offered to someone, and to whom?",
+          "Reminders: through which channels and how far ahead should reminders go (a messenger, SMS, email, a notification in the app)? Should the reminder carry \"confirm\" and \"cancel\" buttons, and what happens when the client does not answer?",
+          "Personal calendars: do you need two-way synchronisation with the calendars of practitioners and rooms, so that time taken by private matters closes itself for booking?",
+          "Branches and time zones: does the system work across several locations or cities? Should times be shown in the client's own zone — for online consultations this decides everything?",
+          "The staff workplace: how do employees see the bookings (a day and week grid, a list of statuses \"expected — arrived — finished\", a client card with visit history, links to the till and the customer records)? Who is allowed to change someone else's bookings?",
+          "Technical and practical constraints: is there anything to be known upfront (an installable app, languages, connections to payment services and accounting systems, the number of bookings you expect a day, a launch deadline, who will run the system)?"
         ]
       },
       "learning": {
@@ -4574,13 +4584,23 @@
           "Расписание сегодня живёт в тетради, чате или таблице"
         ],
         "questions": [
-          "Что именно бронируется: человек, кабинет, стол, машина, оборудование, номер?",
-          "Сколько таких ресурсов и чем они отличаются друг от друга?",
-          "Как устроено рабочее время: часы, перерывы, выходные, сезон, минимальный срок брони?",
-          "Сколько длится одна услуга и нужен ли зазор между записями?",
-          "Платит ли клиент заранее или вносит предоплату — и что происходит при отмене?",
-          "Кто ведёт расписание сегодня и с чем оно должно оставаться в согласии?",
-          "Как вы напоминаете о записи и за сколько времени?"
+          "Что бронируют: что именно занимает клиент (личное время специалиста, помещение или оборудование, столик или место в зале, номер, участие в мероприятии, онлайн-консультация)? Один вид ресурса или несколько сразу?",
+          "Обе стороны: кто записывается и кто принимает записи? Опишите каждую сторону — клиенты и те, кто оказывает услугу: мастера, врачи, администраторы, владелец. Кто из них будет работать в системе ежедневно?",
+          "Боль каждой стороны: что решаем клиенту (не дозвониться, неудобно записываться, непонятно, свободно ли время) и что принимающему (хаос записей в переписке, пустые слоты из-за неявок, две брони на одно время, напоминания вручную)?",
+          "Как записываются сейчас: каким образом это происходит без вашей системы (звонок администратору, переписка в мессенджере, бумажный журнал, чужой сервис, который не подошёл)?",
+          "Идеальный результат: какой сценарий записи сделает клиента довольным простотой, а бизнес избавит от пустых окон в графике? Опишите его с обеих сторон.",
+          "Конкуренты и образцы: на какие сервисы вы ориентируетесь? Назовите их и ссылки, скажите, что из их устройства обязательно нужно вам, а что считаете лишним.",
+          "Чем принципиально отличаетесь: удобство, гибкость расписания, автоматизация, знание вашей отрасли, цена, связи с другими системами?",
+          "Процесс записи: как проходит путь от выбора до подтверждения (выбор услуги, специалиста или ресурса, даты и времени, дополнительные пожелания, подтверждение, оплата)? Что человек видит после записи — свои будущие и прошлые визиты, повтор в одно нажатие, возможность оставить отзыв?",
+          "Слоты и графики: как складывается доступное время (фиксированная длительность или своя у каждой услуги, рабочие часы и перерывы, промежуток между клиентами на уборку или подготовку, личные графики мастеров, выходные и отпуска, несколько залов или кресел)?",
+          "Групповые записи: нужно ли пускать на один слот несколько человек — мастер-класс на десять мест, аренда зала компанией, приём двоих одновременно? Как считается остаток мест и что происходит, когда группа не набралась?",
+          "Деньги при записи: нужна ли оплата вперёд (полная оплата онлайн, невозвратный залог против неявок, удержание суммы на карте, оплата на месте)? Что происходит с деньгами при отмене по вине каждой из сторон?",
+          "Отмены, переносы и неявки: до какого момента клиент может отменить или перенести сам? Есть ли ограничение на число переносов и штраф за поздний отказ? Что происходит со слотом при отмене — освобождается сразу и кому предлагается?",
+          "Напоминания: по каким каналам и за сколько времени напоминать (сообщение в мессенджер, СМС, письмо, уведомление в приложении)? Нужны ли в напоминании кнопки «подтверждаю» и «отменить», и что делать, если клиент не ответил?",
+          "Связь с личными календарями: нужна ли двусторонняя синхронизация с календарями мастеров и помещений, чтобы занятое личным делом время автоматически закрывалось для записи?",
+          "Филиалы и часовые пояса: работает ли система в нескольких точках или городах? Нужно ли показывать время в поясе клиента — для онлайн-консультаций это решает всё?",
+          "Рабочее место персонала: в каком виде сотрудники видят записи (сетка дня и недели, список статусов «ждём — пришёл — завершено», карточка клиента с историей визитов, связь с кассой и учётом клиентов)? Кто вправе менять чужие записи?",
+          "Технические и организационные ограничения: есть ли требования, о которых нужно знать заранее (устанавливаемое приложение, языки, связь с платёжными службами и учётными системами, ожидаемое число записей в день, сроки запуска, кто будет вести систему)?"
         ]
       },
       "learning": {
