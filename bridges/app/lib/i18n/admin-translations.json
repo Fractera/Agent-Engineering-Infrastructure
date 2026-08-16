@@ -1507,13 +1507,21 @@
           "There is one product or one service — nothing to choose between"
         ],
         "questions": [
-          "What exactly does a person receive after leaving a request, and what happens in the first 24 hours?",
-          "Where does the traffic come from: paid ads, social media, a mailing list, offline?",
-          "Which single objection stops people most often, and how do you remove it?",
-          "What proof do you already have: reviews, numbers, cases, licences, client names?",
-          "What do you give in exchange for a contact — a quote, a consultation, a trial, a file, a place in the queue?",
-          "Which fields must the form have, and which ones would scare people away and should go?",
-          "Where does the request land and who answers it: email, Telegram, CRM, a phone call?"
+          "The product and the offer: What exactly are you selling or presenting on this page — what does the person get and what are they paying for? And how does it work, from the moment a request comes in to the moment they get the result?",
+          "Audience and segments: Who is your target audience? Describe in detail every type of visitor (persona) who will land on the page: age, occupation, income level, where they live, what drives them, and how much they already know that a solution like yours exists.",
+          "The problem and the pain: What specific pain or task of the user does your product or service solve? What hurts most right now?",
+          "Alternatives: How do people solve this problem today, when neither your product nor a competitor's is available to them?",
+          "The ideal outcome: From the user's point of view, what is the perfect end result — the one that leaves them completely satisfied?",
+          "Competitive landscape: Who are your direct and indirect competitors? Name the companies, their sites or landing pages you have seen — and say what you like about them and what you do not.",
+          "Your offer in one line: What makes your offer fundamentally different from the competition, and what headline with what promised advantage must the visitor see on the first screen within three seconds?",
+          "The main call to action: What is the one action a visitor should take (leave a request, buy in one click, download a file, book a demo, call you)? Describe the path you want them to walk to get there.",
+          "How you collect contacts: Which ways of getting in touch will the visitor have (a simple name-and-phone form, a multi-step quiz, a call-back widget, a jump into a Telegram bot)?",
+          "Proof and trust: What do you have to back the promise up (reviews, client logos, case studies, certificates, guarantees, hard numbers, press mentions)?",
+          "Required blocks: Which blocks must the page carry (hero, problem and solution, a 1-2-3 how-it-works, benefits, reviews, pricing, FAQ, cost calculator, closing call to action)? Say which come first, if the order matters.",
+          "Style and mood: What impression should the page leave (minimal, premium, bold, friendly, technical, expert)? Do you have references — links or descriptions of pages you like?",
+          "Integrations and analytics: Where should the collected data go (CRM, Telegram, email, a spreadsheet), and which analytics counters must be connected (Google Analytics, Yandex.Metrica, ad pixels)?",
+          "Languages and geography: Do you need several languages, automatic detection of city or currency, or content adapted to the region?",
+          "Technical and organisational constraints: Is there anything that has to be known upfront (A/B tests, required form fields, particular demands for the mobile version, a launch deadline, legal or industry restrictions)?"
         ]
       },
       "store": {
@@ -3977,13 +3985,21 @@
           "Товар один или услуга одна — выбирать не из чего"
         ],
         "questions": [
-          "Что именно человек получит, оставив заявку, и что произойдёт в первые сутки?",
-          "Откуда придёт трафик: платная реклама, соцсети, рассылка, офлайн?",
-          "Какое одно возражение чаще всего останавливает людей и чем вы его снимаете?",
-          "Какие доказательства у вас уже есть: отзывы, цифры, кейсы, лицензии, имена клиентов?",
-          "Что вы отдаёте в обмен на контакт — расчёт, консультацию, пробу, файл, место в очереди?",
-          "Какие поля в форме обязательны, а какие отпугнут и должны исчезнуть?",
-          "Куда попадает заявка и кто на неё отвечает: почта, Telegram, CRM, звонок?"
+          "Продукт и суть предложения: Что именно вы продаёте или презентуете на этой странице — что человек получает и за что платит? Как ваш продукт или услуга работает от момента заявки до получения результата?",
+          "Целевая аудитория и сегментация: Кто ваша целевая аудитория? Опишите подробно все типы пользователей (персоны), которые будут заходить на страницу: возраст, занятие, уровень дохода, география, их ключевые мотивы и насколько они вообще знают о таком решении.",
+          "Проблема и боль: Какую конкретную боль или задачу пользователя решает ваш продукт/услуга? Что болит сильнее всего прямо сейчас?",
+          "Альтернативные решения: Как пользователи решают эту проблему сейчас, если ваш продукт или предложения конкурентов им недоступны?",
+          "Идеальный результат: Что с точки зрения пользователя является идеальным финальным результатом, который сделает его полностью довольным?",
+          "Конкурентное окружение: Кто ваши прямые и косвенные конкуренты? Укажите названия компаний, их сайты или примеры лендингов — и скажите, что вам в них нравится, а что нет.",
+          "Уникальное торговое предложение (УТП) и оффер: Чем ваше предложение принципиально отличается от конкурентов и какой главный заголовок с обещанным преимуществом должен увидеть пользователь на первом экране в первые 3 секунды?",
+          "Главное целевое действие (CTA): Какое ключевое действие должен совершить посетитель (оставить заявку, купить в 1 клик, скачать файл, записаться на демо, позвонить)? Опишите желаемый путь пользователя до этого действия.",
+          "Формат сбора данных и контактов: Какие способы связи и формы доступны пользователю (простая форма с именем/телефоном, многошаговый квиз, виджет обратного звонка, переход в Telegram-бот)?",
+          "Элементы доверия и доказательства (Social Proof): Какие материалы для укрепления доверия у вас есть (отзывы, логотипы клиентов, кейсы, сертификаты, гарантии, цифры и факты, упоминания в СМИ)?",
+          "Структура и ключевые блоки: Какие обязательные блоки должны быть на странице (герой-блок, проблема и решение, схема работы «1-2-3», преимущества, отзывы, тарифы, FAQ, калькулятор стоимости, финальный призыв)? Укажите приоритет, если он есть.",
+          "Стиль и атмосфера: Какое впечатление должна оставлять страница (минимализм, премиум, дерзкий, дружелюбный, технологичный, экспертный)? Есть ли референсы — ссылки или описания, которые вам нравятся?",
+          "Интеграции и аналитика: Куда должны отправляться собранные данные пользователей (CRM, Telegram, email, Google Таблицы) и какие счётчики аналитики нужно подключить (Яндекс.Метрика, Google Analytics, рекламные пиксели)?",
+          "Мультиязычность и гео-привязка: Нужна ли поддержка нескольких языков, автоматическое определение города/валюты или адаптация контента под регион?",
+          "Технические и организационные ограничения: Есть ли требования, о которых нужно знать заранее (A/B-тесты, обязательные поля формы, особые требования к мобильной версии, сроки запуска, юридические или отраслевые ограничения)?"
         ]
       },
       "store": {
