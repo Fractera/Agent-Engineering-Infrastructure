@@ -115,7 +115,7 @@ and more agents produce more work to review, not less.
 
 ## 🔒 Two locks on the door
 
-**First: confirmed user cases.** The panel refuses to switch this on until `USE-CASES/CASES/` holds cases
+**First: confirmed user cases.** The panel refuses to switch this on until `USE-CASES/<product-id>/CASES/` holds cases
 the owner has confirmed. The reason is not bureaucracy. A workflow is an amplifier, and an amplifier
 pointed at a guess produces a large, tidy, expensive wrong thing. The most costly outcome available in
 this product is a hundred agents building carefully in the wrong direction. Cases are what point it.

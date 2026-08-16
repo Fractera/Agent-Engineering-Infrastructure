@@ -26,7 +26,7 @@ again. It answers three questions and nothing else — what was being done, wher
 very next physical action is.
 
 It is **not** a diary and **not** a summary of the work. History lives in git; decisions live in
-`LESSONS.md`; what the product is for lives in `USE-CASES.md`. This file is the baton, and a baton is
+`LESSONS.md`; what each product is for lives in `USE-CASES/<product-id>/CASES/`. This file is the baton, and a baton is
 useless if it is heavy.
 
 ## When the model writes it

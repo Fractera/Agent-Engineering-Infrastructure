@@ -1,21 +1,32 @@
 # Glossary
 
-> Workspace term map — approved abbreviations and preferred phrasings so every
-> agent in this project reads them the same way (e.g. aws -> ai-workspace).
-> Edited via the Admin /service/glossary page (:3002); this file is the source of truth.
+> Term map of this project — so every agent and every document reads the same words the same way.
+> Edited from the control panel; this file is the source of truth inside your repository.
+
+## 🪦 Removed 2026-08-16 — terms that described a subsystem that no longer exists
+
+This file used to define `Automation (Rule)`, `Trigger`, `Hook`, `Router`, `Step`, `Integration`, `State`,
+`Run` and `Record` — the vocabulary of the Projects layer, which was deleted with the coding agents and
+Hermes. A glossary describing a subsystem that does not exist is worse than an empty one: the next session
+builds by it. If you meet those words in an old document, they are history, not instructions.
+
+## Product — the unit of work inside one server
+
+One server carries many products: a landing page today, a store tomorrow, a company brain next month.
+The register is `PRODUCTS-CONFIG/products-config.json`.
 
 | Term | Meaning |
 |---|---|
-| AWS | ai-workspace |
-| Automation (Rule) | The container "when X, under condition Y, do Z" — one Projects-layer project. Canon: CRUD-DOCS/workspace-standards/automation-ontology.md (READ IT before authoring/extending any automation) |
-| Trigger | Event source starting a run (message / cron schedule / manual / webhook); node kind `trigger` |
-| Hook | A user's spoken phrase bound to ONE Action (global `project_hooks`, normalized lowercase, app-wide unique) |
-| Condition | A DECLARED guard "run only if …" on an Action/Step — shown on the diagram and in the records table; executed in step code (R6) |
-| Action | First-class named outcome = a branch of steps (id/title/color/hooks/condition/channel). Configuring an automation = configuring Actions bound to Hooks |
-| Router | The classifier step turning an event into an action id (e.g. detect-hook); node kind `router` |
-| Step | Atomic operation node (kind `step`/`transform`), implemented under its `// node:<id>` marker in the durable workflow |
-| Integration | External service + its env keys (Telegram, OpenAI, LightRAG) — declared, never hardcoded |
-| Channel | Where an Action's output is delivered (e.g. telegram-bot-chat) — a field on the Action |
-| State | Declared persistent data between runs (poll cursor, vector memory) — registry `state[]` in the automation graph |
-| Run | One execution instance (runId/status/journal in `project_cron_runs`) |
-| Record | A durable result row (+ memory document) shown in the universal records table: Action · Hook · Summary · Condition · Due · Created. Owner-deletable — the last column's Delete button (with confirm) removes the DB row AND its vector document (best-effort via the stored memory_doc_id) |
+| **product** | one of the things this server carries. `id` never changes and means nothing (`p1`, `p2`); the title is the owner's and may be renamed freely |
+| **structure** | one of the twelve directions picked on the use-cases page (`store`, `landing`, `company-brain`, …). Decides the seven opening questions and the default surface |
+| **surface** | `public` — own address · `private` — a tab in the control panel · `headless` — channels and schedule only |
+| **the four roots** | pages · logic · tables · use cases. Derived from the product record, never invented — and they are the boundary: work on a product's use case writes inside them and nowhere else |
+| **pages plan** (`PAGES.md`) | what the product should have, proposed from its use cases. What exists is counted from the folders and never stored |
+
+## Machine layer and human layer
+
+| Term | Meaning |
+|---|---|
+| **machine layer** | every JSON in the project, ids, slugs, file names, `PAGES.md`. **English only** — the agent loads it at the start of every session, and a second language there is paid for in tokens forever |
+| **human layer** | the title and the scenario **inside** a use-case file — the one thing a person reads and confirms, written in their language |
+| **control panel** | `:3002`, outside your repository. It speaks 82 languages on its own; the repository never carries its translations |
