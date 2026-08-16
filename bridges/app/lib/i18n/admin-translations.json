@@ -1912,6 +1912,42 @@
           "Technical and practical constraints: is there anything to be known upfront (working on a weak signal in the room, an installable app or only a page behind a code, a dark look, who will maintain the menu after launch, deadlines)?"
         ]
       },
+      "tours": {
+        "title": "Tours marketplace",
+        "tagline": "A place, a date and the person who will show you",
+        "definition": "A platform where a traveller looks for an experience on a particular day in a particular city, and a guide receives a confirmed booking with no messaging. It rests on three things at once: geography, the calendar, and money between two sides. Separate from a marketplace and from booking — because here there is weather, a season, and an unfamiliar city.",
+        "examples": [
+          "Walks around the city led by the people who live there",
+          "A tour agency tired of running bookings through chat",
+          "The experiences of one region: mountains, sea, food",
+          "Workshops and live events for visitors"
+        ],
+        "signals": [
+          "A person searches not for a product but for \"what to see here on these dates\"",
+          "Every offer has its own host and its own schedule",
+          "A tour may not happen because of the weather, and nobody is to blame"
+        ],
+        "questions": [
+          "What is aggregated: which tours and experiences will the platform carry (on foot and by transport, private and group, single-day and multi-day, for children, adventurous, workshops, online meetings)? Is there a specialisation — a city, a country, a theme?",
+          "Both sides: who travels and who hosts? Describe each side — travellers (alone, families, the premium end, visitors or locals) and organisers (private guides, agencies, guides who speak other languages).",
+          "The pain on each side: what do you solve for the traveller (hard to choose, afraid of being cheated, unclear whether it will happen) and for the guide (no steady stream, bookings lost in chat, time gone to arranging)?",
+          "How they find it today: where does a traveller get a tour without your platform (the hotel desk, touts on the street, ads on social networks, friends, the big aggregators)?",
+          "The ideal outcome: what does the flawless case look like — the traveller found the right thing for the right date in two moves, the guide got a confirmed booking without a single message? Describe it from both sides.",
+          "Competitors and models: which platforms do you take your bearings from? Name them with links, say what you like most and what is missing.",
+          "What sets you apart: a narrow theme, how carefully guides are chosen, convenience, price, unusual formats, a strong focus on particular cities or countries?",
+          "The traveller's path: how does it run from search to the tour itself (search and filtering, the offer's page, choosing a date, booking, payment, confirmation and a voucher, a reminder the day before, a review afterwards)? Do you need favourites and messaging with the guide beforehand?",
+          "Search, map and filters: how does a person find what they want (by city, country or landmark, on a map with meeting points, filtering by date, price, length, language of the tour, format)? What do you show someone who has not chosen a city yet?",
+          "The guide's calendar and prices: how does an organiser run their schedule (available days and hours, a gap between tours, a different number of places, a higher price in season and at weekends, closing dates by hand)?",
+          "How a booking is confirmed: instantly with immediate payment, or does the guide confirm within an agreed time? What happens when they never answer, and does the traveller see that waiting?",
+          "How the platform earns: commission on a booking, a subscription for organisers, paid promotion in the results, advertising? Who pays the commission — the traveller, the guide, or both?",
+          "How money moves: how is it settled (paid fully online and passed to the guide after the tour, a part upfront and the rest on the spot, everything on the spot)? When does the guide get paid, and what is held back during a dispute?",
+          "The organiser's workplace: what does a guide need (adding and editing programmes, photos and video, their own schedule, the list of people booked for a given date, messaging the traveller, withdrawing earnings, reports)?",
+          "Trust and quality: how are guides selected and how is trust built (checking documents and permits, reviews only after a tour that took place, ratings in both directions, handling complaints, removing someone from the platform)? Who checks a newcomer?",
+          "Cancellations, weather and force majeure: what are the refund rules when the traveller cancels (a day before, an hour before, on the day)? What happens when the guide cancels, and what when the weather is to blame — that is, nobody? Is there a penalty for a guide who does not show up?",
+          "Notifications and connections: what must be connected (maps, messages to traveller and guide about the upcoming meeting and any changes, currency conversion, organisers' calendars)? How far ahead should the reminder go?",
+          "Technical, geographic and practical constraints: is there anything to be known upfront (launch cities and countries, languages and currencies, an installable app, payment services and the legal form of settling with guides, a launch deadline, who will run the platform)?"
+        ]
+      },
       "learning": {
         "title": "Courses and learning",
         "tagline": "From lesson to result",
@@ -1928,13 +1964,24 @@
           "Access opens and closes rather than being granted forever"
         ],
         "questions": [
-          "What will a person be able to do afterwards — name the result as an action?",
-          "What is the course made of: modules, lessons, length, and is the order compulsory?",
-          "In what form is the material: video, text, assignments, live sessions, reviews of student work?",
-          "Are assignments checked, and by whom: automation, a mentor, the student themselves?",
-          "How does access open: one payment, a subscription, a cohort with dates, an invitation?",
-          "What marks completion: a certificate, entry to a community, a record in the profile?",
-          "What do you do with those who quit halfway, and how will you notice?"
+          "What kind of educational product: what are you building (your own online courses, a platform for other authors, a school with several tracks, training for a company's staff, a mentoring programme, interactive practice tools)?",
+          "Topics and level: what do you teach and for whom — a beginner, a practitioner, an expert? How deep do you go, and how many courses do you plan in the first year?",
+          "Both sides: who learns and who teaches? Describe the students — age, background, what drives them (changing profession, a hobby, an exam, an employer's demand) — and the authors and tutors, if they are not only you.",
+          "The student's pain: what problem do you solve (people drop out halfway through other courses, no practice, the programme is out of date, it costs too much, nobody to go through mistakes with)?",
+          "How they learn today: where do people get this knowledge without you (videos and books, a private tutor, in-person courses, other platforms, not at all)?",
+          "The ideal outcome: how should the learning end for a person to call it a success (an exam passed, a portfolio built, a job, a named certificate, simply confidence)?",
+          "Competitors and models: which platforms and schools do you take your bearings from? Name them with links, say what you like and what is missing.",
+          "What sets you apart: the method, the way material is delivered, the support, how much practice there is, the community, the result at the end, the price?",
+          "How material is delivered: in what form does it come (recorded video lessons, long texts, live meetings, short daily sessions of a few minutes, practice tools that check you on the spot)? Which of these is primary and which supports it?",
+          "When lessons open: access to the whole course right after payment, strictly by date, the next lesson after the previous is passed, or learning in cohorts with a common start? The shape of the entire course depends on this.",
+          "Homework and marking: how is knowledge checked (multiple-choice tests, work uploaded for a tutor, written pieces, automatic checking of code or tasks by a model)? Who marks it, and within what time must they answer?",
+          "Roles in the system: who is needed besides the student (course author, marking tutor, curriculum designer, administrator, a representative of the client company) and what may each of them do?",
+          "Video and protecting the material: where does the video live, and does it need protecting from downloading and resharing? What other formats are needed — documents, audio, slides, downloadable files?",
+          "Communication and support: how does a student ask a question (comments under the lesson, a group chat for the cohort, private messages with a tutor, a forum, a messenger group)? Who answers, and how quickly?",
+          "Retention and completion: do you need a progress bar, points and achievements, deadlines, reminders for those falling behind, a table of the group's results? What do you do with someone who quit halfway?",
+          "Certificates and the author's reports: do you need a named certificate with a verifiable number? What summaries do you need as the owner (how many finished, where people most often quit, average marks, how loaded the tutors are)?",
+          "How access is sold: buying a course once and forever, a subscription to the whole library, paying in instalments, selling separate modules, free first lessons, a contract with a company for its staff? If it is a platform for other authors — what share do you take?",
+          "Technical and practical constraints: is there anything to be known upfront (a course builder for authors, languages, links to payments and customer records, an installable app, how many students you expect at once, a launch deadline)?"
         ]
       },
       "ai-coach": {
@@ -4675,6 +4722,42 @@
           "Технические и организационные ограничения: есть ли требования, о которых нужно знать заранее (работа при слабой связи в зале, устанавливаемое приложение или только страница по коду, тёмное оформление, кто будет вести меню после запуска, сроки)?"
         ]
       },
+      "tours": {
+        "title": "Агрегатор экскурсий",
+        "tagline": "Место, дата и человек, который проведёт",
+        "definition": "Площадка, где путешественник ищет впечатление на конкретный день в конкретном городе, а гид получает подтверждённый заказ без переписки. Держится на трёх вещах разом: география, календарь и деньги между двумя сторонами. Отдельно от маркетплейса и бронирования — потому что здесь есть погода, сезон и чужой город.",
+        "examples": [
+          "Авторские прогулки по городу от местных жителей",
+          "Экскурсионное бюро, уставшее вести брони в переписке",
+          "Впечатления одного региона: горы, море, гастрономия",
+          "Мастер-классы и живые события для приезжих"
+        ],
+        "signals": [
+          "Человек ищет не товар, а «что посмотреть здесь и в эти даты»",
+          "У каждого предложения свой ведущий и своё расписание",
+          "Экскурсия может не состояться из-за погоды, и это никто не виноват"
+        ],
+        "questions": [
+          "Что агрегируем: какие экскурсии и туры будут на площадке (пешие и на транспорте, индивидуальные и групповые, однодневные и многодневные, детские, приключенческие, мастер-классы, онлайн-встречи)? Есть ли специализация — город, страна, тема?",
+          "Обе стороны: кто путешествует и кто проводит? Опишите каждую сторону — туристы (в одиночку, семьями, дорогой сегмент, приезжие или местные) и организаторы (частные гиды, бюро, гиды со знанием языков).",
+          "Боль каждой стороны: что решаем туристу (трудно выбрать, страшно нарваться, непонятно, состоится ли) и что гиду (нет постоянного потока, брони теряются в переписке, время уходит на согласования)?",
+          "Как находят сейчас: где турист берёт экскурсию без вашей площадки (стойка в отеле, зазывалы на улице, объявления в социальных сетях, знакомые, крупные агрегаторы)?",
+          "Идеальный результат: как выглядит безупречный случай — турист за два действия нашёл нужное на нужную дату, гид получил подтверждённый заказ без единого сообщения? Опишите с обеих сторон.",
+          "Конкуренты и образцы: на какие площадки вы ориентируетесь? Назовите их и ссылки, скажите, что нравится больше всего и чего не хватает.",
+          "Чем принципиально отличаетесь: узкая тема, качество отбора гидов, удобство, цена, необычные форматы, сильный упор на конкретные города или страны?",
+          "Путь туриста: как проходит дорога от поиска до самой экскурсии (поиск и отбор, карточка предложения, выбор даты, бронирование, оплата, подтверждение и ваучер, напоминание накануне, отзыв после)? Нужны ли избранное и переписка с гидом до встречи?",
+          "Поиск, карта и отбор: как человек находит нужное (по городу, стране или достопримечательности, на карте с точками сбора, отбор по дате, цене, длительности, языку проведения, формату)? Что показывать тому, кто ещё не выбрал город?",
+          "Календарь гида и цены: как организатор ведёт своё расписание (доступные дни и часы, перерыв между экскурсиями, разное число мест, цена выше в сезон и в выходные, закрытие дат вручную)?",
+          "Как подтверждается бронь: мгновенно с немедленной оплатой или гид подтверждает в течение оговорённого срока? Что происходит, если он не ответил вовсе, и видит ли турист это ожидание?",
+          "Как площадка зарабатывает: комиссия с брони, подписка для организаторов, платное продвижение в выдаче, реклама? Кто платит комиссию — турист, гид или оба?",
+          "Движение денег: как проходит расчёт (полная оплата онлайн с переводом гиду после проведения, частичная предоплата и доплата на месте, оплата целиком на месте)? Когда гид получает деньги и что удерживается при споре?",
+          "Кабинет организатора: что нужно гиду для работы (добавление и правка программ, фотографии и видео, своё расписание, список записавшихся на конкретную дату, переписка с туристом, вывод заработанного, отчёты)?",
+          "Доверие и качество: как отбираются гиды и как строится доверие (проверка документов и разрешений, отзыв можно оставить только после состоявшейся экскурсии, оценки в обе стороны, разбор жалоб, снятие с площадки)? Кто проверяет новичка?",
+          "Отмены, погода и форс-мажор: каковы правила возврата при отмене туристом (за сутки, за час, в день экскурсии)? Что происходит при отмене гидом и что — когда виновата погода, то есть никто? Есть ли наказание для гида за неявку?",
+          "Уведомления и связи: что нужно подключить (карты, сообщения туристу и гиду о предстоящей встрече и её изменениях, пересчёт валют, календари организаторов)? За сколько напоминать о встрече?",
+          "Технические, географические и организационные ограничения: есть ли требования, о которых нужно знать заранее (города и страны запуска, языки и валюты, устанавливаемое приложение, платёжные службы и правовая форма расчётов с гидами, сроки запуска, кто будет вести площадку)?"
+        ]
+      },
       "learning": {
         "title": "Обучение и курсы",
         "tagline": "От урока к результату",
@@ -4691,13 +4774,24 @@
           "Доступ открывается и закрывается, а не выдаётся навсегда"
         ],
         "questions": [
-          "Что человек сможет делать после обучения — назовите результат действием?",
-          "Из чего состоит курс: модули, уроки, длительность, обязателен ли порядок?",
-          "В каком виде материал: видео, текст, задания, эфиры, разбор работ?",
-          "Проверяются ли задания и кем: автоматикой, куратором, самим учеником?",
-          "Как открывается доступ: разовая оплата, подписка, поток с датами, приглашение?",
-          "Что подтверждает завершение: сертификат, вход в сообщество, отметка в профиле?",
-          "Что делать с теми, кто бросил на середине, и как вы это заметите?"
+          "Какой образовательный продукт: что вы создаёте (свои онлайн-курсы, площадка для чужих авторов, школа с несколькими направлениями, обучение сотрудников компании, менторская программа, интерактивные тренажёры)?",
+          "Темы и уровень: чему учите и для кого — новичок, практикующий, эксперт? Насколько глубоко идёте и сколько курсов планируете в первый год?",
+          "Обе стороны: кто учится и кто учит? Опишите учеников — возраст, подготовка, что ими движет (смена профессии, увлечение, экзамен, требование работодателя), — и авторов с кураторами, если они не только вы.",
+          "Боль ученика: какую задачу вы решаете (на других курсах бросают на середине, нет практики, программа устарела, дорого, не с кем разобрать ошибку)?",
+          "Как учатся сейчас: где люди берут эти знания без вас (ролики и книги, живой репетитор, очные курсы, чужие платформы, не учатся вовсе)?",
+          "Идеальный результат: чем должно закончиться обучение, чтобы человек считал его удачным (сданный экзамен, собранное портфолио, работа, именной сертификат, просто уверенность)?",
+          "Конкуренты и образцы: на какие площадки и школы вы ориентируетесь? Назовите их и ссылки, скажите, что нравится и чего в них не хватает.",
+          "Чем принципиально отличаетесь: методика, форма подачи, поддержка, доля практики, сообщество, результат на выходе, цена?",
+          "Форма подачи: в каком виде идёт материал (записанные видеоуроки, длинные тексты, живые встречи, короткие занятия по несколько минут в день, тренажёры с проверкой на месте)? Что из этого главное, а что дополняет?",
+          "Когда открываются уроки: доступ ко всему курсу сразу после оплаты, строго по датам, следующий урок после сдачи предыдущего, или обучение идёт потоками с общим стартом? От этого зависит устройство всего курса.",
+          "Домашние задания и проверка: как проверяются знания (тесты с готовыми ответами, загруженная работа на проверку куратору, письменная работа, автоматическая проверка кода или задания моделью)? Кто проверяет и за какой срок отвечает?",
+          "Роли в системе: кто нужен кроме ученика (автор курса, куратор-проверяющий, методист, администратор, представитель компании-заказчика) и что каждый вправе делать?",
+          "Видео и защита материала: где лежит видео и нужно ли защищать его от скачивания и пересылки? Какие ещё форматы нужны — документы, звук, презентации, файлы для скачивания?",
+          "Общение и поддержка: как ученик задаёт вопрос (комментарии под уроком, общий чат потока, личная переписка с куратором, форум, группа в мессенджере)? Кто отвечает и как быстро?",
+          "Удержание и доходимость: нужны ли шкала прохождения, баллы и достижения, сроки сдачи, напоминания отставшим, таблица результатов группы? Что делать с тем, кто бросил на середине?",
+          "Сертификаты и отчёты автора: нужен ли именной сертификат с проверяемым номером? Какие сводки нужны вам как владельцу школы (сколько дошло до конца, где чаще всего бросают, средний балл, загрузка кураторов)?",
+          "Как продаётся доступ: разовая покупка курса навсегда, подписка на всю библиотеку, оплата частями, продажа отдельных модулей, бесплатные первые уроки, договор с компанией на её сотрудников? Если площадка для чужих авторов — какую долю берёте?",
+          "Технические и организационные ограничения: есть ли требования, о которых нужно знать заранее (свой сборщик курсов для авторов, языки, связь с платежами и учётом клиентов, устанавливаемое приложение, ожидаемое число учеников одновременно, сроки запуска)?"
         ]
       },
       "ai-coach": {
