@@ -31,13 +31,11 @@ import { PageShell } from "../_components/page-shell";
 import { HelpDetails } from "../_components/help-details";
 import {
   listCases, useCasesGate, readSeed, readQuestions, resetPreview,
-  useCasesPaths, migrateLegacyLayout, readPagesPlan,
+  useCasesPaths, migrateLegacyLayout,
 } from "@/lib/use-cases-store";
 import { PROJECT_TYPES, isProjectTypeId } from "@/lib/project-types";
 import { activeProduct, adoptLegacyProjectType, listProducts } from "@/lib/products-config";
-import { pagesReport } from "@/lib/product-pages";
 import { ProductsSection } from "./_components/products-section";
-import { PagesReportBlock } from "./_components/pages-report";
 import { readInstructionSet } from "@/lib/instruction-set";
 import { DocCommands } from "../_components/doc-commands";
 import { DocPopup } from "../_components/doc-popup.client";
@@ -84,7 +82,11 @@ export default async function UseCasesPage(
   // производное от файловой системы, и записанный однажды он разойдётся с ней в
   // первую неделю. План живёт файлом, потому что он намерение, а намерение
   // вывести неоткуда.
-  const pages = product ? pagesReport(product, readPagesPlan(pid)) : null;
+  // 🪦 Отчёт «план против построенного» снят с этого экрана (2026-08-16, см.
+  // надгробие ниже, у места показа). Вычисление осталось в `lib/product-pages.ts`
+  // и здесь НЕ ВЫЗЫВАЕТСЯ: оно обходит все папки слота на каждое открытие
+  // страницы, а страница динамическая — платить за обход ради того, что никто не
+  // видит, незачем.
 
   // 🔒 ВСЁ, ЧТО НИЖЕ, ЧИТАЕТСЯ У НАЗВАННОГО ПРОДУКТА. Порядок здесь не
   // косметика: пока продукт не выбран, читать нечего и не у кого.
@@ -338,10 +340,27 @@ export default async function UseCasesPage(
             </div>
           )}
 
-          {/* План страниц против факта — сразу под кейсами, потому что он из них
-              и рождён: увидев «страницы нет», владелец либо просит агента её
-              построить, либо понимает, что кейс описан не так. */}
-          {pages && <PagesReportBlock report={pages} planFile={`${paths.cases.replace(/CASES\/$/, "")}PAGES.md`} p={p} />}
+          {/* 🪦 ЗДЕСЬ СТОЯЛ ОТЧЁТ «ПЛАН СТРАНИЦ ПРОТИВ ПОСТРОЕННОГО» — СНЯТ С
+              ЭКРАНА ВЛАДЕЛЬЦЕМ 2026-08-16, И ПРИЧИНА СТОИТ ЗАПИСИ.
+
+              Замысел был такой: план рождается из кейсов, значит смотреть на
+              него надо там же, где кейсы правят. На деле человек, ТОЛЬКО ЧТО
+              ответивший на вопросы, получал под ними блок, который в этот момент
+              не может сказать ничего полезного: плана ещё нет (кейсы не
+              разобраны), зато список «построено, но в плане не значится» уже
+              полон — пятнадцать служебных маршрутов стартера, к его продукту
+              отношения не имеющих. Отчёт, у которого в норме одна половина
+              пуста, а вторая заполнена шумом, читается как поломка.
+
+              Урок общий: сведение «план против факта» имеет смысл ТОЛЬКО когда
+              есть план. Показывать его до появления плана — значит показывать
+              разницу с пустотой.
+
+              🔒 ВЫЧИСЛЕНИЕ ОСТАВЛЕНО ЖИТЬ (`lib/product-pages.ts`) по прямому
+              слову владельца: убрать из интерфейса, из логики не убирать. Оно
+              ничего не стоит, пока его никто не зовёт, и понадобится, когда для
+              отчёта найдётся своё место — отдельный раздел или показ по запросу,
+              а не первый экран после опроса. */}
         </>
       )}
 
