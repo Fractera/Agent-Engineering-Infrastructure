@@ -17,6 +17,7 @@
 // сюда одной строкой.
 
 import fs from "fs";
+import { DESCRIPTION_MAX } from "@/lib/products-config";
 export { parseRound, type QuizPair } from "@/lib/quiz-brain.shared";
 
 const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
@@ -319,16 +320,29 @@ text, the remark wins. NEVER add a scenario they did not mention. Answer in the 
 export async function describeProduct(
   seed: string,
   cases: { title: string; summary: string }[],
-): Promise<{ title: string; pages: { path: string; purpose: string }[] } | null> {
+  /**
+   * Язык владельца — на нём пишется ТОЛЬКО описание (владелец 2026-08-16).
+   * Пусто — описания не будет вовсе: выдать его на английском значило бы
+   * положить в карточку строку, которую владелец не читает.
+   */
+  ownerLang = "",
+): Promise<{ title: string; description: string; pages: { path: string; purpose: string }[] } | null> {
   const list = cases.map((c, i) => `${i + 1}. ${c.title} — ${c.summary}`).join("\n");
   const out = await chat([
-    { role: "system", content: `You name a product and sketch the pages it needs. Reply with STRICT JSON only:
-{"title":"<the product's name, 1-3 words>","pages":[{"path":"/example","purpose":"<why this page exists, one short sentence>"}]}
+    { role: "system", content: `You name a product, describe it in one breath, and sketch the pages it needs. Reply with STRICT JSON only:
+{"title":"<the product's name, 1-3 words>","description":"<what this product is and how it works, max 200 characters>","pages":[{"path":"/example","purpose":"<why this page exists, one short sentence>"}]}
 
-🔒 EVERYTHING YOU RETURN IS IN ENGLISH, whatever language the owner speaks. This answer is written into
-the project's machine layer — a config file and a plan the coding agent loads at the start of every
-session. One language there is a hard rule, not a preference: a second one is paid for in tokens on
-every run, forever.
+🔒 TWO LANGUAGES, AND THE SPLIT IS EXACT. Everything you return is in ENGLISH — the title, the page
+paths, every purpose — because they are written into the project's machine layer, which the coding
+agent loads at the start of every session, and one language there is a hard rule paid for in tokens
+forever.
+
+The single exception is "description"${ownerLang ? `: write it in the language whose code is "${ownerLang}", because a HUMAN reads it and nobody else` : `: return it EMPTY, because the owner's language was not supplied and an English description would be a line the owner does not read`}.
+
+The DESCRIPTION says what the product IS and HOW IT WORKS, in at most 200 characters — two short
+sentences at most. It is read by the owner glancing at a card among several products, so it must let
+him tell THIS product from his others. Do not repeat the title, do not praise, do not mention the
+technology.
 
 The TITLE names THIS product and must be IMPOSSIBLE to reuse for anyone else's product. Take the words
 from what they sell or do: coffee they roast themselves → "Own Roast"; legal help for landlords →
@@ -347,14 +361,18 @@ Each purpose is one short English sentence.` },
   ], { json: true });
   try {
     const j = JSON.parse(out.replace(/^```json\s*|\s*```$/g, "")) as {
-      title?: string; pages?: { path?: string; purpose?: string }[];
+      title?: string; description?: string; pages?: { path?: string; purpose?: string }[];
     };
     const title = (j.title ?? "").trim().slice(0, 80);
     if (!title) return null;
+    // Предел режется и здесь, и при записи. Двойная обрезка не лишняя: модель
+    // просили уложиться в 200 знаков, но просьба — не гарантия, а хранилище
+    // обязано принимать любой ответ, не полагаясь на послушание.
+    const description = (j.description ?? "").trim().slice(0, DESCRIPTION_MAX);
     const pages = (j.pages ?? [])
       .map((p) => ({ path: (p.path ?? "").trim(), purpose: (p.purpose ?? "").trim() }))
       .filter((p) => p.path);
-    return { title, pages };
+    return { title, description, pages };
   } catch {
     return null;
   }

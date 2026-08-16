@@ -543,6 +543,22 @@ export type AdminStrings = {
     rootsTitle: string; rootsHint: string;
     rootPages: string; rootLogic: string; rootTables: string; rootCases: string;
     /**
+     * Правка карточки продукта и его удаление (владелец 2026-08-16).
+     *
+     * 🔒 УДАЛЕНИЕ ОБЪЯСНЯЕТСЯ ТРЕМЯ РАЗНЫМИ ФРАЗАМИ, И НИ ОДНА НЕ ЛИШНЯЯ:
+     * `delDanger` — чем это опасно, `delGoes` — что именно исчезает с экрана,
+     * `delStays` — что остаётся на диске. Окно, говорящее одно «вы уверены?»,
+     * заставляет человека угадывать последствие, и он либо не нажимает вовсе,
+     * либо нажимает вслепую.
+     */
+    editTitle: string; editAction: string; editName: string; editNameHint: string;
+    editDesc: string; editDescHint: string; editSave: string; editCancel: string;
+    editSaved: string; editFailed: string; editNameRequired: string;
+    noDescription: string;
+    delAction: string; delTitle: string; delDanger: string; delGoes: string;
+    delStays: string; delConfirm: string; delWorking: string; delDone: string;
+    delFailed: string; delArchive: string;
+    /**
      * План страниц против факта (владелец 2026-08-16).
      *
      * 🔒 ДВА РАЗНЫХ ЗНАНИЯ. План — намерение из кейсов, он хранится и правится.

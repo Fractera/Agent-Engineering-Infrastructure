@@ -34,8 +34,9 @@ import {
   useCasesPaths, migrateLegacyLayout,
 } from "@/lib/use-cases-store";
 import { PROJECT_TYPES, isProjectTypeId } from "@/lib/project-types";
-import { activeProduct, adoptLegacyProjectType, listProducts } from "@/lib/products-config";
+import { activeProduct, adoptLegacyProjectType, listProducts, DESCRIPTION_MAX } from "@/lib/products-config";
 import { ProductsSection } from "./_components/products-section";
+import { ProductCardActions } from "./_components/product-card-actions.client";
 import { readInstructionSet } from "@/lib/instruction-set";
 import { DocCommands } from "../_components/doc-commands";
 import { DocPopup } from "../_components/doc-popup.client";
@@ -220,6 +221,25 @@ export default async function UseCasesPage(
           typeCards={typeCards}
           pickerLabels={{ ...pickerLabels, addProduct: p.addProduct, addHint: p.addHint }}
           p={p}
+          actions={product && (
+            <ProductCardActions
+              productId={product.id}
+              title={product.title}
+              description={product.description ?? ""}
+              casesCount={cases.length}
+              descriptionMax={DESCRIPTION_MAX}
+              labels={{
+                editTitle: p.editTitle, editAction: p.editAction, editName: p.editName,
+                editNameHint: p.editNameHint, editDesc: p.editDesc, editDescHint: p.editDescHint,
+                editSave: p.editSave, editCancel: p.editCancel, editSaved: p.editSaved,
+                editFailed: p.editFailed, editNameRequired: p.editNameRequired,
+                delAction: p.delAction, delTitle: p.delTitle, delDanger: p.delDanger,
+                delGoes: p.delGoes, delStays: p.delStays, delConfirm: p.delConfirm,
+                delWorking: p.delWorking, delDone: p.delDone, delFailed: p.delFailed,
+                delArchive: p.delArchive,
+              }}
+            />
+          )}
         />
       )}
 

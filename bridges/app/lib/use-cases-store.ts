@@ -592,3 +592,39 @@ export function migrateLegacy(pid: string): { ok: boolean; id?: string } {
     return { ok: false };
   }
 }
+
+/**
+ * Убрать ПАПКУ ПРОДУКТА целиком — кейсы, затравку, стенограмму, план страниц.
+ *
+ * 🔒 ПЕРЕЕЗДОМ, А НЕ СТИРАНИЕМ — тот же закон, что у сброса опроса выше, и по той
+ * же причине: одно нажатие не должно стоить описания продукта, собранного
+ * разговором на сорок вопросов. Папка уезжает в `USE-CASES/ARCHIVE/<id>-<дата>/`,
+ * то есть остаётся в репозитории и уедет в GitHub вместе с остальным.
+ *
+ * 🔒 АРХИВ ЛЕЖИТ ВНЕ ПАПКИ ПРОДУКТА, и это существенно: складывать его ВНУТРЬ
+ * (как делает сброс) здесь нельзя — удаляется как раз она.
+ *
+ * 🔒 КОД ПРОДУКТА НЕ ТРОГАЕТСЯ ВООБЩЕ. Ни страницы, ни `lib/products/<id>/`, ни
+ * таблицы. Кейсы — это описание замысла; построенное по ним приложение живёт
+ * своей жизнью, и стереть его заодно значило бы наказать за уборку в документах.
+ * Что остаётся на диске, окно подтверждения называет прямо.
+ */
+export function deleteProductDocs(pid: string): { archive: string | null; cases: number } {
+  const { cases } = listCases(pid);
+  const dir = productDir(pid);
+  if (!fs.existsSync(dir)) return { archive: null, cases: 0 };
+
+  const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+  const dest = path.join(APP_DIR, USE_CASES_DIR, ARCHIVE_SUBDIR, `${pid}-${stamp}`);
+  try {
+    fs.mkdirSync(path.dirname(dest), { recursive: true });
+    fs.renameSync(dir, dest);
+    return { archive: `${USE_CASES_DIR}/${ARCHIVE_SUBDIR}/${pid}-${stamp}/`, cases: cases.length };
+  } catch {
+    // Переезд не удался (чужая файловая система, права) — НЕ стираем следом.
+    // Здесь это осознанно иначе, чем при сбросе: там оставался мусор, мешавший
+    // начать заново, а тут в папке лежит единственная копия описания продукта.
+    // Честный отказ дешевле молчаливой потери.
+    return { archive: null, cases: cases.length };
+  }
+}

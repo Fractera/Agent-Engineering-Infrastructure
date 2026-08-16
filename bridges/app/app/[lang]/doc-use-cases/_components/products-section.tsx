@@ -22,7 +22,7 @@ import type { AdminStrings } from "@/lib/i18n/admin-strings";
 import { AddProductCard } from "./add-product.client";
 
 export function ProductsSection(
-  { products, current, casesCount, lang, typeCards, pickerLabels, p }:
+  { products, current, casesCount, lang, typeCards, pickerLabels, p, actions }:
   {
     products: Product[];
     current: Product | null;
@@ -32,6 +32,15 @@ export function ProductsSection(
     typeCards: React.ComponentProps<typeof AddProductCard>["types"];
     pickerLabels: React.ComponentProps<typeof AddProductCard>["labels"];
     p: AdminStrings["projectPicker"];
+    /**
+     * Кнопки правки и удаления текущего продукта.
+     *
+     * 🔒 ПРИХОДЯТ СОДЕРЖИМЫМ, А НЕ СОБИРАЮТСЯ ЗДЕСЬ. Эта секция серверная, а
+     * кнопки — клиентский островок с окнами; собери их внутри, и словарь на 82
+     * языка уехал бы в браузер вместе с ними. Тот же приём, что у ссылки
+     * «Руководство» в подвале.
+     */
+    actions?: React.ReactNode;
   },
 ) {
   if (!products.length) return null;
@@ -60,19 +69,33 @@ export function ProductsSection(
         {products.map((product) => {
           const active = product.id === current?.id;
           return (
-            // 🔒 КАРТОЧКА — ССЫЛКА, А НЕ КНОПКА С ОБРАБОТЧИКОМ. Выбор живёт в
-            // адресе (`?product=p2`), поэтому переключение работает без единой
-            // строки JavaScript, делится ссылкой и переживает «назад».
-            <Link
+            // 🔒 ВЫБОР ЖИВЁТ В АДРЕСЕ (`?product=p2`) — переключение работает без
+            // единой строки JavaScript, делится ссылкой и переживает «назад».
+            //
+            // 🔒 КАРТОЧКА БОЛЬШЕ НЕ САМА ССЫЛКА, А КОНТЕЙНЕР С РАСТЯНУТОЙ ССЫЛКОЙ
+            // ВНУТРИ (2026-08-16). У текущего продукта появились кнопки правки и
+            // удаления, а ссылка внутри ссылки недопустима и ведёт себя в
+            // браузерах по-разному. `absolute inset-0` сохраняет прежнее
+            // поведение — щёлкнуть можно по всей карточке, — а кнопки стоят ей
+            // соседями и лежат слоем выше.
+            <div
               key={product.id}
-              href={`/${lang}/doc-use-cases?product=${product.id}`}
-              className={`flex min-w-[11rem] flex-1 flex-col gap-1 rounded-lg border p-2.5 transition-colors ${
+              className={`relative flex min-w-[11rem] flex-1 flex-col gap-1 rounded-lg border p-2.5 transition-colors ${
                 active ? "border-primary bg-primary/5" : "border-border hover:border-primary/40 hover:bg-muted"
               }`}
             >
-              <div className="flex items-center gap-1.5">
-                {active && <Check size={11} className="shrink-0 text-primary" />}
-                <span className="text-[12px] font-medium text-foreground">{product.title}</span>
+              <Link
+                href={`/${lang}/doc-use-cases?product=${product.id}`}
+                aria-label={product.title}
+                className="absolute inset-0 rounded-lg"
+              />
+
+              <div className="relative flex items-start gap-1.5">
+                {active && <Check size={11} className="mt-0.5 shrink-0 text-primary" />}
+                <span className="min-w-0 flex-1 text-[12px] font-medium text-foreground">{product.title}</span>
+                {/* Правка и удаление — только у ТЕКУЩЕГО продукта: удалить
+                    чужой, не открыв его, значит ошибиться без права на откат. */}
+                {active && actions}
               </div>
 
               {/* Адрес — машинная строка, поэтому моноширинным и без перевода.
@@ -91,7 +114,19 @@ export function ProductsSection(
                   ? (casesCount ? p.casesCount.replace("{n}", String(casesCount)) : p.noCases)
                   : " "}
               </span>
-            </Link>
+            {/* 🔒 ОПИСАНИЕ ПОКАЗЫВАЕТСЯ ТОЛЬКО У ТЕКУЩЕГО, и это не экономия
+                  места. Двести знаков в каждой из пяти карточек превращают ряд
+                  выбора в стену текста, а выбирают по имени. Открыл продукт —
+                  читаешь, что это; остальные остаются короткими.
+
+                  Пусто — говорим об этом прямо: молчащая карточка не объясняет,
+                  откуда описание берётся и можно ли написать своё. */}
+              {active && (
+                <span className="mt-0.5 border-t border-border/60 pt-1 text-[10px] leading-relaxed text-muted-foreground">
+                  {product.description || p.noDescription}
+                </span>
+              )}
+            </div>
           );
         })}
 

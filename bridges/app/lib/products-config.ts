@@ -58,9 +58,51 @@ export type Product = {
    * вправе их переписывать; человеческое имя не трогается никогда.
    */
   titleAuto?: boolean;
+  /**
+   * Что это за продукт — двумя фразами, НА ЯЗЫКЕ ВЛАДЕЛЬЦА (владелец 2026-08-16).
+   *
+   * 🔒 ЭТО ЕДИНСТВЕННОЕ ПОЛЕ КОНФИГА НЕ НА АНГЛИЙСКОМ, И ИСКЛЮЧЕНИЕ ОСОЗНАННОЕ.
+   * Правило шага 509 гласит: машинный слой одноязычен, потому что его грузит
+   * агент на старте каждой сессии и второй язык оплачивается токенами вечно.
+   * Правило остаётся в силе для всего остального — `id`, `route`, `type`,
+   * `surface`, имена файлов, `PAGES.md`.
+   *
+   * Здесь оно уступает по прямой причине: описание читает ЧЕЛОВЕК и никто
+   * больше. Владелец открывает панель, видит карточку и должен за две секунды
+   * понять, какой из продуктов перед ним, — на английском это работает ровно для
+   * тех, кто на нём думает. Цена ограничена: двести знаков на продукт, а
+   * продуктов у сервера единицы.
+   *
+   * 🔒 ИМЯ ПРИ ЭТОМ ОСТАЁТСЯ АНГЛИЙСКИМ. Оно попадает в отчёты, в заголовок
+   * плана страниц и в разговор с агентом — то есть живёт в машинном слое, в
+   * отличие от описания. Разделение проведено намеренно: имя для машины,
+   * описание для человека.
+   *
+   * Не длиннее 200 знаков — обрезается при записи, а не «желательно».
+   */
+  description?: string;
 };
 
-export type ProductsConfig = { version: number; products: Product[] };
+/** Предел описания. Живёт здесь, а не в вызывающем коде: обрезать обязан тот, кто хранит. */
+export const DESCRIPTION_MAX = 200;
+
+export type ProductsConfig = {
+  version: number;
+  products: Product[];
+  /**
+   * Наибольший выданный номер — включая продукты, которых уже нет.
+   *
+   * 🔒 БЕЗ НЕГО `id` ПЕРЕИСПОЛЬЗУЕТСЯ ПОСЛЕ УДАЛЕНИЯ. Счётчик берёт первый
+   * свободный номер; удалив `p2` и заведя следующий продукт, владелец получил бы
+   * `p2` второй раз — с таблицами `p2_*` прежнего продукта, его папкой в архиве
+   * и его логикой в `lib/products/p2/`. Идентификатор обязан быть вечным даже
+   * после смерти продукта, иначе «вечный id» из шага 509 — не свойство, а
+   * совпадение.
+   *
+   * Поле необязательное: конфиг, где его нет, читается как прежде.
+   */
+  maxId?: number;
+};
 
 const EMPTY: ProductsConfig = { version: 1, products: [] };
 
@@ -135,8 +177,11 @@ export function findProduct(id: string): Product | null {
  * Идентификатор обязан пережить смену всего остального, поэтому он не значит
  * ничего. Читаемость даёт название, а адрес — `route`.
  */
-function nextId(taken: Set<string>): string {
-  for (let n = 1; ; n += 1) {
+function nextId(taken: Set<string>, maxIssued = 0): string {
+  // 🔒 НАЧИНАЕМ ПОСЛЕ НАИБОЛЬШЕГО КОГДА-ЛИБО ВЫДАННОГО, а не после наибольшего
+  // живого: удалённый `p2` не имеет права воскреснуть у другого продукта — за
+  // его номером остались таблицы `p2_*` и папка в архиве.
+  for (let n = maxIssued + 1; ; n += 1) {
     const id = `p${n}`;
     if (!taken.has(id)) return id;
   }
@@ -224,7 +269,9 @@ export function addProduct(
   const config = readProductsConfig();
   const taken = new Set(config.products.map((p) => p.id));
   const surface = input.surface ?? defaultSurface(input.type);
-  const id = nextId(taken);
+  // Живые номера тоже учитываются: конфиг мог родиться до появления `maxId`.
+  const maxLive = Math.max(0, ...config.products.map((p) => Number(String(p.id).replace(/\D+/g, "")) || 0));
+  const id = nextId(taken, Math.max(config.maxId ?? 0, maxLive));
   const route = input.route ?? routeFor(surface, id, config.products);
 
   const product: Product = {
@@ -308,13 +355,23 @@ export function adoptLegacyProjectType(): Product | null {
 /** Правка записи. `id` и `createdAt` неизменны — на них держатся все пути продукта. */
 export function updateProduct(
   id: string,
-  patch: Partial<Pick<Product, "title" | "type" | "surface" | "route" | "status" | "titleAuto">>,
+  patch: Partial<Pick<Product, "title" | "type" | "surface" | "route" | "status" | "titleAuto" | "description">>,
 ): Product | null {
   const config = readProductsConfig();
   const i = config.products.findIndex((p) => p.id === id);
   if (i < 0) return null;
 
   const next = { ...config.products[i], ...patch };
+
+  // Предел описания держит хранилище, а не тот, кто пишет: вызывающих будет
+  // несколько (модель, форма владельца, будущий импорт), и договориться они
+  // между собой не смогут. Пустая строка = «описания нет», поле снимается
+  // целиком, чтобы в конфиге не копились ключи со значением "".
+  if (patch.description !== undefined) {
+    const d = patch.description.trim().slice(0, DESCRIPTION_MAX);
+    if (d) next.description = d;
+    else delete next.description;
+  }
 
   // 🔒 ПОВЕРХНОСТЬ И АДРЕС МЕНЯЮТСЯ ПАРОЙ (найдено проверкой живьём 2026-08-15).
   //
@@ -338,4 +395,33 @@ export function updateProduct(
   config.products[i] = next;
   writeProductsConfig(config);
   return next;
+}
+
+/**
+ * Убрать ЗАПИСЬ продукта из реестра (владелец 2026-08-16).
+ *
+ * 🔒 ЗАПИСЬ И ДОКУМЕНТЫ УБИРАЮТСЯ РАЗНЫМИ ФУНКЦИЯМИ, И ЭТО НЕ ДРОБЛЕНИЕ РАДИ
+ * дробления. Здесь `PRODUCTS-CONFIG`, там папка кейсов; у них разные способы
+ * отказать и разная цена отказа. Слепив их в одну, мы получили бы состояние
+ * «запись стёрта, папка осталась» без всякого способа о нём узнать.
+ *
+ * 🔒 `id` НЕ ПЕРЕИСПОЛЬЗУЕТСЯ ПОСЛЕ УДАЛЕНИЯ. Счётчик берёт максимум из
+ * СУЩЕСТВОВАВШИХ когда-либо, а не из оставшихся: иначе удалив `p2` и заведя
+ * новый продукт, владелец получил бы `p2` второй раз — с чужими таблицами
+ * `p2_*` и чужой папкой в архиве. Идентификатор вечен даже после смерти
+ * продукта.
+ */
+export function removeProduct(id: string): { ok: boolean; product: Product | null } {
+  const config = readProductsConfig();
+  const product = config.products.find((p) => p.id === id) ?? null;
+  if (!product) return { ok: false, product: null };
+
+  config.products = config.products.filter((p) => p.id !== id);
+  // Максимальный выданный номер запоминается, чтобы следующий продукт не занял
+  // освободившийся. Поле необязательное: конфиг, где его нет, читается как
+  // прежде — счётчик тогда просто считает по живым.
+  const used = Number(String(product.id).replace(/\D+/g, "")) || 0;
+  config.maxId = Math.max(config.maxId ?? 0, used);
+  writeProductsConfig(config);
+  return { ok: true, product };
 }

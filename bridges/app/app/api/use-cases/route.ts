@@ -3,13 +3,14 @@ import { requireAuth } from "@/lib/require-auth";
 import {
   listCases, useCasesGate, appendCases, writeCase, setStatus, confirmAll, deleteCase,
   migrateLegacy, appendRaw, writeSeed, readSeed, appendTurns, readTurns,
-  readQuestions, writeQuestions, resetUseCases, resetPreview, writePagesPlan,
+  readQuestions, writeQuestions, resetUseCases, resetPreview, writePagesPlan, deleteProductDocs,
 } from "@/lib/use-cases-store";
 import { describeProduct } from "@/lib/quiz-brain";
 import { isProjectTypeId } from "@/lib/project-types";
+import { slotLanguages } from "@/lib/slot-languages";
 import {
   addProduct, updateProduct, adoptLegacyProjectType, defaultSurface,
-  activeProduct, listProducts, findProduct, giveRootTo,
+  activeProduct, listProducts, findProduct, giveRootTo, removeProduct,
 } from "@/lib/products-config";
 
 // Кейсы: чтение папки и действия над ней.
@@ -75,6 +76,11 @@ export async function POST(req: NextRequest) {
     cases?: { title: string; summary: string; slug?: string }[];
     turns?: { role: "user" | "assistant"; content: string }[];
     note?: string;
+    /**
+     * Описание продукта на языке владельца (2026-08-16).
+     * Пустая строка — законное «убрать описание»; отсутствие поля — «не трогать».
+     */
+    description?: string;
   } | null;
   if (!body?.op) return NextResponse.json({ error: "op_required" }, { status: 400 });
 
@@ -141,7 +147,44 @@ export async function POST(req: NextRequest) {
       if (!pid) return NextResponse.json({ error: "no_product" }, { status: 400 });
       const title = body.title?.trim();
       if (!title) return NextResponse.json({ error: "title_required" }, { status: 400 });
-      return NextResponse.json({ ok: true, product: updateProduct(pid, { title, titleAuto: false }) });
+      // 🔒 ОПИСАНИЕ ПРАВИТСЯ ЗДЕСЬ ЖЕ, И ЭТО НЕ «ЗАОДНО». Имя и описание — две
+      // половины одной карточки, владелец правит их в одном окне; разведи их по
+      // двум вызовам, и одна половина сохранится, а вторая нет — состояние,
+      // которого форма не показывает.
+      //
+      // `description` приходит СТРОКОЙ, в том числе пустой: пустая означает
+      // «убрать описание», и это законное действие. Отсутствие поля означает
+      // «не трогать» — разница между `undefined` и `""` здесь содержательная.
+      const patch: Parameters<typeof updateProduct>[1] = { title, titleAuto: false };
+      if (typeof body.description === "string") patch.description = body.description;
+      return NextResponse.json({ ok: true, product: updateProduct(pid, patch) });
+    }
+    // 🔒 УДАЛЕНИЕ ПРОДУКТА — ДВА ДЕЙСТВИЯ В СТРОГОМ ПОРЯДКЕ: сначала документы
+    // переезжают в архив, потом исчезает запись. Обратный порядок оставил бы при
+    // отказе переезда папку без владельца — её никто уже не найдёт в панели.
+    //
+    // Отказ переезда НЕ убивает запись: лучше продукт, который не удалился и об
+    // этом сказал, чем запись, стёртая при неубранных документах.
+    case "delete-product": {
+      if (!pid) return NextResponse.json({ error: "no_product" }, { status: 400 });
+      const victim = findProduct(pid);
+      if (!victim) return NextResponse.json({ error: "not_found" }, { status: 404 });
+
+      const docs = deleteProductDocs(pid);
+      if (docs.cases > 0 && !docs.archive) {
+        return NextResponse.json({ error: "archive_failed" }, { status: 500 });
+      }
+      const removed = removeProduct(pid);
+      if (!removed.ok) return NextResponse.json({ error: "not_found" }, { status: 404 });
+
+      return NextResponse.json({
+        ok: true,
+        // Куда уехали документы — говорится в ответе и показывается владельцу:
+        // «удалено» без адреса архива читается как «стёрто безвозвратно».
+        archive: docs.archive,
+        cases: docs.cases,
+        products: listProducts(),
+      });
     }
     // Отдать корень другому продукту: адреса страниц прежнего владельца
     // изменятся, поэтому это отдельное осознанное действие.
@@ -190,7 +233,10 @@ export async function POST(req: NextRequest) {
       // при следующем разборе. Обратный порядок стоил бы владельцу работы.
       if (product?.titleAuto) {
         try {
-          const described = await describeProduct(readSeed(pid), body.cases);
+          // Язык владельца берётся у СЛОТА, а не у панели: описание ложится в
+          // конфиг проекта и читается всеми, кто откроет панель, — на каком бы
+          // языке её ни открыл тот, кто нажал кнопку сейчас.
+          const described = await describeProduct(readSeed(pid), body.cases, slotLanguages().base);
           // 🔒 КАТЕГОРИЯ — НЕ ИМЯ (найдено проверкой живьём 2026-08-15).
           //
           // Первый же настоящий вызов вернул «Интернет-магазин» — то самое слово,
@@ -206,9 +252,28 @@ export async function POST(req: NextRequest) {
           // ответе. Отказ в одном поле не повод выбрасывать другое.
           const named = described?.title
             && described.title.trim().toLowerCase() !== product.title.trim().toLowerCase();
-          if (described && named) {
-            updateProduct(product.id, { title: described.title, titleAuto: false });
+
+          // 🔒 ОПИСАНИЕ ПИШЕТСЯ, ДАЖЕ ЕСЛИ ИМЯ ОТВЕРГНУТО, и это не небрежность.
+          // Отказ по имени означает «модель вернула категорию вместо названия» —
+          // про описание это не говорит ничего. Связать их значило бы лишить
+          // описания как раз те продукты, что остались безымянными, то есть те,
+          // которым карточка нужнее всего.
+          //
+          // 🔒 ТОЛЬКО В ПУСТОЕ МЕСТО. Уже написанное описание не переписывается
+          // никогда — ни своё прежнее, ни тем более правку владельца. Отдельного
+          // флага (как `titleAuto` у имени) здесь не нужно: «поле пусто» и есть
+          // достаточное условие, а лишний флаг — ещё одно состояние, которое
+          // однажды разойдётся с действительностью.
+          //
+          // Плата названа честно: описание, которое владелец стёр намеренно,
+          // вернётся при следующем разборе. Это дешевле обратного — молча
+          // затереть текст, который человек писал руками.
+          const patch: Parameters<typeof updateProduct>[1] = {};
+          if (named && described) { patch.title = described.title; patch.titleAuto = false; }
+          if (described?.description && !product.description) {
+            patch.description = described.description;
           }
+          if (Object.keys(patch).length) updateProduct(product.id, patch);
           if (described?.pages.length) {
             writePagesPlan(pid, described.pages, named ? described.title : product.title);
           }
