@@ -1714,13 +1714,24 @@
           "There are several directions, and each needs its own story"
         ],
         "questions": [
-          "What does the company do — the way an employee would explain it to a stranger in one minute?",
-          "Which services or directions each deserve a page of their own?",
-          "Who makes the buying decision on the other side, and what do they look for first?",
-          "Which confirmations must you show: licences, certificates, memberships, years in business?",
-          "Do you need sections for people who are not buying: careers, press, investors, partners?",
-          "Which employees should be visible by name, and what do people come to them with?",
-          "Who will update the content after launch, and how often?"
+          "What the company does: what is its business, what are the main product and service directions, and what mission do you want to convey? What exactly should the site present?",
+          "Audience: who are the main visitors? Describe every group — prospective clients, partners, investors, job seekers, journalists — and what each of them needs from the site.",
+          "The site's main job: what should it bring the company (inbound enquiries, trust in the brand, hiring, an official presence, supporting the sales team)? If one job matters most, name it.",
+          "What the client gets: what pain or need does the company close for those who come to it? What does a person get by choosing you?",
+          "How people find you today: how does your audience find companies in your field and decide to work with them, when not through a website (direct sales, trade shows, recommendations, tenders, industry platforms)?",
+          "The ideal outcome: what impression should a visitor leave with, and what should they do, for you to consider the site working?",
+          "Competitors and benchmarks: whose sites in your industry do you consider exemplary? Name the companies and links — and say what you like about them and what you find unsuccessful.",
+          "What sets the company apart: what is your advantage over competitors (approach, experience, results, expertise, scale, a narrow specialisation)?",
+          "Site map: which sections are required (about the company and its history, services and directions, projects and case studies, the team, a press centre, careers, contacts and offices, a client account)? Say which come first, if the order matters.",
+          "Services and products in detail: how deeply is each service described — can a presentation or a proposal be downloaded, a quote requested for a specific task, the make-up of a complex service and its pricing be seen?",
+          "Careers and vacancies: do you need a section for applying (filtering by city and department, uploading a CV, a link to outside hiring platforms or an internal recruitment system)?",
+          "Press centre and publications: do you need to publish news, articles, reports, a press kit and a newsletter sign-up? How often will this be updated?",
+          "Proof: what do you want to show to confirm your standing (case studies, reviews, hard numbers, well-known clients, awards, certificates, press coverage)?",
+          "Style and tone: what impression should the site convey (expert, premium, modern, formal, friendly, innovative)? Do you have references you like?",
+          "Languages and regions: do you need several languages, and a choice of office or branch depending on where the visitor comes from?",
+          "Where enquiries go: where should requests, proposal enquiries and job applications land (a corporate CRM, an accounting system, a particular department's mailbox, a message to whoever is responsible)?",
+          "Who fills the site: who will add news and vacancies after launch — the company's marketer, a contractor, nobody? Do you need a simple page builder and a separation between those who write and those who publish?",
+          "Security and requirements: are there particular requirements for the data and the site's operation (handling personal data and consent for it, where the servers are located, protection against mass attacks, a launch deadline)?"
         ]
       },
       "media": {
@@ -4399,13 +4410,24 @@
           "Направлений несколько, и каждому нужен свой рассказ"
         ],
         "questions": [
-          "Чем занимается компания — так, как объяснил бы сотрудник постороннему за минуту?",
-          "Какие услуги или направления заслуживают каждое своей страницы?",
-          "Кто принимает решение о сделке на той стороне и что он ищет в первую очередь?",
-          "Какие подтверждения вы обязаны показать: лицензии, сертификаты, членства, годы работы?",
-          "Нужны ли разделы для тех, кто не покупает: вакансии, пресса, инвесторы, партнёры?",
-          "Кто из сотрудников должен быть виден по имени и с чем к нему обращаются?",
-          "Кто и как часто будет обновлять содержимое после запуска?"
+          "Чем занимается компания: какова её деятельность, ключевые направления продуктов и услуг, какую миссию вы хотите донести? Что именно должно быть представлено на сайте?",
+          "Целевая аудитория: кто основные посетители? Опишите все группы — потенциальные клиенты, партнёры, инвесторы, соискатели, журналисты — и что каждой из них нужно от сайта.",
+          "Главная задача сайта: что он должен приносить компании (входящие заявки, доверие к бренду, привлечение кадров, официальное представительство, поддержка продаж)? Если задача одна главная — назовите её.",
+          "Что получает клиент: какую боль или потребность закрывает компания для тех, кто к ней обращается? Что человек получает, придя именно к вам?",
+          "Как узнают о вас сейчас: каким образом ваша аудитория находит компании вашего профиля и принимает решение о сотрудничестве, если не через сайт (прямые продажи, выставки, рекомендации, тендеры, отраслевые площадки)?",
+          "Идеальный результат: какое впечатление должен унести посетитель и какое действие совершить, чтобы вы считали сайт работающим?",
+          "Конкуренты и образцы: чьи сайты в вашей отрасли вы считаете образцовыми? Назовите компании и ссылки — и скажите, что вам в них нравится, а что считаете неудачным.",
+          "Чем компания принципиально отличается: в чём ваше преимущество перед конкурентами (подход, опыт, результаты, экспертиза, масштаб, узкая специализация)?",
+          "Карта сайта: какие разделы обязательны (о компании и её история, услуги и направления, проекты и кейсы, команда, пресс-центр, карьера, контакты и офисы, личный кабинет клиента)? Укажите приоритет, если он есть.",
+          "Услуги и продукты в деталях: насколько подробно раскрывается каждая услуга — можно ли скачать презентацию или коммерческое предложение, заказать расчёт под задачу, увидеть состав сложной услуги и тарифы?",
+          "Карьера и вакансии: нужен ли раздел с откликом на вакансии (отбор по городу и подразделению, загрузка резюме, связь с внешними площадками найма или внутренней системой подбора)?",
+          "Пресс-центр и публикации: нужна ли публикация новостей, статей, отчётов, набора материалов для прессы и подписка на рассылку? Как часто это будет обновляться?",
+          "Доказательства: что вы хотите показать в подтверждение своего уровня (кейсы, отзывы, цифры и факты, известные клиенты, награды, сертификаты, публикации в СМИ)?",
+          "Стиль и тон: какое впечатление должен передавать сайт (экспертный, премиальный, современный, строгий, дружелюбный, инновационный)? Есть ли референсы, которые вам нравятся?",
+          "Языки и регионы: нужна ли поддержка нескольких языков и выбор офиса или филиала в зависимости от того, откуда пришёл посетитель?",
+          "Куда идут обращения: где должны оказываться заявки, запросы предложений и отклики на вакансии (корпоративная CRM, учётная система, почта конкретного отдела, уведомление ответственному в мессенджер)?",
+          "Кто наполняет сайт: кто будет добавлять новости и вакансии после запуска — маркетолог компании, подрядчик, никто? Нужен ли простой сборщик страниц и разграничение прав между теми, кто пишет, и теми, кто публикует?",
+          "Безопасность и требования: есть ли особые требования к данным и работе сайта (обработка персональных данных и согласия на неё, где размещаются серверы, защита от массовых атак, сроки запуска)?"
         ]
       },
       "media": {
