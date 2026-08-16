@@ -1876,6 +1876,42 @@
           "Technical and practical constraints: is there anything to be known upfront (an installable app, languages, connections to payment services and accounting systems, the number of bookings you expect a day, a launch deadline, who will run the system)?"
         ]
       },
+      "qr-menu": {
+        "title": "Digital menu",
+        "tagline": "A table, a phone and the kitchen",
+        "definition": "A menu the guest opens on their own phone at the table. One decision defines the product: does it only show the dishes, or does it take the order and the payment? In the second case a till, a kitchen, a table number and a stop list grow onto it at once — and it stops being a shop window and becomes part of how the place runs.",
+        "examples": [
+          "A menu behind a code on the table instead of a laminated folder",
+          "Ordering and paying from the phone without waiting for a waiter",
+          "A chain's menu where prices and stop lists differ per venue",
+          "A menu for a tourist spot where half the guests read no Russian"
+        ],
+        "signals": [
+          "Prices change more often than you are willing to reprint",
+          "A guest waits for the waiter longer than they choose a dish",
+          "A dish runs out in the kitchen while the menu still offers it"
+        ],
+        "questions": [
+          "What the product is and how far it goes: only showing dishes behind a code on the table, taking the order, or taking the order and the payment straight from the guest's phone? Half the remaining answers depend on this.",
+          "The venue and the kitchen: what format (a restaurant with tablecloths, a café, a bar, a coffee shop, fast food, a food court, a chain) and what cuisine? What sets the place apart from the one next door?",
+          "The guests: who visits you? Describe them — how they arrive, how long they stay, in company or alone, how used they are to ordering from a phone, how many are visitors from elsewhere.",
+          "What the menu is for: what should it give the venue (showing dishes conveniently, a bigger bill, faster ordering, less load on the waiters, no reprinting costs when prices change, removing the language barrier)?",
+          "How it works today: how does a guest read the menu and order without your solution (a paper folder, a board at the counter, calling a waiter, somebody else's digital menu)?",
+          "The ideal outcome: what experience would delight the guest, raise the average bill and turn tables faster? Describe it through the guest's eyes and the manager's.",
+          "Competitors and models: which solutions do you take your bearings from? Name them with links, say what you like most and what is missing.",
+          "What sets you apart: the look, the convenience, how fast it opens, how easy it is to update, the depth of features, being built for one kind of venue?",
+          "Structure and navigation: how is the menu arranged (sections and subsections, the order of dishes, seasonal items, sets and combos, search, filtering by things like \"no meat\" or \"spicy\")? How many items in total?",
+          "The dish card: what do we show the guest (a photo or video, ingredients, allergens, calories and weight, how spicy, cooking time) and what options do they choose — how it is cooked, the sauce, the portion size, a milk substitute, paid extras?",
+          "Stop list and prices: how does an item disappear when the kitchen has run out — by hand from the panel, or by itself from the stock data? Who changes prices, and how quickly does the guest see the change?",
+          "Tables and ordering scenarios: how does the system know where the order came from (a code per table, a zone or terrace, takeaway, ordering for a set time)? Do you need \"call the waiter\" and \"bring the bill\" buttons?",
+          "The till and the kitchen: should the order land in the venue's till system by itself and print or appear on the kitchen and bar screens? Which system do you use today?",
+          "Payment, tips and splitting the bill: how does the guest pay (card, instant transfer, paying the waiter)? Do you need to split the bill between people at one table and leave a tip for the waiter?",
+          "Languages: how many languages are needed, and should the language be picked from the guest's phone by itself? Who translates the dish names — you or the system?",
+          "Upselling: how does the menu raise the bill (\"often taken with this\", sets, dish of the day, offers by time of day, extras on the card)? Where is that welcome and where would it annoy?",
+          "The staff workplace: do the waiters and the kitchen need a screen (calls from tables, new orders and confirming them, the state of the room)? Which staff may change the stop list and prices?",
+          "Technical and practical constraints: is there anything to be known upfront (working on a weak signal in the room, an installable app or only a page behind a code, a dark look, who will maintain the menu after launch, deadlines)?"
+        ]
+      },
       "learning": {
         "title": "Courses and learning",
         "tagline": "From lesson to result",
@@ -4601,6 +4637,42 @@
           "Филиалы и часовые пояса: работает ли система в нескольких точках или городах? Нужно ли показывать время в поясе клиента — для онлайн-консультаций это решает всё?",
           "Рабочее место персонала: в каком виде сотрудники видят записи (сетка дня и недели, список статусов «ждём — пришёл — завершено», карточка клиента с историей визитов, связь с кассой и учётом клиентов)? Кто вправе менять чужие записи?",
           "Технические и организационные ограничения: есть ли требования, о которых нужно знать заранее (устанавливаемое приложение, языки, связь с платёжными службами и учётными системами, ожидаемое число записей в день, сроки запуска, кто будет вести систему)?"
+        ]
+      },
+      "qr-menu": {
+        "title": "Электронное меню",
+        "tagline": "Стол, телефон и кухня",
+        "definition": "Меню, которое гость открывает со своего телефона за столом. Продукт определяется одним решением: он только показывает блюда или принимает заказ и оплату. Во втором случае к нему сразу прирастают касса, кухня, номер стола и стоп-лист — и это уже не витрина, а часть работы заведения.",
+        "examples": [
+          "Меню по коду на столе вместо папки с ламинатом",
+          "Заказ и оплата с телефона без ожидания официанта",
+          "Меню сети, где цены и стоп-листы у каждой точки свои",
+          "Меню для туристического места, где половина гостей не читает по-русски"
+        ],
+        "signals": [
+          "Цены меняются чаще, чем вы готовы печатать меню",
+          "Гость ждёт официанта дольше, чем выбирает блюдо",
+          "Блюдо кончается на кухне, а в меню оно ещё есть"
+        ],
+        "questions": [
+          "Что за продукт и до какого шага он доходит: только показать блюда по коду со стола, принять заказ, или принять заказ и оплату прямо с телефона гостя? От этого зависит половина остальных ответов.",
+          "Заведение и кухня: какой формат (ресторан со скатертями, кафе, бар, кофейня, быстрая еда, фудкорт, сеть точек) и какая кухня? Чем заведение отличается от соседнего?",
+          "Гости: кто ваши посетители? Опишите их — как приходят, надолго ли, компанией или в одиночку, привычны ли к заказу с телефона, много ли среди них приезжих.",
+          "Задача меню: что оно должно давать заведению (удобно показать блюда, поднять средний чек, ускорить заказ, снять нагрузку с официантов, убрать расходы на печать при смене цен, снять языковой барьер)?",
+          "Как сейчас: как гость знакомится с меню и делает заказ без вашего решения (бумажная папка, доска у стойки, вызов официанта, чужое электронное меню)?",
+          "Идеальный результат: какой опыт вызовет у гостя восторг, поднимет средний чек и ускорит оборот столов? Опишите его глазами гостя и глазами управляющего.",
+          "Конкуренты и образцы: на какие решения вы ориентируетесь? Назовите их и ссылки, скажите, что нравится больше всего и чего не хватает.",
+          "Чем принципиально отличаетесь: облик, удобство, скорость открытия, простота обновления, глубина возможностей, работа под определённый тип заведений?",
+          "Структура и навигация: как устроено меню (разделы и подразделы, порядок блюд, сезонные позиции, наборы и комбо, поиск, отбор по признакам вроде «без мяса» или «острое»)? Сколько позиций всего?",
+          "Карточка блюда: что показываем гостю (фотография или видео, состав, аллергены, калорийность и вес, острота, время приготовления) и какие опции он выбирает — степень прожарки, соус, размер порции, замена молока, добавки за доплату?",
+          "Стоп-лист и цены: как позиция исчезает из меню, когда её нет на кухне, — вручную из панели или сама, по данным учёта? Кто меняет цены и как быстро изменение видит гость?",
+          "Столы и сценарии заказа: как система понимает, откуда пришёл заказ (свой код у каждого стола, зона или терраса, заказ навынос, заказ ко времени)? Нужны ли кнопки «позовите официанта» и «принесите счёт»?",
+          "Касса и кухня: должен ли заказ сам попадать в кассовую систему заведения и уходить на печать или экран кухни и бара? С какой системой учёта работаете сегодня?",
+          "Оплата, чаевые и счёт на компанию: как платит гость (карта, быстрый платёж, оплата у официанта)? Нужно ли делить счёт между сидящими за одним столом и оставлять чаевые официанту?",
+          "Языки: сколько языков нужно и должен ли язык определяться сам по телефону гостя? Кто переводит названия блюд — вы или система?",
+          "Допродажи: как меню повышает средний чек (подсказки «к этому часто берут», наборы, блюдо дня, акции по времени суток, добавки в карточке)? Где это уместно, а где будет раздражать?",
+          "Рабочее место персонала: нужен ли экран официанту и кухне (вызовы от столов, новые заказы и их подтверждение, состояние зала)? Кто из персонала вправе менять стоп-лист и цены?",
+          "Технические и организационные ограничения: есть ли требования, о которых нужно знать заранее (работа при слабой связи в зале, устанавливаемое приложение или только страница по коду, тёмное оформление, кто будет вести меню после запуска, сроки)?"
         ]
       },
       "learning": {
