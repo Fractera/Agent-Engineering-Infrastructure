@@ -1570,13 +1570,25 @@
           "The order is placed on the site, even when payment happens on delivery"
         ],
         "questions": [
-          "What do you sell by the piece: how many items today, and how fast does the list change?",
-          "What makes one item differ from another inside a product card: size, colour, volume, bundle?",
-          "Where do prices and stock levels come from — typed by hand, an accounting system, a supplier feed?",
-          "How does the buyer pay: card, cash on delivery, invoice for a company, instalments?",
-          "How do the goods reach the buyer: courier, pickup, post, digital delivery — and who calculates the cost?",
-          "What happens after payment: who packs the order, where do you see it, what does the buyer receive?",
-          "Returns and exchanges: in which cases, at whose expense, and who decides?"
+          "Range and business model: What exactly are you selling — categories, roughly how many products, are there variants (size, colour, configuration)? And how does the shop work: your own stock, dropshipping, a place for other sellers, or made to order?",
+          "Audience and segments: Who are your buyers? Describe every key type — retail and wholesale, private people and companies, impulse and considered purchases — along with age, income, where they live, and how often they buy things like this.",
+          "The problem and the pain: What is the main thing your shop solves for the buyer (a range no one else has, a better price, speed of delivery, ease of choosing)? Why should they buy from you and not elsewhere?",
+          "Alternatives: Where and how do buyers get goods like yours today, when your shop is not there (ordinary shops, marketplaces, classified ads, ordering from abroad)?",
+          "The ideal outcome: What is the perfect buying experience from the customer's point of view — the one that brings them back?",
+          "Competitive landscape: Who are your main competitors? Name the companies and links to their shops or marketplaces — and say what you like about them and what irritates you.",
+          "What sets you apart: what is your main difference from the competition (the range, prices, service, speed, expertise, exclusivity, the way you treat customers)?",
+          "Catalogue structure and the product page: How deep do the categories nest? Which attributes and variants must a product carry (size, colour, configuration, gallery, video)? Are the goods physical, digital, or both?",
+          "Search, filters and sorting: How does a buyer find what they need (smart search with suggestions, filters by attribute, tag and price, sorting, comparing products side by side)?",
+          "The buyer's path, cart and checkout: How does a person get from the first visit to payment? What checkout do you need — one-click purchase, a multi-step checkout, ordering without registration, an account with order history?",
+          "Payment: Which payment methods and services must be connected (bank cards, instant transfers, instalments and pay-in-parts, cryptocurrency, cash on delivery, an invoice for companies)?",
+          "Delivery and geography: How is delivery calculated and arranged (your own couriers or delivery services, pickup points and collection in person, choosing a city and a country, cost by weight and size, shipping abroad)?",
+          "Stock and availability: Where does availability data come from (typed into the panel by hand, synchronised with an accounting system, imported from a file, live stock levels)? What happens when an item runs out while an order is being placed?",
+          "The customer account and service: What does a person need once signed in (order history, favourites, product reviews and ratings, live chat, reordering in one tap)?",
+          "Marketing and retention: Do you need discount mechanics (promo codes, accumulating bonuses, a loyalty programme, struck-through prices, countdown offers, abandoned-cart emails)?",
+          "Notifications and integrations: Where and how should order status reach the buyer and the manager (push, SMS, a Telegram bot, email, passing the order into a CRM)?",
+          "Style and mood: What impression should the shop leave (premium, minimal, bright and young, expert, cosy, technical)? Do you have references you like?",
+          "Proof and trust: What do you want to show as evidence (reviews, ratings, number of sales, well-known customers, certificates, guarantees, press mentions)?",
+          "Technical, legal and practical constraints: Is there anything that has to be known upfront (several languages, several currencies, mandatory certification or product labelling, a launch deadline, who will fill the catalogue and how)?"
         ]
       },
       "saas": {
@@ -4078,13 +4090,25 @@
           "Заказ оформляется на сайте, даже если оплата при получении"
         ],
         "questions": [
-          "Что вы продаёте штучно: сколько позиций сейчас и как быстро список меняется?",
-          "Чем один товар отличается от другого внутри карточки: размер, цвет, объём, комплект?",
-          "Откуда берутся цены и остатки — вводятся руками, приходят из учётной системы, от поставщика?",
-          "Как покупатель платит: карта, при получении, счёт юрлицу, рассрочка?",
-          "Как товар доезжает: курьер, самовывоз, почта, цифровая доставка — и кто считает стоимость?",
-          "Что происходит после оплаты: кто собирает заказ, где вы его видите, что получает покупатель?",
-          "Возврат и обмен: в каких случаях, за чей счёт и кто это решает?"
+          "Ассортимент и бизнес-модель: Что именно вы продаёте — категории, примерное число товаров, есть ли вариации (размер, цвет, комплектация)? И как устроен магазин: продаёте собственный товар, работаете по дропшиппингу, площадкой для других продавцов или производите под заказ?",
+          "Целевая аудитория и сегментация: Кто ваши покупатели? Опишите все ключевые типы — розница и опт, частные лица и компании, покупки импульсивные и обдуманные, — а также возраст, доход, географию и то, как часто они покупают подобное.",
+          "Проблема и боль: Какую главную задачу магазин решает для покупателя (уникальный ассортимент, лучшая цена, скорость доставки, удобство подбора)? Почему покупать должны именно у вас?",
+          "Альтернативные решения: Где и как покупатели приобретают подобные товары сейчас, если вашего магазина нет (обычные магазины, маркетплейсы, доски объявлений, покупка за рубежом)?",
+          "Идеальный результат: Что для покупателя является идеальным опытом покупки — таким, после которого он вернётся снова?",
+          "Конкурентное окружение: Кто ваши главные конкуренты? Назовите компании и ссылки на их магазины или маркетплейсы — и скажите, что вам в них нравится, а что раздражает.",
+          "Чем вы принципиально отличаетесь: в чём ваше главное отличие от конкурентов (ассортимент, цены, сервис, скорость, экспертиза, эксклюзивность, отношение к клиенту)?",
+          "Структура каталога и карточка товара: Какова вложенность категорий? Какие характеристики и вариации обязательны у товара (размер, цвет, комплектация, галерея, видео)? Товар физический, цифровой или и тот и другой?",
+          "Поиск, фильтры и сортировка: Как покупатель находит нужное (умный поиск с подсказками, фильтры по параметрам, тегам и цене, сортировка, сравнение товаров между собой)?",
+          "Путь покупателя, корзина и оформление заказа: Как человек проходит путь от первого захода до оплаты? Какое оформление нужно — покупка в один клик, многошаговое оформление, заказ без регистрации, личный кабинет с историей?",
+          "Оплата: Какие способы и службы оплаты нужно подключить (банковские карты, быстрые платежи, рассрочка и оплата долями, криптовалюта, оплата при получении, счёт для юридических лиц)?",
+          "Доставка и гео-логика: Как рассчитывается и оформляется доставка (свои курьеры или службы доставки, пункты выдачи и самовывоз, выбор города и страны, расчёт по весу и габаритам, международная отправка)?",
+          "Склад и остатки: Откуда берутся данные о наличии (ручной ввод в панели, синхронизация с 1С или МойСклад, импорт файлом, остатки в реальном времени)? Что происходит, когда товар заканчивается во время оформления заказа?",
+          "Личный кабинет и сервис для покупателя: Какие возможности нужны человеку после входа (история заказов, избранное, отзывы и рейтинги товаров, онлайн-чат, повторный заказ в одно нажатие)?",
+          "Маркетинг и удержание: Нужны ли скидочные механизмы (промокоды, накопительные бонусы, программа лояльности, зачёркнутые цены, таймеры акций, письма о брошенной корзине)?",
+          "Уведомления и интеграции: Куда и как сообщать о статусе заказа покупателю и менеджеру (push, SMS, Telegram-бот, письма, передача заказа в CRM)?",
+          "Стиль и атмосфера: Какое впечатление должен оставлять магазин (премиум, минимализм, яркий и молодёжный, экспертный, уютный, технологичный)? Есть ли референсы, которые вам нравятся?",
+          "Доказательства и социальное доказательство: Что вы хотите показать в подтверждение (отзывы, рейтинги, число продаж, известные покупатели, сертификаты, гарантии, упоминания в СМИ)?",
+          "Технические, юридические и организационные ограничения: Есть ли требования, о которых нужно знать заранее (мультиязычность, несколько валют, обязательная сертификация или маркировка товара, сроки запуска, кто и как будет наполнять каталог)?"
         ]
       },
       "saas": {
