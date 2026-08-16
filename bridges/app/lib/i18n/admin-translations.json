@@ -1750,13 +1750,24 @@
           "The reader has to be held until the next piece"
         ],
         "questions": [
-          "What do you write about and for whom — say it as a subject, not as a section name?",
-          "Who writes: you, an editorial team, invited authors, a model?",
-          "How often does material come out, and how long is one piece?",
-          "By which sections and tags does a reader search, and which of them matter most for search engines?",
-          "How does the audience earn you money: advertising, subscription, your own product, affiliate links?",
-          "What should the reader do after the text: subscribe, buy, share, read the next one?",
-          "Is any material closed to some readers, and what opens the access?"
+          "The kind of project and its job: what are you making (a personal blog, a themed publication, a news site, an expert journal, a podcast platform, a blog alongside your main business)? And what should it bring — an audience, money, a name, support for the main business, a community?",
+          "Topics and formats: what will you write about and in what form (short news, long analyses, reviews, guides, interviews, video, podcasts, letters to subscribers)? Which sections matter most and how deep do the pieces go?",
+          "Audience: who are your readers? Describe every type — how deep they are in the subject, age, occupation, what concerns them — and why they will come back to you specifically.",
+          "The problem and the pain: what shortage of information do you close (no decent analysis in the niche, no independent view, industry news arriving as a stream with no meaning)?",
+          "How they read today: where does your audience get this kind of material now (messenger channels, social networks, video platforms, competing publications, newsletters)?",
+          "The ideal outcome: what experience turns a chance visitor into a regular reader? What habit do you want to form — coming daily, waiting for a weekly letter, reading everything you publish?",
+          "Competitors and models: which publications and platforms do you take your bearings from? Name them with links, and say what you like and what is missing in them.",
+          "What sets you apart: the angle, the format, the depth, the delivery, the expertise, the regularity?",
+          "Who writes and how often: who creates the material — you personally, an in-house team, invited authors, the readers themselves, help from a model? How many pieces a week can you realistically publish, and who takes over when you run out of time?",
+          "Sections and search: how does a reader find what they want (a hierarchy of sections, tags, editor's collections, special projects, what is being read right now, search across the site)?",
+          "How an article reads: what must be in the piece itself (reading time, a table of contents with jumps, a spoken version, footnotes and pull quotes, galleries, callouts, a dark theme)?",
+          "Recommendations and links between pieces: how is the \"read next\" block assembled (by shared tags, by what others read, a personal feed for a signed-in reader)? How clever must this be at launch?",
+          "Community and engagement: do you need threaded comments, reactions, bookmarks, ratings of pieces, author reputation, sharing? Who moderates it and how?",
+          "Monetisation: how does the project earn (advertising and sponsored pieces, a paid subscription for part of the articles, donations to authors, sponsored projects, selling your own goods)? What stays free forever?",
+          "Reach and distribution: what is needed to grow (sitemaps and social-network markup, subscription feeds, automatic announcements to messengers and social networks, letters to subscribers)? What share of the audience should arrive from search?",
+          "The editorial workplace: what do the people who publish need (scheduling a piece for later, a comfortable text editor, two people working on one draft, comment moderation, a split of roles — author, editor, proofreader)?",
+          "Style and mood: what should the publication look like (formal and businesslike, warm and personal, bold, academic, minimal)? Are there examples you like?",
+          "Technical and practical constraints: is there anything to be known upfront (an installable app, several languages, the traffic you expect, a launch deadline, who will run the site after launch)?"
         ]
       },
       "marketplace": {
@@ -4446,13 +4457,24 @@
           "Читателя нужно удержать до следующего текста"
         ],
         "questions": [
-          "О чём вы пишете и для кого — назовите темой, а не именем рубрики?",
-          "Кто пишет: вы, редакция, приглашённые авторы, модель?",
-          "Как часто выходит материал и какого он объёма?",
-          "По каким рубрикам и меткам ищет читатель и что из этого важнее для поиска?",
-          "Чем аудитория зарабатывает вам деньги: реклама, подписка, свой продукт, партнёрские ссылки?",
-          "Что читатель должен сделать после текста: подписаться, купить, поделиться, прочесть следующий?",
-          "Есть ли материалы, закрытые не для всех, и что открывает доступ?"
+          "Тип проекта и его задача: что вы создаёте (личный блог, тематическое медиа, новостной сайт, экспертный журнал, площадка подкастов, блог при основном деле)? И что он должен приносить — аудиторию, деньги, имя, поддержку основного бизнеса, сообщество?",
+          "Темы и форматы: о чём будете писать и в каком виде (короткие новости, длинные разборы, обзоры, руководства, интервью, видео, подкасты, письма подписчикам)? Какие рубрики главные и насколько глубоки материалы?",
+          "Целевая аудитория: кто ваши читатели? Опишите все типы — уровень погружения в тему, возраст, занятие, что их волнует — и зачем они будут возвращаться именно к вам.",
+          "Проблема и боль: какую информационную нехватку вы закрываете (в нише нет качественного разбора, нет независимого взгляда, отраслевые новости идут потоком без смысла)?",
+          "Как читают сейчас: где ваша аудитория берёт такой материал сегодня (каналы в мессенджерах, социальные сети, видеоплощадки, конкурирующие издания, рассылки)?",
+          "Идеальный результат: какой опыт превратит случайного посетителя в постоянного читателя? Какую привычку вы хотите у него сформировать — заходить ежедневно, ждать письма раз в неделю, читать всё подряд?",
+          "Конкуренты и образцы: на какие издания и площадки вы ориентируетесь? Назовите их и ссылки, скажите, что нравится и чего в них не хватает.",
+          "Чем принципиально отличаетесь: угол зрения, формат, глубина, подача, экспертиза, регулярность?",
+          "Кто пишет и как часто: кто создаёт материалы — вы лично, штатная редакция, приглашённые авторы, сами читатели, помощь модели? Сколько материалов в неделю вы реально готовы выпускать и кто отвечает за это, когда станет некогда?",
+          "Рубрикатор и поиск: как читатель находит нужное (иерархия разделов, метки, тематические подборки редакции, спецпроекты, что сейчас читают, поиск по сайту)?",
+          "Как читается статья: что должно быть в самом материале (время чтения, оглавление с переходами, озвученная версия, сноски и цитаты, галереи, врезки, тёмная тема)?",
+          "Рекомендации и связи между материалами: как собирается блок «читайте также» (по общим меткам, по тому, что читали другие, личная лента для вошедшего читателя)? Насколько это должно быть умным на старте?",
+          "Сообщество и вовлечение: нужны ли комментарии с ответами на ответы, реакции, закладки, оценки материалов, репутация авторов, возможность поделиться? Кто и как это модерирует?",
+          "Монетизация: как проект зарабатывает (реклама и партнёрские материалы, платная подписка на часть статей, пожертвования авторам, спонсорские проекты, продажа своего)? Что остаётся бесплатным всегда?",
+          "Продвижение и распространение: что нужно для роста (карты сайта и разметка для соцсетей, ленты подписки, автоматические анонсы в мессенджеры и социальные сети, письма подписчикам)? Какая часть аудитории должна приходить из поиска?",
+          "Рабочее место редакции: что нужно тем, кто публикует (отложенный выход материала, удобный редактор текста, работа над черновиком вдвоём, модерация комментариев, разделение ролей — автор, редактор, корректор)?",
+          "Стиль и атмосфера: каким должен быть облик издания (строгий и деловой, тёплый и личный, дерзкий, академичный, минималистичный)? Есть ли образцы, которые вам нравятся?",
+          "Технические и организационные ограничения: есть ли требования, о которых нужно знать заранее (устанавливаемое приложение, несколько языков, ожидаемая посещаемость, сроки запуска, кто будет вести площадку после запуска)?"
         ]
       },
       "marketplace": {
