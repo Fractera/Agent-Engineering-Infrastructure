@@ -120,7 +120,13 @@ const EMPTY: ProductsConfig = { version: 1, products: [] };
  * утечки.
  */
 export function defaultSurface(type: ProjectTypeId): ProductSurface {
-  if (type === "competitors" || type === "company-brain") return "private";
+  // 🔒 CRM ЗАКРЫТА ПО УМОЛЧАНИЮ, И ЭТО НЕ ОСТОРОЖНОСТЬ, А ЕДИНСТВЕННЫЙ ВЕРНЫЙ
+  // ОТВЕТ (2026-08-16). В ней лежат чужие персональные данные — имена, телефоны,
+  // переписка, суммы сделок. Публичный адрес, выданный ей по умолчанию, означал
+  // бы клиентскую базу, открытую миру, и узнал бы об этом владелец последним.
+  // Правило умолчания записано парой строк выше: ошибка в сторону «закрыто»
+  // стоит одного нажатия, ошибка в сторону «открыто» — утечки.
+  if (type === "competitors" || type === "company-brain" || type === "crm") return "private";
   if (type === "agents") return "headless";
   return "public";
 }

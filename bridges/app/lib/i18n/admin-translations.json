@@ -1791,6 +1791,43 @@
           "How many records do you expect — hundreds, thousands, hundreds of thousands?"
         ]
       },
+      "crm": {
+        "title": "CRM system",
+        "tagline": "An internal system, not a website",
+        "definition": "A team's workplace: leads, deals, tasks and every conversation with a client in one place. It has no visitors — it has employees with different rights, and what matters most is not how the screen looks but how the records are shaped and by what rules a deal moves along the funnel.",
+        "examples": [
+          "A sales team losing enquiries between messengers",
+          "An agency running client projects from enquiry to delivery",
+          "A clinic or service with bookings, calls and repeat visits",
+          "A company that outgrew a spreadsheet but does not want somebody else's CRM"
+        ],
+        "signals": [
+          "Enquiries arrive from several places and some of them are lost",
+          "The manager cannot see which stage each deal is standing at",
+          "Records live in spreadsheets, and every employee has their own copy"
+        ],
+        "questions": [
+          "The business and its processes: what field and what size of company is this system for? Which records are the central ones (leads, deals, clients, projects, enquiries, support tickets)?",
+          "Who works in the system: describe every role and type of user (sales people, team leads, marketing, support, administrators, outside contractors) and what each of them must be able to do.",
+          "The problem and the pain: what is the main problem the business is solving with this CRM (lost leads, no oversight of the sales team, chaos in tasks, a long deal cycle, weak analytics)?",
+          "Alternatives: how do people handle these tasks today (spreadsheets, paper notebooks, messengers, notes, somebody else's CRM that did not fit)?",
+          "The ideal outcome: what result of working in this system would leave both the manager and the team as productive and satisfied as possible?",
+          "Competitors and prior tools: which systems have you or your clients used before (amoCRM, Bitrix24, HubSpot, Salesforce, a Notion database)? What did not work, and which of their ideas are worth taking?",
+          "What must make your CRM fundamentally different from what exists (your own processes, simplicity, deep tailoring to your industry, automation, speed, price, integrations)?",
+          "The client cycle and funnels: what does the path look like from first contact to a closed deal and repeat sales? How many funnels are needed, what stages do they have, what happens at each, and by what rules does a deal move on?",
+          "Records and fields: which objects do you need (leads, contacts, companies, deals, products and services) and what fields, tags and flags must their cards carry?",
+          "Tasks and the calendar: how is task management arranged (tied to a deal or a client, deadlines, the type of task — call, meeting, email) and how are they viewed (a board, a list, a calendar)?",
+          "Modules and sections: what else must the system carry (emails and calls, documents and invoices, a knowledge base, internal team chat, a mobile app)?",
+          "Access rights: what are the rules of visibility — can a salesperson open somebody else's deal, are they allowed to export the database, who deletes records and reassigns owners? Do you need a hierarchy of managers and their teams?",
+          "Channels that create leads: which sources must automatically create a lead or a task (a form on the site, telephony, Telegram and WhatsApp, email, social networks, ad campaigns)?",
+          "Integrations with outside systems: what does the system exchange data with (accounting and stock, the website, email, ad accounts, payment services, other internal tools) and in which direction does the data flow?",
+          "Automation and triggers: what should happen without a human (assigning an owner, creating a follow-up task when the stage changes, an email or SMS to the client, a notification to the manager)?",
+          "Analytics and reporting: which summaries, charts and figures do you need (funnel conversion, average deal size, output per salesperson, how long a deal takes, lifetime value, reasons for losing)?",
+          "Import, export and migration: does an existing database need to be moved in, and in what form (spreadsheets, an export from the previous CRM)? Do you need reports and data exported out?",
+          "Interface and complexity: which system do you want — as simple and fast as possible, or flexible and powerful with many settings? Are there interfaces you like?",
+          "Technical, practical and legal constraints: is there anything to be known upfront (your own server or a cloud, how many users, requirements for protecting personal data, mobile apps, working offline, a launch deadline, who will administer the system)?"
+        ]
+      },
       "competitors": {
         "title": "Competitor intelligence",
         "tagline": "Their moves, your decisions",
@@ -4309,6 +4346,43 @@
           "Кто отвечает за достоверность и как запись обновляется, когда данные устарели?",
           "Есть ли платные места: продвижение, выделение, расширенная карточка?",
           "Сколько записей вы ожидаете — сотни, тысячи, сотни тысяч?"
+        ]
+      },
+      "crm": {
+        "title": "CRM-система",
+        "tagline": "Внутренняя система, а не сайт",
+        "definition": "Рабочее место отдела: лиды, сделки, задачи и вся переписка с клиентом в одном месте. У неё нет посетителей — есть сотрудники с разными правами, и главное здесь не вид экрана, а устройство сущностей и правила перехода сделки по воронке.",
+        "examples": [
+          "Отдел продаж, теряющий заявки между мессенджерами",
+          "Агентство, ведущее проекты клиентов от заявки до сдачи",
+          "Клиника или сервис с записью, звонками и повторными визитами",
+          "Компания, переросшая таблицу, но не желающая чужую CRM"
+        ],
+        "signals": [
+          "Заявки приходят из нескольких мест, и часть теряется",
+          "Руководитель не видит, на каком этапе стоит каждая сделка",
+          "Учёт живёт в таблицах, и у каждого сотрудника своя копия"
+        ],
+        "questions": [
+          "Бизнес и его процессы: для какой сферы и какого размера компании создаётся система? Какие сущности в ней главные (лиды, сделки, клиенты, проекты, заявки, обращения в поддержку)?",
+          "Кто работает в системе: опишите все роли и типы пользователей (менеджеры по продажам, руководители отделов, маркетологи, поддержка, администраторы, внешние подрядчики) и что каждый из них должен делать.",
+          "Проблема и боль: какую главную проблему бизнес решает этой CRM (потеря лидов, отсутствие контроля за менеджерами, хаос в задачах, долгий цикл сделки, слабая аналитика)?",
+          "Альтернативные решения: как сотрудники справляются с этими задачами сейчас (таблицы, бумажные блокноты, мессенджеры, заметки, чужая CRM, которая не подошла)?",
+          "Идеальный результат: какой результат работы в системе сделает и руководителя, и сотрудников максимально продуктивными и довольными?",
+          "Конкуренты и аналоги: какими системами вы или ваши клиенты пользовались раньше (amoCRM, Bitrix24, HubSpot, Salesforce, Мегаплан, база в Notion)? Чем они не устроили и какие решения оттуда стоит перенять?",
+          "Чем ваша CRM должна принципиально отличаться от существующих (свои процессы, простота, глубокая настройка под отрасль, автоматизация, скорость, цена, интеграции)?",
+          "Цикл клиента и воронки: как выглядит путь от первого контакта до закрытия сделки и повторных продаж? Сколько воронок нужно, какие в них этапы, что происходит на каждом и по каким правилам сделка переходит дальше?",
+          "Структура сущностей и поля: какие объекты нужны (лиды, контакты, компании, сделки, товары и услуги) и какие поля, метки и признаки должны быть в их карточках?",
+          "Задачи и календарь: как устроено управление задачами (привязка к сделке или клиенту, сроки, тип задачи — звонок, встреча, письмо) и в каком виде их смотрят (доска, список, календарь)?",
+          "Модули и разделы: что ещё обязательно должно быть в системе (письма и звонки, документы и счета, база знаний, чат внутри команды, мобильное приложение)?",
+          "Права доступа: каковы правила видимости данных — может ли менеджер открыть чужую сделку, вправе ли он выгрузить базу, кто удаляет записи и меняет ответственного? Нужна ли иерархия руководителей и подчинённых?",
+          "Каналы, создающие лиды: какие источники должны автоматически заводить лид или задачу (форма на сайте, телефония, Telegram и WhatsApp, почта, социальные сети, реклама)?",
+          "Интеграции с внешними системами: с чем система обменивается данными (учёт и склад, сайт, почта, рекламные кабинеты, платёжные сервисы, другие внутренние службы) и в какую сторону идут данные?",
+          "Автоматизация и триггеры: что должно происходить без участия человека (назначение ответственного, постановка контрольной задачи при смене этапа, письмо или SMS клиенту, уведомление руководителю)?",
+          "Аналитика и отчётность: какие сводки, графики и показатели нужны (конверсия воронки, средний чек, выработка менеджеров, срок сделки, пожизненная ценность клиента, причины отказов)?",
+          "Импорт, экспорт и переезд: нужно ли переносить существующую базу и в каком виде (таблицы, выгрузка из прежней CRM)? Нужна ли выгрузка отчётов и данных наружу?",
+          "Интерфейс и уровень сложности: какой системы вы хотите — предельно простой и быстрой или гибкой и мощной с множеством настроек? Есть ли интерфейсы, которые вам нравятся?",
+          "Технические, организационные и юридические ограничения: есть ли требования, о которых нужно знать заранее (свой сервер или облако, сколько пользователей, требования к защите персональных данных, мобильные приложения, работа без сети, сроки запуска, кто будет администрировать систему)?"
         ]
       },
       "competitors": {
