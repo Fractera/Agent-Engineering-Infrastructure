@@ -1554,150 +1554,6 @@
           "Technical and practical wishes: are there requirements or constraints (filtering projects by category, dark and light themes, several languages, a contact form, links to Behance/Dribbble/GitHub, animation, the mobile version, updating the work yourself)?"
         ]
       },
-      "store": {
-        "title": "Online store",
-        "tagline": "Goods, cart, payment, delivery",
-        "definition": "A shop window for goods that belong to you, with a cart, payment and delivery. There is one seller — you; the buyer picks from your stock and pays on the site.",
-        "examples": [
-          "Your own clothing or cosmetics brand",
-          "A shop attached to a production line",
-          "Digital goods: files, keys, access codes",
-          "A grocery shop with city delivery"
-        ],
-        "signals": [
-          "Items repeat: the same product is sold many times",
-          "You have stock levels and they change",
-          "The order is placed on the site, even when payment happens on delivery"
-        ],
-        "questions": [
-          "Range and business model: What exactly are you selling — categories, roughly how many products, are there variants (size, colour, configuration)? And how does the shop work: your own stock, dropshipping, a place for other sellers, or made to order?",
-          "Audience and segments: Who are your buyers? Describe every key type — retail and wholesale, private people and companies, impulse and considered purchases — along with age, income, where they live, and how often they buy things like this.",
-          "The problem and the pain: What is the main thing your shop solves for the buyer (a range no one else has, a better price, speed of delivery, ease of choosing)? Why should they buy from you and not elsewhere?",
-          "Alternatives: Where and how do buyers get goods like yours today, when your shop is not there (ordinary shops, marketplaces, classified ads, ordering from abroad)?",
-          "The ideal outcome: What is the perfect buying experience from the customer's point of view — the one that brings them back?",
-          "Competitive landscape: Who are your main competitors? Name the companies and links to their shops or marketplaces — and say what you like about them and what irritates you.",
-          "What sets you apart: what is your main difference from the competition (the range, prices, service, speed, expertise, exclusivity, the way you treat customers)?",
-          "Catalogue structure and the product page: How deep do the categories nest? Which attributes and variants must a product carry (size, colour, configuration, gallery, video)? Are the goods physical, digital, or both?",
-          "Search, filters and sorting: How does a buyer find what they need (smart search with suggestions, filters by attribute, tag and price, sorting, comparing products side by side)?",
-          "The buyer's path, cart and checkout: How does a person get from the first visit to payment? What checkout do you need — one-click purchase, a multi-step checkout, ordering without registration, an account with order history?",
-          "Payment: Which payment methods and services must be connected (bank cards, instant transfers, instalments and pay-in-parts, cryptocurrency, cash on delivery, an invoice for companies)?",
-          "Delivery and geography: How is delivery calculated and arranged (your own couriers or delivery services, pickup points and collection in person, choosing a city and a country, cost by weight and size, shipping abroad)?",
-          "Stock and availability: Where does availability data come from (typed into the panel by hand, synchronised with an accounting system, imported from a file, live stock levels)? What happens when an item runs out while an order is being placed?",
-          "The customer account and service: What does a person need once signed in (order history, favourites, product reviews and ratings, live chat, reordering in one tap)?",
-          "Marketing and retention: Do you need discount mechanics (promo codes, accumulating bonuses, a loyalty programme, struck-through prices, countdown offers, abandoned-cart emails)?",
-          "Notifications and integrations: Where and how should order status reach the buyer and the manager (push, SMS, a Telegram bot, email, passing the order into a CRM)?",
-          "Style and mood: What impression should the shop leave (premium, minimal, bright and young, expert, cosy, technical)? Do you have references you like?",
-          "Proof and trust: What do you want to show as evidence (reviews, ratings, number of sales, well-known customers, certificates, guarantees, press mentions)?",
-          "Technical, legal and practical constraints: Is there anything that has to be known upfront (several languages, several currencies, mandatory certification or product labelling, a launch deadline, who will fill the catalogue and how)?"
-        ]
-      },
-      "saas": {
-        "title": "SaaS",
-        "tagline": "A product on subscription",
-        "definition": "Software people pay for again and again. The value is the work it does instead of the user; every user has an account, a plan and their own data.",
-        "examples": [
-          "A bookkeeping or planning service",
-          "A tool for marketers, doctors or lawyers",
-          "A personal dashboard with calculations and reports",
-          "A team service with roles and permissions"
-        ],
-        "signals": [
-          "Money arrives repeatedly, not once",
-          "The user has an account and data of their own inside it",
-          "Your main risk is people not renewing, not people not buying"
-        ],
-        "questions": [
-          "What the product does and its main path: what exactly does a person or a company get from your service? Describe the main route — from the first sign-in to the moment the user gets the result they came for.",
-          "Audience and roles: who are your customers (private people, solo founders, small business, large companies) and who inside them uses the product — owners, managers, specialists? Describe each type: industry, size, job.",
-          "The problem and the pain: what key working task or pain do you close for this audience?",
-          "Alternatives: how is this solved today, when neither your service nor a competitor's is there (spreadsheets, somebody else's product that does not quite fit, manual work, hiring a person, not at all)?",
-          "The ideal outcome: what is the perfect result for a customer — the one that makes them renew every month? At what moment do they realise the money is well spent?",
-          "Competitors: who are your direct and indirect competitors? Name the products and links, say what you like about them and what you find weak.",
-          "What sets you apart: the approach, the features, simplicity, price, speed of adoption, being built narrowly for one industry?",
-          "The core at launch: which capabilities must be in the first version, and which can wait? Describe what the product is meaningless without.",
-          "Pricing and monetisation: how is it paid for (a free tier, a flat subscription, per user, by usage, one-off purchases, enterprise terms)? Name the plans and what each includes.",
-          "Limits and overdue payment: what happens when a user exceeds their plan or has not paid for the new period — access closes at once, the product drops to the free tier, a grace period with a warning? And what happens to their data meanwhile?",
-          "Teams and organisations: how are accounts arranged (a personal account, a shared workspace with roles, several organisations under one person)? Who invites whom, who sees what, and what happens when an employee leaves?",
-          "Taking money: which payment services and features are needed (recurring charges, invoices for companies, several currencies, taxes, refunds, changing plan mid-period)?",
-          "Sign-in and security: how do people get in (email and password, signing in through other services, single sign-on for large customers, two-step confirmation)? Do your customers impose requirements on how data is protected?",
-          "First experience and activation: how does a new user reach their first benefit (a step-by-step setup wizard, hints over the interface, ready templates and sample data, an empty screen with one button)? Within how many minutes should they see a result?",
-          "Open access and integrations: do customers need access to your API and outgoing event notifications? Which third-party systems must the product connect to first?",
-          "Metrics and the owner's workplace: what do you need to see about your own service (revenue and its growth, churn, customer lifetime, active users), and do you need a support console — find a customer, extend a subscription, sign in as them to investigate?",
-          "Interface style and complexity: what product do you want — as simple and fast as possible, or powerful and flexible with many settings? Are there interfaces worth taking as a model?",
-          "Technical and practical constraints: is there anything to be known upfront (a mobile version or app, where data is stored and what is required of it, the load you expect, a launch deadline, who will support the product after launch)?"
-        ]
-      },
-      "agents": {
-        "title": "Agentic automation",
-        "tagline": "The route is built as it goes",
-        "definition": "A system given one goal, which then decides for itself which steps will reach it: it walks through sources, reads what it finds, discards what contradicts, and assembles the rest into a document. What separates it from a schedule is that each step depends on the last — only the result is known in advance.",
-        "examples": [
-          "A market study across dozens of sources, delivered as a report",
-          "A dossier on a company or a candidate before a meeting",
-          "An industry digest with the primary sources checked",
-          "A recurring study repeated month after month"
-        ],
-        "signals": [
-          "The task does not fit one query — it takes a dozen steps",
-          "What to look for next only becomes clear from what was already found",
-          "The output is a document with conclusions, not a row of data"
-        ],
-        "questions": [
-          "Tasks for the agent: which complex multi-step jobs must it handle (a market study, a dossier on a company or candidate, a legal check, gathering analytics, content research, running a process with branches)? Name the two or three you will start with.",
-          "Your audience: who sets the task and who reads the result? Describe every type — analysts, researchers, marketers, operations managers, business owners, developers — and how willing each is to check the agent's work.",
-          "The problem and the pain: what exactly do ordinary scripts and timed automations fail to cover? What eats a person's time today — walking through a dozen sources by hand, shallow analysis, missing what matters, the difficulty of pulling scattered findings into one document?",
-          "Alternatives: how is this kind of research done today (searching and assembling a report by hand, hiring a freelancer or a consultant, buying a ready report, not at all)?",
-          "The ideal result and its form: what is the gold standard of an answer (a structured document with links to primary sources and charts, an interactive summary, filled-in tables with reasoning)? In what form should it arrive?",
-          "Competitors and peers: what are you taking your bearings from (AutoGPT, CrewAI, Devin, deep research in Perplexity, your own agent setups)? What attracts you in how they work, and what looks unnecessary?",
-          "What sets you apart — both from scheduled automation and from existing agent platforms (depth of reasoning, gathering step by step, adaptability, transparency of actions, human control)?",
-          "Stating the task and the plan: in what form does a person express the goal (a free sentence, a structured brief, a ready research template, a goal builder)? Does the agent draw up the plan itself, may it change the plan along the way, and does the person see that plan before it starts?",
-          "How the agents are arranged: one agent with a set of tools, or several with roles — planner, searcher, critic, writer? Can the owner change their roles and instructions?",
-          "Tools and sources: what may the agent use (web search, reading pages, parsing PDFs, documents and spreadsheets, calling other APIs, running code, the company's internal databases and systems, email)?",
-          "How much it decides alone: what does the agent do unasked, and where must it stop and ask (collects data only · collects and recommends · acts with confirmation · acts on its own within set bounds)? What always needs confirmation — a paid call, sending something outward, writing into another system?",
-          "Contradictions and gaps: what does the agent do when sources disagree (look for more, weigh how trustworthy each is, show the fork honestly in the report, refuse to conclude)? And what does it do when there simply is not enough data?",
-          "Depth and limits of one run: what bounds it (number of steps, number of pages read, spend on the model, total time)? What happens at the limit — does it stop dead or hand over what it managed?",
-          "Citing primary sources: how is every claim in the final document backed (a footnote with the address, a saved quote or a snapshot of the page, the date it was collected)? What should be done with a claim that has no source?",
-          "Transparency of the run: does the person watch the steps live — what the agent is searching for now, what it is reading, what it is verifying? Is a full record of the run needed for review afterwards?",
-          "Memory between runs: should the results of past studies accumulate into a shared store of knowledge, so the agent does not search twice for the same thing? How is stale knowledge told apart from current?",
-          "Templates, failures and notifications: do you need ready scenarios for frequent studies? What happens when a step fails — retry, go around, stop? How does the person learn that the work is finished or broken?",
-          "Constraints and safety: is there anything to be known upfront (hosting it yourself or in a cloud, working with confidential data, what the agent must never do at all, mandatory human oversight, a launch deadline)?"
-        ]
-      },
-      "scheduler": {
-        "title": "Scheduled automation",
-        "tagline": "A rule and a timer instead of judgement",
-        "definition": "A service that wakes itself at the appointed hour, goes where it was told, compares what it found against a condition and sends the result. There is nothing for it to decide: where judgement is needed you want an agent, here you want a rule. The product rests on three things invisible from outside — the schedule, the behaviour on failure, and the run log.",
-        "examples": [
-          "Watching a price and reporting the moment it drops",
-          "Going through incoming mail and sending one digest a day",
-          "Collecting data from sites that offer no open access",
-          "A recurring report that assembles and sends itself"
-        ],
-        "signals": [
-          "Somebody checks the same thing by hand many times a day",
-          "The rule fits into one sentence: if this, then that",
-          "What matters is not missing the moment, not having a conversation"
-        ],
-        "questions": [
-          "Scenarios first: which recurring tasks are you covering (checking mail, watching prices and discounts, collecting data from sites, recurring reports, publishing, syncing data, calling someone else's API)? List the most important — those are where it starts.",
-          "Your audience: who creates and uses these automations? Describe every type — ordinary people, freelancers, marketers, analysts, small business owners, developers — and how willing each is to work out the settings.",
-          "The problem and the pain: what is the main thing the service solves (time lost to routine, the fear of missing a deal or an important email, the need to see how a price moves)? What is most irritating about doing it by hand?",
-          "Alternatives: how do people cope today, when your service is not there (checking manually every half hour, setting alarms, hiring an assistant, writing their own scripts, not at all)?",
-          "The ideal outcome: what result would leave a person fully satisfied (a message the very minute the price drops; one digest a day instead of a stream)?",
-          "Competitors and peers: what are you taking your bearings from (Zapier, Make, n8n, IFTTT, browser extensions, narrow price trackers, hand-written scripts)? What should be borrowed from how they work, and what do you find weak?",
-          "What sets you apart: simplicity, reliability, price, how deep the automations go, ready-made templates, working without code, speed, a narrow set of scenarios instead of everything at once?",
-          "How a person builds an automation: from ready templates, a visual builder, describing the task in plain language, code, or a combination? How manageable must it be for a newcomer on the very first evening?",
-          "Schedule and triggers: which ways of starting are needed (a fixed interval such as every 15 minutes, a cron expression, particular days and hours, a one-off delayed run, a manual run, an external event, a chain of several automations)?",
-          "Firing conditions: how is the rule \"if this, then that\" described (a price below a threshold, a word found in an email, a new entry appearing, a value changed since last time)? Do you need a condition builder by mouse, or is a simple form enough?",
-          "Actions and where the result goes: what does the system do when it fires and where does the outcome land (a message in a messenger, an email, a row in a spreadsheet, a task in a tracker, a call to someone else's address, filling in a form)? Report every run, or only when there is news?",
-          "Data sources and integrations: what must the tool work with (email, sites with no open access, other people's APIs and incoming calls, news feeds, spreadsheets, databases, calendars, messengers, a CRM)? Which comes first?",
-          "Reading sites and their defences: do you need to get past obstacles when collecting data (going through intermediate servers, a full browser instead of a plain request, dealing with \"prove you are human\" checks, signing in on the target site)? How lawful is that in your case?",
-          "Failures and retries: how does the system behave when something breaks — the target site is down, the network is gone, the answer came back empty? How many times to retry, at what interval, and when and whom to tell that a task is broken?",
-          "The run log: does a person need a detailed history of every task (success or failure, response time, what exactly came back, the saved response for debugging)? How long should it be kept?",
-          "Limits and payment: how are restrictions and money arranged (how many tasks may stay switched on, the minimum check interval on a free plan, paying per run or by subscription, what happens when a limit runs out)?",
-          "Technical and practical constraints: is there anything to be known upfront (hosting it yourself or in a cloud, running around the clock, the volume of data processed, languages, a launch deadline)?"
-        ]
-      },
       "corporate": {
         "title": "Corporate website",
         "tagline": "Company, services, trust",
@@ -1770,75 +1626,40 @@
           "Technical and practical constraints: is there anything to be known upfront (an installable app, several languages, the traffic you expect, a launch deadline, who will run the site after launch)?"
         ]
       },
-      "marketplace": {
-        "title": "Marketplace",
-        "tagline": "Two sides, your platform",
-        "definition": "A platform where other people sell. You have two kinds of users — seller and buyer — and you earn on the deal between them, not on goods of your own.",
+      "directory": {
+        "title": "Catalogue and directory",
+        "tagline": "Many objects, filters, a map",
+        "definition": "A collection of objects of one kind with filters, search and often a map. Its value is completeness and accuracy; every object gives a page of its own.",
         "examples": [
-          "A classifieds board for a city or a niche",
-          "A platform of craftsmen and customers",
-          "A shop window shared by several stores",
-          "An exchange for services or rentals"
+          "A directory of a city's organisations",
+          "A catalogue of specialists or craftsmen",
+          "A database of properties",
+          "A listing of venues and events"
         ],
         "signals": [
-          "The goods or services are not yours",
-          "Sellers must be attracted separately from buyers",
-          "There is a commission, moderation and disputes"
+          "There are hundreds or thousands of objects and they are alike",
+          "People arrive asking «what is near me» or «who fits»",
+          "The data goes stale and has to be refreshed"
         ],
         "questions": [
-          "What is traded: what exactly is sold on the platform (physical goods, digital files, services and commissioned work, renting things or spaces, tickets, classified ads)? One category or several at once?",
-          "Both sides: who sells and who buys? Describe each side separately — who these people or companies are, what they do, how used they are to platforms like this.",
-          "The pain on each side: what problem do you solve for the buyer (no choice, no guarantees, hard to compare) and what for the seller (a high barrier to entry, no customers, trouble taking money)? Answer for both — they are different pains.",
-          "How they find each other today: where do buyer and seller meet without your platform (social networks, classified boards, direct arrangements, agents and intermediaries, the big marketplaces)?",
-          "The ideal outcome: what does a flawless deal look like, where the buyer got what they wanted, the seller earned, and the platform took its share? Describe it through both pairs of eyes.",
-          "Competitors and models: which platforms do you take your bearings from — the giants or the narrow ones? Name them with links, say what you like and what you find weak.",
-          "What sets you apart: a narrow niche, better matching, the size of the commission, convenience, trust, extra services?",
-          "The deal: how does it run from search to completion (found, chose, messaged the seller, paid, received, confirmed, left a review)? Where do the two sides need to talk, and at which steps does safety matter most?",
-          "How the platform earns: commission on each deal, a listing fee, a subscription for sellers, paid promotion in the results, extra services? Who pays — the seller, the buyer, or both?",
-          "How money moves: whose account does it pass through (the platform holds it until receipt is confirmed, payment goes straight to the seller, part is held as a deposit)? When does the seller get paid, and what happens to the money during a dispute?",
-          "The seller's workplace: what do they need (managing their own catalogue and prices, stock and orders, a sales summary, withdrawing what they earned, reports for their accounts)?",
-          "The buyer's account: what do they see (favourites, purchase history, tracking orders from DIFFERENT sellers at once, a cart holding items from several sellers, reordering)?",
-          "Search and matching: how does a buyer find what they want (filters by price, rating and availability, search on a map and by distance, suggestions of similar offers, sorting)? By what rule are the offers ordered?",
-          "Trust and verification: how is trust built between strangers (reviews in both directions, checking the seller's documents, a \"verified\" mark, guarantees from the platform, moderating listings)? Who checks a new seller, and when?",
-          "Disputes and refunds: how are conflicts resolved (a complaint, a review with support involved, refund scenarios, holding the payout while a dispute runs)? Who makes the final decision, and by what rules?",
-          "Delivery and fulfilment: how does the order reach the buyer (the seller ships it themselves, the platform holds stock, delivery services, collection in person, and for services — how is completion confirmed)?",
-          "Technical, geographic and practical constraints: is there anything to be known upfront (launch regions and languages, installable apps, payment services and the legal form of settlements, moderating content, a launch deadline, who will run the platform)?"
-        ]
-      },
-      "delivery": {
-        "title": "Delivery service",
-        "tagline": "Customer, courier and venue — three to an order",
-        "definition": "A platform where every order has three sides: the one who ordered, the one who carries it, and the one who hands it over. Everything rests on the map and the clock — where the courier is now, how long they will take, what it costs. A mistake in how orders are handed out costs more than any mistake in layout.",
-        "examples": [
-          "Hot food delivered from several venues",
-          "Groceries and goods from shops nearby",
-          "Courier delivery of documents and parcels across the city",
-          "A chain's own delivery arm, tired of somebody else's commission"
-        ],
-        "signals": [
-          "An order has someone who carries it, and that someone has to be assigned",
-          "The customer wants to watch their order move on a map",
-          "The price depends on distance, weight or the time of day"
-        ],
-        "questions": [
-          "The kind of service: what exactly do you deliver and in what form (hot food, groceries and goods from shops, documents and parcels, consolidated freight, door-to-door courier work, a logistics platform for business)? Within one city, between cities, or both?",
-          "The three sides and what each can do: who uses the system — customers, couriers (on foot, by bike, by car), venues and shops, dispatchers, support? Describe every side and exactly what it is allowed to do.",
-          "The problem and the pain: what is the main problem the service solves (slow delivery, high price, no oversight of couriers, poor routes, lost orders)? What irritates people most today — the customer, the courier, or the venue?",
-          "Alternatives: how do people and companies send and receive orders today, when your service is not there (other delivery firms, their own couriers, collection in person, the post, an arrangement over a messenger)?",
-          "The ideal outcome: what delivery scenario do you consider perfect — one where all three come out ahead: the customer, the courier and the business?",
-          "Competitors and peers: who are you taking your bearings from? Name the services and links, say which of their features you must have, and what you consider their weak spot.",
-          "What sets you apart: what is your main difference from the competition (speed, price, unusual delivery zones, how you work with couriers, features nobody else has)?",
-          "The life of an order: what stages does an order pass from creation to completion (created, confirmed, being prepared, courier assigned, on the way, delivered)? Who creates it, how is delivery confirmed, and what happens on a cancellation, a delay, or a refusal at the door?",
-          "Assigning the courier: how does a courier get an order — automatically to the nearest free one, an open board where the first to take it wins, or by hand through a dispatcher? What happens when nobody takes it?",
-          "Maps and location: what map work is needed (the courier live on the map, resolving the address from the device's location, building a route, delivery zones and their borders, travel time allowing for traffic)?",
-          "Working out the delivery price: how is the price to the customer formed (a flat rate, distance, weight and size, time of day, surge demand, free delivery above a certain order value)?",
-          "How the service earns: where does your own revenue come from (commission on the order, commission from the venue or the courier, a subscription, a placement fee, advertising, paid priority delivery)?",
-          "Payments and settlements: how does money move (paid on the site or in the app, cash to the courier, tips, invoicing for companies, payouts to couriers and venues — how often and to where)?",
-          "Interfaces and devices: in what form does each side work (a site for the customer, an installable app, a separate courier app with notifications, a tablet or panel for the venue, a dispatcher's workstation)?",
-          "Key features: what must be there (live tracking on the map, choosing a delivery time, chat with the courier, ratings and reviews, repeating a past order, a loyalty programme, notifications at every stage)?",
-          "Integrations: what must the service connect to (mapping services, the venues' till and accounting systems, payment services, SMS and Telegram, a CRM)?",
-          "Style and mood: what impression should the site and the app leave (fast and technical, friendly and simple, premium, young)? Do you have references you like?",
-          "Technical, geographic and practical constraints: is there anything to be known upfront (which cities and zones you launch in, installable apps, how couriers are engaged, the load you expect at peak hour, a launch deadline, who will staff the dispatch desk)?"
+          "What is catalogued: what exactly goes into the directory (companies and venues, suppliers, specialists and doctors, places, products, digital tools, people, objects of a particular industry)? How many entries do you expect in the first year?",
+          "The audience on both sides: who searches and who wants to be listed? Describe those who use the search and those whose cards live here — business owners, specialists, representatives.",
+          "What the directory is for: what should a person get (find the right thing fast, compare options, trust the data, choose a provider)? What shortage do you close — no single base in the niche, information scattered, nowhere to find honest reviews?",
+          "How they search today: where do people find and compare such things without your directory (search engines, topic chats, friends, their own spreadsheets, other directories)?",
+          "The ideal outcome: what does the flawless case look like — a person found the right entry with exact contacts and prices in ten seconds and made an informed choice? What has to be on screen for that?",
+          "Competitors and models: which directories and catalogues do you take your bearings from? Name them with links, say what you like and what is missing.",
+          "What sets you apart: depth of data, ease of search, freshness, a narrow specialisation, extra capabilities?",
+          "The structure: how is navigation arranged (sections and subsections, tags, links between entries, neighbouring categories)? By what property does a person usually start searching?",
+          "The entry card: which fields are compulsory (name, images, contacts, address) and which are particular to your niche (opening hours, price band, payment methods, licences and certificates, languages served, capacity)? These same fields become the filters.",
+          "Search and filtering: how does a person find what they need (live search by name and synonyms, filtering by dozens of properties at once, sorting by rating, popularity or newness, comparing several entries, favourites)?",
+          "Map and geography: is there a tie to location (entries on a map, searching near me, filtering by district, city or station)? Or is geography irrelevant here?",
+          "Where the data comes from: what fills the base at launch and afterwards (entered by an administrator, collected automatically from open sources, companies submit themselves, imported as a ready list)? Who checks a new entry, and by what rules?",
+          "Keeping data current: how does the directory avoid becoming a graveyard of dead phone numbers? Who updates entries and how often, what happens to those nobody has confirmed in a year, and can a visitor report an error?",
+          "Claiming a card: do you need a \"this is my company\" flow — confirming the right, editing contacts, replying to reviews, buying promotion? How do you verify the person really owns it?",
+          "Reviews and credibility: how are ratings arranged (an overall star score, detailed reviews with photos, scoring on separate criteria)? How are paid-for and vengeful reviews filtered out — pre-moderation, proof that the person was actually a customer, a right of reply?",
+          "Monetisation: how does the directory earn (paid listing or a subscription for companies, lifting an entry in the results and highlighting the card, advertising, selling the enquiries a card generates, paid access to extended data)? What stays free forever?",
+          "Pages built for search queries: should pages be generated automatically at the intersection of properties — of the kind \"this thing in that city with that condition\"? For directories this is the main source of visitors and also the main source of empty pages: how do you avoid creating the ones with nothing behind them?",
+          "Technical and practical requirements: is there anything to be known upfront (the size of the base, languages, a mobile version, links to outside data sources, who will moderate after launch, deadlines)?"
         ]
       },
       "booking": {
@@ -1912,40 +1733,41 @@
           "Technical and practical constraints: is there anything to be known upfront (working on a weak signal in the room, an installable app or only a page behind a code, a dark look, who will maintain the menu after launch, deadlines)?"
         ]
       },
-      "tours": {
-        "title": "Tours marketplace",
-        "tagline": "A place, a date and the person who will show you",
-        "definition": "A platform where a traveller looks for an experience on a particular day in a particular city, and a guide receives a confirmed booking with no messaging. It rests on three things at once: geography, the calendar, and money between two sides. Separate from a marketplace and from booking — because here there is weather, a season, and an unfamiliar city.",
+      "store": {
+        "title": "Online store",
+        "tagline": "Goods, cart, payment, delivery",
+        "definition": "A shop window for goods that belong to you, with a cart, payment and delivery. There is one seller — you; the buyer picks from your stock and pays on the site.",
         "examples": [
-          "Walks around the city led by the people who live there",
-          "A tour agency tired of running bookings through chat",
-          "The experiences of one region: mountains, sea, food",
-          "Workshops and live events for visitors"
+          "Your own clothing or cosmetics brand",
+          "A shop attached to a production line",
+          "Digital goods: files, keys, access codes",
+          "A grocery shop with city delivery"
         ],
         "signals": [
-          "A person searches not for a product but for \"what to see here on these dates\"",
-          "Every offer has its own host and its own schedule",
-          "A tour may not happen because of the weather, and nobody is to blame"
+          "Items repeat: the same product is sold many times",
+          "You have stock levels and they change",
+          "The order is placed on the site, even when payment happens on delivery"
         ],
         "questions": [
-          "What is aggregated: which tours and experiences will the platform carry (on foot and by transport, private and group, single-day and multi-day, for children, adventurous, workshops, online meetings)? Is there a specialisation — a city, a country, a theme?",
-          "Both sides: who travels and who hosts? Describe each side — travellers (alone, families, the premium end, visitors or locals) and organisers (private guides, agencies, guides who speak other languages).",
-          "The pain on each side: what do you solve for the traveller (hard to choose, afraid of being cheated, unclear whether it will happen) and for the guide (no steady stream, bookings lost in chat, time gone to arranging)?",
-          "How they find it today: where does a traveller get a tour without your platform (the hotel desk, touts on the street, ads on social networks, friends, the big aggregators)?",
-          "The ideal outcome: what does the flawless case look like — the traveller found the right thing for the right date in two moves, the guide got a confirmed booking without a single message? Describe it from both sides.",
-          "Competitors and models: which platforms do you take your bearings from? Name them with links, say what you like most and what is missing.",
-          "What sets you apart: a narrow theme, how carefully guides are chosen, convenience, price, unusual formats, a strong focus on particular cities or countries?",
-          "The traveller's path: how does it run from search to the tour itself (search and filtering, the offer's page, choosing a date, booking, payment, confirmation and a voucher, a reminder the day before, a review afterwards)? Do you need favourites and messaging with the guide beforehand?",
-          "Search, map and filters: how does a person find what they want (by city, country or landmark, on a map with meeting points, filtering by date, price, length, language of the tour, format)? What do you show someone who has not chosen a city yet?",
-          "The guide's calendar and prices: how does an organiser run their schedule (available days and hours, a gap between tours, a different number of places, a higher price in season and at weekends, closing dates by hand)?",
-          "How a booking is confirmed: instantly with immediate payment, or does the guide confirm within an agreed time? What happens when they never answer, and does the traveller see that waiting?",
-          "How the platform earns: commission on a booking, a subscription for organisers, paid promotion in the results, advertising? Who pays the commission — the traveller, the guide, or both?",
-          "How money moves: how is it settled (paid fully online and passed to the guide after the tour, a part upfront and the rest on the spot, everything on the spot)? When does the guide get paid, and what is held back during a dispute?",
-          "The organiser's workplace: what does a guide need (adding and editing programmes, photos and video, their own schedule, the list of people booked for a given date, messaging the traveller, withdrawing earnings, reports)?",
-          "Trust and quality: how are guides selected and how is trust built (checking documents and permits, reviews only after a tour that took place, ratings in both directions, handling complaints, removing someone from the platform)? Who checks a newcomer?",
-          "Cancellations, weather and force majeure: what are the refund rules when the traveller cancels (a day before, an hour before, on the day)? What happens when the guide cancels, and what when the weather is to blame — that is, nobody? Is there a penalty for a guide who does not show up?",
-          "Notifications and connections: what must be connected (maps, messages to traveller and guide about the upcoming meeting and any changes, currency conversion, organisers' calendars)? How far ahead should the reminder go?",
-          "Technical, geographic and practical constraints: is there anything to be known upfront (launch cities and countries, languages and currencies, an installable app, payment services and the legal form of settling with guides, a launch deadline, who will run the platform)?"
+          "Range and business model: What exactly are you selling — categories, roughly how many products, are there variants (size, colour, configuration)? And how does the shop work: your own stock, dropshipping, a place for other sellers, or made to order?",
+          "Audience and segments: Who are your buyers? Describe every key type — retail and wholesale, private people and companies, impulse and considered purchases — along with age, income, where they live, and how often they buy things like this.",
+          "The problem and the pain: What is the main thing your shop solves for the buyer (a range no one else has, a better price, speed of delivery, ease of choosing)? Why should they buy from you and not elsewhere?",
+          "Alternatives: Where and how do buyers get goods like yours today, when your shop is not there (ordinary shops, marketplaces, classified ads, ordering from abroad)?",
+          "The ideal outcome: What is the perfect buying experience from the customer's point of view — the one that brings them back?",
+          "Competitive landscape: Who are your main competitors? Name the companies and links to their shops or marketplaces — and say what you like about them and what irritates you.",
+          "What sets you apart: what is your main difference from the competition (the range, prices, service, speed, expertise, exclusivity, the way you treat customers)?",
+          "Catalogue structure and the product page: How deep do the categories nest? Which attributes and variants must a product carry (size, colour, configuration, gallery, video)? Are the goods physical, digital, or both?",
+          "Search, filters and sorting: How does a buyer find what they need (smart search with suggestions, filters by attribute, tag and price, sorting, comparing products side by side)?",
+          "The buyer's path, cart and checkout: How does a person get from the first visit to payment? What checkout do you need — one-click purchase, a multi-step checkout, ordering without registration, an account with order history?",
+          "Payment: Which payment methods and services must be connected (bank cards, instant transfers, instalments and pay-in-parts, cryptocurrency, cash on delivery, an invoice for companies)?",
+          "Delivery and geography: How is delivery calculated and arranged (your own couriers or delivery services, pickup points and collection in person, choosing a city and a country, cost by weight and size, shipping abroad)?",
+          "Stock and availability: Where does availability data come from (typed into the panel by hand, synchronised with an accounting system, imported from a file, live stock levels)? What happens when an item runs out while an order is being placed?",
+          "The customer account and service: What does a person need once signed in (order history, favourites, product reviews and ratings, live chat, reordering in one tap)?",
+          "Marketing and retention: Do you need discount mechanics (promo codes, accumulating bonuses, a loyalty programme, struck-through prices, countdown offers, abandoned-cart emails)?",
+          "Notifications and integrations: Where and how should order status reach the buyer and the manager (push, SMS, a Telegram bot, email, passing the order into a CRM)?",
+          "Style and mood: What impression should the shop leave (premium, minimal, bright and young, expert, cosy, technical)? Do you have references you like?",
+          "Proof and trust: What do you want to show as evidence (reviews, ratings, number of sales, well-known customers, certificates, guarantees, press mentions)?",
+          "Technical, legal and practical constraints: Is there anything that has to be known upfront (several languages, several currencies, mandatory certification or product labelling, a launch deadline, who will fill the catalogue and how)?"
         ]
       },
       "learning": {
@@ -1984,75 +1806,147 @@
           "Technical and practical constraints: is there anything to be known upfront (a course builder for authors, languages, links to payments and customer records, an installable app, how many students you expect at once, a launch deadline)?"
         ]
       },
-      "ai-coach": {
-        "title": "AI coach and mentor",
-        "tagline": "It leads a person, it does not hand out lessons",
-        "definition": "A companion that remembers you between conversations: it sets goals, asks about them unprompted, and notices what you promised a week ago. What separates it from a course is that nothing is recorded in advance — the whole product is its character, its memory, and the point at which it stops and hands the person to real specialists.",
+      "tours": {
+        "title": "Tours marketplace",
+        "tagline": "A place, a date and the person who will show you",
+        "definition": "A platform where a traveller looks for an experience on a particular day in a particular city, and a guide receives a confirmed booking with no messaging. It rests on three things at once: geography, the calendar, and money between two sides. Separate from a marketplace and from booking — because here there is weather, a season, and an unfamiliar city.",
         "examples": [
-          "A habit tracker that asks first",
-          "A career mentor for those priced out of a human coach",
-          "A weekly goal review for a founder",
-          "A trainer guiding someone to an athletic target"
+          "Walks around the city led by the people who live there",
+          "A tour agency tired of running bookings through chat",
+          "The experiences of one region: mountains, sea, food",
+          "Workshops and live events for visitors"
         ],
         "signals": [
-          "The value is in the conversation, not in pre-recorded material",
-          "Past sessions must be remembered, or everything starts from zero",
-          "People drop off without reminders, and the product must do the reminding"
+          "A person searches not for a product but for \"what to see here on these dates\"",
+          "Every offer has its own host and its own schedule",
+          "A tour may not happen because of the weather, and nobody is to blame"
         ],
         "questions": [
-          "Field and method: what area and what tasks does your coach work on (career, business, sport, habits, learning a skill, money, personal growth)? By what method does it lead — asking questions and never advising, giving direct recommendations, strictly tracking habits, playing a specific kind of expert?",
-          "Your audience: who will use the service? Describe every type of person in detail — age, occupation, level of experience, what hurts, what drives them — and how ready they are to work with an AI rather than a human.",
-          "The problem and the pain: what is the main thing the coach solves (a human mentor costs too much, discipline runs out, fear of looking foolish, decisions made alone, everything done in fits and starts)? What is stopping them most right now?",
-          "Alternatives: how do people try to solve this today, when your service is not there (working with a human specialist, a journal, videos and books, talking to friends, nothing at all)?",
-          "The ideal outcome: what change must a person reach to call this their best helper? Describe where they are after a month and after a year.",
-          "Competitors and peers: what will you be compared with? Name the services, apps, bots and human-coaching platforms, with links. What do you like about them and what do you think is weak?",
-          "What sets you apart: depth of personalisation, the way it talks, the method, having a structure, combining with a real person, techniques of your own?",
-          "Character and voice: what should the coach be like — warm and supportive, strict and demanding, analytical, provoking, funny? What does it never do? Are there examples of speech worth taking as a model?",
-          "Memory and personalisation: what does the service remember about a person, and for how long (only the current conversation, past sessions, goals and failures, habits and preferences, key facts about their life or business)? Do you need entry tests, an assessment, a programme that adapts to the answers?",
-          "How the work runs: how is the interaction arranged (free conversation at any hour, scheduled sessions, short daily check-ins, a long programme with stages, homework and checking it)? How long is one session and the whole programme?",
-          "The form of conversation: in what form does it happen (text, voice messages, a call with a synthesised voice, going through documents and screenshots the person sends)?",
-          "Goals and progress: does the person need a screen with goals and achievements (a list of goals, a habit tracker, charts of mood and productivity, a weekly summary)?",
-          "Reaching out first: how does the coach start a conversation on its own (a reminder about a goal, a message saying \"you promised to do this by Friday\", a week in review, a reaction to several days of silence)? How often is it allowed to write first?",
-          "Key features: what else must be there (a library of materials, a community, handing over to a human specialist, a link to the calendar, data from wearables, exporting one's own records)?",
-          "Money and limits: how is it paid for (a subscription, per session or per programme, free access capped at so many messages a day, a trial, corporate plans)? What exactly is limited in the free version?",
-          "Limits of competence and handover: how must the system behave with topics outside its field — a person in crisis, health, legal and financial decisions? Where and how does it direct them, and at what point does it refuse to continue on its own?",
-          "Technical and practical constraints: is there anything to be known upfront (how personal data is handled and stored, an installable app, languages, tuning to a specific user, the load you expect, a launch deadline)?"
+          "What is aggregated: which tours and experiences will the platform carry (on foot and by transport, private and group, single-day and multi-day, for children, adventurous, workshops, online meetings)? Is there a specialisation — a city, a country, a theme?",
+          "Both sides: who travels and who hosts? Describe each side — travellers (alone, families, the premium end, visitors or locals) and organisers (private guides, agencies, guides who speak other languages).",
+          "The pain on each side: what do you solve for the traveller (hard to choose, afraid of being cheated, unclear whether it will happen) and for the guide (no steady stream, bookings lost in chat, time gone to arranging)?",
+          "How they find it today: where does a traveller get a tour without your platform (the hotel desk, touts on the street, ads on social networks, friends, the big aggregators)?",
+          "The ideal outcome: what does the flawless case look like — the traveller found the right thing for the right date in two moves, the guide got a confirmed booking without a single message? Describe it from both sides.",
+          "Competitors and models: which platforms do you take your bearings from? Name them with links, say what you like most and what is missing.",
+          "What sets you apart: a narrow theme, how carefully guides are chosen, convenience, price, unusual formats, a strong focus on particular cities or countries?",
+          "The traveller's path: how does it run from search to the tour itself (search and filtering, the offer's page, choosing a date, booking, payment, confirmation and a voucher, a reminder the day before, a review afterwards)? Do you need favourites and messaging with the guide beforehand?",
+          "Search, map and filters: how does a person find what they want (by city, country or landmark, on a map with meeting points, filtering by date, price, length, language of the tour, format)? What do you show someone who has not chosen a city yet?",
+          "The guide's calendar and prices: how does an organiser run their schedule (available days and hours, a gap between tours, a different number of places, a higher price in season and at weekends, closing dates by hand)?",
+          "How a booking is confirmed: instantly with immediate payment, or does the guide confirm within an agreed time? What happens when they never answer, and does the traveller see that waiting?",
+          "How the platform earns: commission on a booking, a subscription for organisers, paid promotion in the results, advertising? Who pays the commission — the traveller, the guide, or both?",
+          "How money moves: how is it settled (paid fully online and passed to the guide after the tour, a part upfront and the rest on the spot, everything on the spot)? When does the guide get paid, and what is held back during a dispute?",
+          "The organiser's workplace: what does a guide need (adding and editing programmes, photos and video, their own schedule, the list of people booked for a given date, messaging the traveller, withdrawing earnings, reports)?",
+          "Trust and quality: how are guides selected and how is trust built (checking documents and permits, reviews only after a tour that took place, ratings in both directions, handling complaints, removing someone from the platform)? Who checks a newcomer?",
+          "Cancellations, weather and force majeure: what are the refund rules when the traveller cancels (a day before, an hour before, on the day)? What happens when the guide cancels, and what when the weather is to blame — that is, nobody? Is there a penalty for a guide who does not show up?",
+          "Notifications and connections: what must be connected (maps, messages to traveller and guide about the upcoming meeting and any changes, currency conversion, organisers' calendars)? How far ahead should the reminder go?",
+          "Technical, geographic and practical constraints: is there anything to be known upfront (launch cities and countries, languages and currencies, an installable app, payment services and the legal form of settling with guides, a launch deadline, who will run the platform)?"
         ]
       },
-      "directory": {
-        "title": "Catalogue and directory",
-        "tagline": "Many objects, filters, a map",
-        "definition": "A collection of objects of one kind with filters, search and often a map. Its value is completeness and accuracy; every object gives a page of its own.",
+      "delivery": {
+        "title": "Delivery service",
+        "tagline": "Customer, courier and venue — three to an order",
+        "definition": "A platform where every order has three sides: the one who ordered, the one who carries it, and the one who hands it over. Everything rests on the map and the clock — where the courier is now, how long they will take, what it costs. A mistake in how orders are handed out costs more than any mistake in layout.",
         "examples": [
-          "A directory of a city's organisations",
-          "A catalogue of specialists or craftsmen",
-          "A database of properties",
-          "A listing of venues and events"
+          "Hot food delivered from several venues",
+          "Groceries and goods from shops nearby",
+          "Courier delivery of documents and parcels across the city",
+          "A chain's own delivery arm, tired of somebody else's commission"
         ],
         "signals": [
-          "There are hundreds or thousands of objects and they are alike",
-          "People arrive asking «what is near me» or «who fits»",
-          "The data goes stale and has to be refreshed"
+          "An order has someone who carries it, and that someone has to be assigned",
+          "The customer wants to watch their order move on a map",
+          "The price depends on distance, weight or the time of day"
         ],
         "questions": [
-          "What is catalogued: what exactly goes into the directory (companies and venues, suppliers, specialists and doctors, places, products, digital tools, people, objects of a particular industry)? How many entries do you expect in the first year?",
-          "The audience on both sides: who searches and who wants to be listed? Describe those who use the search and those whose cards live here — business owners, specialists, representatives.",
-          "What the directory is for: what should a person get (find the right thing fast, compare options, trust the data, choose a provider)? What shortage do you close — no single base in the niche, information scattered, nowhere to find honest reviews?",
-          "How they search today: where do people find and compare such things without your directory (search engines, topic chats, friends, their own spreadsheets, other directories)?",
-          "The ideal outcome: what does the flawless case look like — a person found the right entry with exact contacts and prices in ten seconds and made an informed choice? What has to be on screen for that?",
-          "Competitors and models: which directories and catalogues do you take your bearings from? Name them with links, say what you like and what is missing.",
-          "What sets you apart: depth of data, ease of search, freshness, a narrow specialisation, extra capabilities?",
-          "The structure: how is navigation arranged (sections and subsections, tags, links between entries, neighbouring categories)? By what property does a person usually start searching?",
-          "The entry card: which fields are compulsory (name, images, contacts, address) and which are particular to your niche (opening hours, price band, payment methods, licences and certificates, languages served, capacity)? These same fields become the filters.",
-          "Search and filtering: how does a person find what they need (live search by name and synonyms, filtering by dozens of properties at once, sorting by rating, popularity or newness, comparing several entries, favourites)?",
-          "Map and geography: is there a tie to location (entries on a map, searching near me, filtering by district, city or station)? Or is geography irrelevant here?",
-          "Where the data comes from: what fills the base at launch and afterwards (entered by an administrator, collected automatically from open sources, companies submit themselves, imported as a ready list)? Who checks a new entry, and by what rules?",
-          "Keeping data current: how does the directory avoid becoming a graveyard of dead phone numbers? Who updates entries and how often, what happens to those nobody has confirmed in a year, and can a visitor report an error?",
-          "Claiming a card: do you need a \"this is my company\" flow — confirming the right, editing contacts, replying to reviews, buying promotion? How do you verify the person really owns it?",
-          "Reviews and credibility: how are ratings arranged (an overall star score, detailed reviews with photos, scoring on separate criteria)? How are paid-for and vengeful reviews filtered out — pre-moderation, proof that the person was actually a customer, a right of reply?",
-          "Monetisation: how does the directory earn (paid listing or a subscription for companies, lifting an entry in the results and highlighting the card, advertising, selling the enquiries a card generates, paid access to extended data)? What stays free forever?",
-          "Pages built for search queries: should pages be generated automatically at the intersection of properties — of the kind \"this thing in that city with that condition\"? For directories this is the main source of visitors and also the main source of empty pages: how do you avoid creating the ones with nothing behind them?",
-          "Technical and practical requirements: is there anything to be known upfront (the size of the base, languages, a mobile version, links to outside data sources, who will moderate after launch, deadlines)?"
+          "The kind of service: what exactly do you deliver and in what form (hot food, groceries and goods from shops, documents and parcels, consolidated freight, door-to-door courier work, a logistics platform for business)? Within one city, between cities, or both?",
+          "The three sides and what each can do: who uses the system — customers, couriers (on foot, by bike, by car), venues and shops, dispatchers, support? Describe every side and exactly what it is allowed to do.",
+          "The problem and the pain: what is the main problem the service solves (slow delivery, high price, no oversight of couriers, poor routes, lost orders)? What irritates people most today — the customer, the courier, or the venue?",
+          "Alternatives: how do people and companies send and receive orders today, when your service is not there (other delivery firms, their own couriers, collection in person, the post, an arrangement over a messenger)?",
+          "The ideal outcome: what delivery scenario do you consider perfect — one where all three come out ahead: the customer, the courier and the business?",
+          "Competitors and peers: who are you taking your bearings from? Name the services and links, say which of their features you must have, and what you consider their weak spot.",
+          "What sets you apart: what is your main difference from the competition (speed, price, unusual delivery zones, how you work with couriers, features nobody else has)?",
+          "The life of an order: what stages does an order pass from creation to completion (created, confirmed, being prepared, courier assigned, on the way, delivered)? Who creates it, how is delivery confirmed, and what happens on a cancellation, a delay, or a refusal at the door?",
+          "Assigning the courier: how does a courier get an order — automatically to the nearest free one, an open board where the first to take it wins, or by hand through a dispatcher? What happens when nobody takes it?",
+          "Maps and location: what map work is needed (the courier live on the map, resolving the address from the device's location, building a route, delivery zones and their borders, travel time allowing for traffic)?",
+          "Working out the delivery price: how is the price to the customer formed (a flat rate, distance, weight and size, time of day, surge demand, free delivery above a certain order value)?",
+          "How the service earns: where does your own revenue come from (commission on the order, commission from the venue or the courier, a subscription, a placement fee, advertising, paid priority delivery)?",
+          "Payments and settlements: how does money move (paid on the site or in the app, cash to the courier, tips, invoicing for companies, payouts to couriers and venues — how often and to where)?",
+          "Interfaces and devices: in what form does each side work (a site for the customer, an installable app, a separate courier app with notifications, a tablet or panel for the venue, a dispatcher's workstation)?",
+          "Key features: what must be there (live tracking on the map, choosing a delivery time, chat with the courier, ratings and reviews, repeating a past order, a loyalty programme, notifications at every stage)?",
+          "Integrations: what must the service connect to (mapping services, the venues' till and accounting systems, payment services, SMS and Telegram, a CRM)?",
+          "Style and mood: what impression should the site and the app leave (fast and technical, friendly and simple, premium, young)? Do you have references you like?",
+          "Technical, geographic and practical constraints: is there anything to be known upfront (which cities and zones you launch in, installable apps, how couriers are engaged, the load you expect at peak hour, a launch deadline, who will staff the dispatch desk)?"
+        ]
+      },
+      "marketplace": {
+        "title": "Marketplace",
+        "tagline": "Two sides, your platform",
+        "definition": "A platform where other people sell. You have two kinds of users — seller and buyer — and you earn on the deal between them, not on goods of your own.",
+        "examples": [
+          "A classifieds board for a city or a niche",
+          "A platform of craftsmen and customers",
+          "A shop window shared by several stores",
+          "An exchange for services or rentals"
+        ],
+        "signals": [
+          "The goods or services are not yours",
+          "Sellers must be attracted separately from buyers",
+          "There is a commission, moderation and disputes"
+        ],
+        "questions": [
+          "What is traded: what exactly is sold on the platform (physical goods, digital files, services and commissioned work, renting things or spaces, tickets, classified ads)? One category or several at once?",
+          "Both sides: who sells and who buys? Describe each side separately — who these people or companies are, what they do, how used they are to platforms like this.",
+          "The pain on each side: what problem do you solve for the buyer (no choice, no guarantees, hard to compare) and what for the seller (a high barrier to entry, no customers, trouble taking money)? Answer for both — they are different pains.",
+          "How they find each other today: where do buyer and seller meet without your platform (social networks, classified boards, direct arrangements, agents and intermediaries, the big marketplaces)?",
+          "The ideal outcome: what does a flawless deal look like, where the buyer got what they wanted, the seller earned, and the platform took its share? Describe it through both pairs of eyes.",
+          "Competitors and models: which platforms do you take your bearings from — the giants or the narrow ones? Name them with links, say what you like and what you find weak.",
+          "What sets you apart: a narrow niche, better matching, the size of the commission, convenience, trust, extra services?",
+          "The deal: how does it run from search to completion (found, chose, messaged the seller, paid, received, confirmed, left a review)? Where do the two sides need to talk, and at which steps does safety matter most?",
+          "How the platform earns: commission on each deal, a listing fee, a subscription for sellers, paid promotion in the results, extra services? Who pays — the seller, the buyer, or both?",
+          "How money moves: whose account does it pass through (the platform holds it until receipt is confirmed, payment goes straight to the seller, part is held as a deposit)? When does the seller get paid, and what happens to the money during a dispute?",
+          "The seller's workplace: what do they need (managing their own catalogue and prices, stock and orders, a sales summary, withdrawing what they earned, reports for their accounts)?",
+          "The buyer's account: what do they see (favourites, purchase history, tracking orders from DIFFERENT sellers at once, a cart holding items from several sellers, reordering)?",
+          "Search and matching: how does a buyer find what they want (filters by price, rating and availability, search on a map and by distance, suggestions of similar offers, sorting)? By what rule are the offers ordered?",
+          "Trust and verification: how is trust built between strangers (reviews in both directions, checking the seller's documents, a \"verified\" mark, guarantees from the platform, moderating listings)? Who checks a new seller, and when?",
+          "Disputes and refunds: how are conflicts resolved (a complaint, a review with support involved, refund scenarios, holding the payout while a dispute runs)? Who makes the final decision, and by what rules?",
+          "Delivery and fulfilment: how does the order reach the buyer (the seller ships it themselves, the platform holds stock, delivery services, collection in person, and for services — how is completion confirmed)?",
+          "Technical, geographic and practical constraints: is there anything to be known upfront (launch regions and languages, installable apps, payment services and the legal form of settlements, moderating content, a launch deadline, who will run the platform)?"
+        ]
+      },
+      "saas": {
+        "title": "SaaS",
+        "tagline": "A product on subscription",
+        "definition": "Software people pay for again and again. The value is the work it does instead of the user; every user has an account, a plan and their own data.",
+        "examples": [
+          "A bookkeeping or planning service",
+          "A tool for marketers, doctors or lawyers",
+          "A personal dashboard with calculations and reports",
+          "A team service with roles and permissions"
+        ],
+        "signals": [
+          "Money arrives repeatedly, not once",
+          "The user has an account and data of their own inside it",
+          "Your main risk is people not renewing, not people not buying"
+        ],
+        "questions": [
+          "What the product does and its main path: what exactly does a person or a company get from your service? Describe the main route — from the first sign-in to the moment the user gets the result they came for.",
+          "Audience and roles: who are your customers (private people, solo founders, small business, large companies) and who inside them uses the product — owners, managers, specialists? Describe each type: industry, size, job.",
+          "The problem and the pain: what key working task or pain do you close for this audience?",
+          "Alternatives: how is this solved today, when neither your service nor a competitor's is there (spreadsheets, somebody else's product that does not quite fit, manual work, hiring a person, not at all)?",
+          "The ideal outcome: what is the perfect result for a customer — the one that makes them renew every month? At what moment do they realise the money is well spent?",
+          "Competitors: who are your direct and indirect competitors? Name the products and links, say what you like about them and what you find weak.",
+          "What sets you apart: the approach, the features, simplicity, price, speed of adoption, being built narrowly for one industry?",
+          "The core at launch: which capabilities must be in the first version, and which can wait? Describe what the product is meaningless without.",
+          "Pricing and monetisation: how is it paid for (a free tier, a flat subscription, per user, by usage, one-off purchases, enterprise terms)? Name the plans and what each includes.",
+          "Limits and overdue payment: what happens when a user exceeds their plan or has not paid for the new period — access closes at once, the product drops to the free tier, a grace period with a warning? And what happens to their data meanwhile?",
+          "Teams and organisations: how are accounts arranged (a personal account, a shared workspace with roles, several organisations under one person)? Who invites whom, who sees what, and what happens when an employee leaves?",
+          "Taking money: which payment services and features are needed (recurring charges, invoices for companies, several currencies, taxes, refunds, changing plan mid-period)?",
+          "Sign-in and security: how do people get in (email and password, signing in through other services, single sign-on for large customers, two-step confirmation)? Do your customers impose requirements on how data is protected?",
+          "First experience and activation: how does a new user reach their first benefit (a step-by-step setup wizard, hints over the interface, ready templates and sample data, an empty screen with one button)? Within how many minutes should they see a result?",
+          "Open access and integrations: do customers need access to your API and outgoing event notifications? Which third-party systems must the product connect to first?",
+          "Metrics and the owner's workplace: what do you need to see about your own service (revenue and its growth, churn, customer lifetime, active users), and do you need a support console — find a customer, extend a subscription, sign in as them to investigate?",
+          "Interface style and complexity: what product do you want — as simple and fast as possible, or powerful and flexible with many settings? Are there interfaces worth taking as a model?",
+          "Technical and practical constraints: is there anything to be known upfront (a mobile version or app, where data is stored and what is required of it, the load you expect, a launch deadline, who will support the product after launch)?"
         ]
       },
       "crm": {
@@ -2090,6 +1984,112 @@
           "Import, export and migration: does an existing database need to be moved in, and in what form (spreadsheets, an export from the previous CRM)? Do you need reports and data exported out?",
           "Interface and complexity: which system do you want — as simple and fast as possible, or flexible and powerful with many settings? Are there interfaces you like?",
           "Technical, practical and legal constraints: is there anything to be known upfront (your own server or a cloud, how many users, requirements for protecting personal data, mobile apps, working offline, a launch deadline, who will administer the system)?"
+        ]
+      },
+      "scheduler": {
+        "title": "Scheduled automation",
+        "tagline": "A rule and a timer instead of judgement",
+        "definition": "A service that wakes itself at the appointed hour, goes where it was told, compares what it found against a condition and sends the result. There is nothing for it to decide: where judgement is needed you want an agent, here you want a rule. The product rests on three things invisible from outside — the schedule, the behaviour on failure, and the run log.",
+        "examples": [
+          "Watching a price and reporting the moment it drops",
+          "Going through incoming mail and sending one digest a day",
+          "Collecting data from sites that offer no open access",
+          "A recurring report that assembles and sends itself"
+        ],
+        "signals": [
+          "Somebody checks the same thing by hand many times a day",
+          "The rule fits into one sentence: if this, then that",
+          "What matters is not missing the moment, not having a conversation"
+        ],
+        "questions": [
+          "Scenarios first: which recurring tasks are you covering (checking mail, watching prices and discounts, collecting data from sites, recurring reports, publishing, syncing data, calling someone else's API)? List the most important — those are where it starts.",
+          "Your audience: who creates and uses these automations? Describe every type — ordinary people, freelancers, marketers, analysts, small business owners, developers — and how willing each is to work out the settings.",
+          "The problem and the pain: what is the main thing the service solves (time lost to routine, the fear of missing a deal or an important email, the need to see how a price moves)? What is most irritating about doing it by hand?",
+          "Alternatives: how do people cope today, when your service is not there (checking manually every half hour, setting alarms, hiring an assistant, writing their own scripts, not at all)?",
+          "The ideal outcome: what result would leave a person fully satisfied (a message the very minute the price drops; one digest a day instead of a stream)?",
+          "Competitors and peers: what are you taking your bearings from (Zapier, Make, n8n, IFTTT, browser extensions, narrow price trackers, hand-written scripts)? What should be borrowed from how they work, and what do you find weak?",
+          "What sets you apart: simplicity, reliability, price, how deep the automations go, ready-made templates, working without code, speed, a narrow set of scenarios instead of everything at once?",
+          "How a person builds an automation: from ready templates, a visual builder, describing the task in plain language, code, or a combination? How manageable must it be for a newcomer on the very first evening?",
+          "Schedule and triggers: which ways of starting are needed (a fixed interval such as every 15 minutes, a cron expression, particular days and hours, a one-off delayed run, a manual run, an external event, a chain of several automations)?",
+          "Firing conditions: how is the rule \"if this, then that\" described (a price below a threshold, a word found in an email, a new entry appearing, a value changed since last time)? Do you need a condition builder by mouse, or is a simple form enough?",
+          "Actions and where the result goes: what does the system do when it fires and where does the outcome land (a message in a messenger, an email, a row in a spreadsheet, a task in a tracker, a call to someone else's address, filling in a form)? Report every run, or only when there is news?",
+          "Data sources and integrations: what must the tool work with (email, sites with no open access, other people's APIs and incoming calls, news feeds, spreadsheets, databases, calendars, messengers, a CRM)? Which comes first?",
+          "Reading sites and their defences: do you need to get past obstacles when collecting data (going through intermediate servers, a full browser instead of a plain request, dealing with \"prove you are human\" checks, signing in on the target site)? How lawful is that in your case?",
+          "Failures and retries: how does the system behave when something breaks — the target site is down, the network is gone, the answer came back empty? How many times to retry, at what interval, and when and whom to tell that a task is broken?",
+          "The run log: does a person need a detailed history of every task (success or failure, response time, what exactly came back, the saved response for debugging)? How long should it be kept?",
+          "Limits and payment: how are restrictions and money arranged (how many tasks may stay switched on, the minimum check interval on a free plan, paying per run or by subscription, what happens when a limit runs out)?",
+          "Technical and practical constraints: is there anything to be known upfront (hosting it yourself or in a cloud, running around the clock, the volume of data processed, languages, a launch deadline)?"
+        ]
+      },
+      "ai-coach": {
+        "title": "AI coach and mentor",
+        "tagline": "It leads a person, it does not hand out lessons",
+        "definition": "A companion that remembers you between conversations: it sets goals, asks about them unprompted, and notices what you promised a week ago. What separates it from a course is that nothing is recorded in advance — the whole product is its character, its memory, and the point at which it stops and hands the person to real specialists.",
+        "examples": [
+          "A habit tracker that asks first",
+          "A career mentor for those priced out of a human coach",
+          "A weekly goal review for a founder",
+          "A trainer guiding someone to an athletic target"
+        ],
+        "signals": [
+          "The value is in the conversation, not in pre-recorded material",
+          "Past sessions must be remembered, or everything starts from zero",
+          "People drop off without reminders, and the product must do the reminding"
+        ],
+        "questions": [
+          "Field and method: what area and what tasks does your coach work on (career, business, sport, habits, learning a skill, money, personal growth)? By what method does it lead — asking questions and never advising, giving direct recommendations, strictly tracking habits, playing a specific kind of expert?",
+          "Your audience: who will use the service? Describe every type of person in detail — age, occupation, level of experience, what hurts, what drives them — and how ready they are to work with an AI rather than a human.",
+          "The problem and the pain: what is the main thing the coach solves (a human mentor costs too much, discipline runs out, fear of looking foolish, decisions made alone, everything done in fits and starts)? What is stopping them most right now?",
+          "Alternatives: how do people try to solve this today, when your service is not there (working with a human specialist, a journal, videos and books, talking to friends, nothing at all)?",
+          "The ideal outcome: what change must a person reach to call this their best helper? Describe where they are after a month and after a year.",
+          "Competitors and peers: what will you be compared with? Name the services, apps, bots and human-coaching platforms, with links. What do you like about them and what do you think is weak?",
+          "What sets you apart: depth of personalisation, the way it talks, the method, having a structure, combining with a real person, techniques of your own?",
+          "Character and voice: what should the coach be like — warm and supportive, strict and demanding, analytical, provoking, funny? What does it never do? Are there examples of speech worth taking as a model?",
+          "Memory and personalisation: what does the service remember about a person, and for how long (only the current conversation, past sessions, goals and failures, habits and preferences, key facts about their life or business)? Do you need entry tests, an assessment, a programme that adapts to the answers?",
+          "How the work runs: how is the interaction arranged (free conversation at any hour, scheduled sessions, short daily check-ins, a long programme with stages, homework and checking it)? How long is one session and the whole programme?",
+          "The form of conversation: in what form does it happen (text, voice messages, a call with a synthesised voice, going through documents and screenshots the person sends)?",
+          "Goals and progress: does the person need a screen with goals and achievements (a list of goals, a habit tracker, charts of mood and productivity, a weekly summary)?",
+          "Reaching out first: how does the coach start a conversation on its own (a reminder about a goal, a message saying \"you promised to do this by Friday\", a week in review, a reaction to several days of silence)? How often is it allowed to write first?",
+          "Key features: what else must be there (a library of materials, a community, handing over to a human specialist, a link to the calendar, data from wearables, exporting one's own records)?",
+          "Money and limits: how is it paid for (a subscription, per session or per programme, free access capped at so many messages a day, a trial, corporate plans)? What exactly is limited in the free version?",
+          "Limits of competence and handover: how must the system behave with topics outside its field — a person in crisis, health, legal and financial decisions? Where and how does it direct them, and at what point does it refuse to continue on its own?",
+          "Technical and practical constraints: is there anything to be known upfront (how personal data is handled and stored, an installable app, languages, tuning to a specific user, the load you expect, a launch deadline)?"
+        ]
+      },
+      "agents": {
+        "title": "Agentic automation",
+        "tagline": "The route is built as it goes",
+        "definition": "A system given one goal, which then decides for itself which steps will reach it: it walks through sources, reads what it finds, discards what contradicts, and assembles the rest into a document. What separates it from a schedule is that each step depends on the last — only the result is known in advance.",
+        "examples": [
+          "A market study across dozens of sources, delivered as a report",
+          "A dossier on a company or a candidate before a meeting",
+          "An industry digest with the primary sources checked",
+          "A recurring study repeated month after month"
+        ],
+        "signals": [
+          "The task does not fit one query — it takes a dozen steps",
+          "What to look for next only becomes clear from what was already found",
+          "The output is a document with conclusions, not a row of data"
+        ],
+        "questions": [
+          "Tasks for the agent: which complex multi-step jobs must it handle (a market study, a dossier on a company or candidate, a legal check, gathering analytics, content research, running a process with branches)? Name the two or three you will start with.",
+          "Your audience: who sets the task and who reads the result? Describe every type — analysts, researchers, marketers, operations managers, business owners, developers — and how willing each is to check the agent's work.",
+          "The problem and the pain: what exactly do ordinary scripts and timed automations fail to cover? What eats a person's time today — walking through a dozen sources by hand, shallow analysis, missing what matters, the difficulty of pulling scattered findings into one document?",
+          "Alternatives: how is this kind of research done today (searching and assembling a report by hand, hiring a freelancer or a consultant, buying a ready report, not at all)?",
+          "The ideal result and its form: what is the gold standard of an answer (a structured document with links to primary sources and charts, an interactive summary, filled-in tables with reasoning)? In what form should it arrive?",
+          "Competitors and peers: what are you taking your bearings from (AutoGPT, CrewAI, Devin, deep research in Perplexity, your own agent setups)? What attracts you in how they work, and what looks unnecessary?",
+          "What sets you apart — both from scheduled automation and from existing agent platforms (depth of reasoning, gathering step by step, adaptability, transparency of actions, human control)?",
+          "Stating the task and the plan: in what form does a person express the goal (a free sentence, a structured brief, a ready research template, a goal builder)? Does the agent draw up the plan itself, may it change the plan along the way, and does the person see that plan before it starts?",
+          "How the agents are arranged: one agent with a set of tools, or several with roles — planner, searcher, critic, writer? Can the owner change their roles and instructions?",
+          "Tools and sources: what may the agent use (web search, reading pages, parsing PDFs, documents and spreadsheets, calling other APIs, running code, the company's internal databases and systems, email)?",
+          "How much it decides alone: what does the agent do unasked, and where must it stop and ask (collects data only · collects and recommends · acts with confirmation · acts on its own within set bounds)? What always needs confirmation — a paid call, sending something outward, writing into another system?",
+          "Contradictions and gaps: what does the agent do when sources disagree (look for more, weigh how trustworthy each is, show the fork honestly in the report, refuse to conclude)? And what does it do when there simply is not enough data?",
+          "Depth and limits of one run: what bounds it (number of steps, number of pages read, spend on the model, total time)? What happens at the limit — does it stop dead or hand over what it managed?",
+          "Citing primary sources: how is every claim in the final document backed (a footnote with the address, a saved quote or a snapshot of the page, the date it was collected)? What should be done with a claim that has no source?",
+          "Transparency of the run: does the person watch the steps live — what the agent is searching for now, what it is reading, what it is verifying? Is a full record of the run needed for review afterwards?",
+          "Memory between runs: should the results of past studies accumulate into a shared store of knowledge, so the agent does not search twice for the same thing? How is stale knowledge told apart from current?",
+          "Templates, failures and notifications: do you need ready scenarios for frequent studies? What happens when a step fails — retry, go around, stop? How does the person learn that the work is finished or broken?",
+          "Constraints and safety: is there anything to be known upfront (hosting it yourself or in a cloud, working with confidential data, what the agent must never do at all, mandatory human oversight, a launch deadline)?"
         ]
       },
       "competitors": {
@@ -2141,7 +2141,7 @@
         ]
       },
       "company-brain": {
-        "title": "Company brain",
+        "title": "Company brain — engineering",
         "tagline": "All the company's knowledge in one place",
         "definition": "A project that gathers what the company knows — documents, correspondence, tasks, the code base, people and their roles — puts it into structure, keeps it in your own database and gives it back as reports and as answers that cite their source.",
         "examples": [
@@ -2187,6 +2187,71 @@
           "The hypothesis behind this architecture is simple: repository maps plus meaning-based search will give a shared view of the project. Like any hypothesis, it will hold in some places and not in others. Which questions do you think it will answer well, and where will it be weak? Do you have repositories or parts of the project that fit this approach especially well or especially badly?",
           "The system reads all of the company's code, and with it whatever ended up in that code by accident. Which safety rules do we lay down from the start: what must not be shown to certain roles, what to do with keys and passwords it finds, with production settings, with employees' personal data in the change history? Are there repositories the system must never touch?"
         ]
+      },
+      "business-brain": {
+        "title": "Company brain — business",
+        "tagline": "One answer instead of six tabs",
+        "definition": "It gathers into one place everything that turns around the customer: enquiries, correspondence, calls, deals, invoices, delivery and support tickets. Anyone asks in plain words and gets an answer that would otherwise take an hour across six systems. The price of that convenience is the company's entire commercial secrecy sitting in one place.",
+        "examples": [
+          "\"What is happening with this client and why did they ask for a discount\"",
+          "A summary on a salesperson: conversion and reasons for losing",
+          "Three years of history with a supplier",
+          "A post-mortem: why the deal fell through and what preceded it"
+        ],
+        "signals": [
+          "Answering a simple question means opening several systems",
+          "What is known about a client lives in one salesperson's head",
+          "The manager learns of a problem once it has already happened"
+        ],
+        "questions": [
+          "The system brings sales, marketing, finance, delivery and support into one place, so that a question about a customer is answered not by a person with a good memory but by the company itself. What main pain of your team should this remove, and which of those areas must be in the very first version?",
+          "The value is measured by the questions it answers. Which should people ask first — \"what is happening with this client\", \"what enquiries does this salesperson have\", \"why did this deal fall through\", \"what is the history with this supplier\", \"how much did we earn from them this year\"? Which \"I cannot quickly see what is going on\" situations hurt most today?",
+          "The system's knowledge rests on a few central entities around which everything else gathers. Which are central for you — customers, deals and enquiries, salespeople, suppliers, goods and services, payments, support tickets, ad campaigns?",
+          "The same person writes from a personal mailbox, replies in a messenger and appears in the sales system under a different name. Until the system knows these are one client, there will be no complete answer. By what signs should records be joined into one person or company, and what happens in case of doubt — merge, or ask?",
+          "The result of that joining is a single card where everything about one client flows together. What do you mean by \"exhaustive information\": purchase history and sums, all correspondence and calls, support tickets, personal discounts and special arrangements, debts, salespeople's internal notes? Which of these is compulsory and which desirable?",
+          "Individual records mean little without the links between them. Should the system show which salespeople worked with a client, which suppliers stand behind which deals, which advertising brought this enquiry, and how one affected the other?",
+          "Enquiries arrive from several places at once, and a channel left out means a customer lost. Which channels must be connected (mailboxes, forms on the site, messengers, telephony with call recording, partner enquiries, marketplaces)?",
+          "The sales system is usually considered the main one, and is also the one that most often disagrees with reality. Which system must be connected, and what is its role: the single source of truth, one source among several, or may the system supplement and correct it with what it finds in correspondence and bank records? What else do we connect at the first stage?",
+          "Money is the most checkable part of an answer and the most sensitive. Where do the financial figures come from (the accounting system, stock records, bank statements, payment services, expense spreadsheets) and who is responsible for their accuracy?",
+          "The path of money begins long before the deal — at an ad impression. Which advertising and analytics systems should be connected so the road from the ad to the revenue is visible?",
+          "A sale does not end at payment: after it come the warehouse, dispatch and delivery. Which stock systems and delivery services must be connected to answer about availability, timing and the status of a particular parcel?",
+          "After the sale comes support, and that is where the truth about the product shows. How should tickets, complaints and returns be collected, and how should the system answer \"what three problems most often hit customers after buying this item, and how are they resolved\"?",
+          "A relationship with a supplier is the same kind of history as with a customer, seen from the other side. What should accumulate (purchase price history, terms and deferrals, reliability and missed dates, delivery times) and which questions must it answer?",
+          "Contracts live for years, and usually one person remembers them. Do you need search across contract texts and tracking of dates — when one expires, when it renews itself, where the special terms are?",
+          "At first launch you must decide how far back to start: the past can be loaded, but that costs time and money. How much history do we raise — a year, three, everything there is, or do we start from a clean slate? And how deep per deal: only the current state, or the whole chronology of contacts with correspondence, calls and internal comments?",
+          "Most of what is known about a customer sits not in fields but in words: long conversations, call recordings, a salesperson's notes, scanned documents. What is done with these — keep them whole, shorten to the essence, extract only facts and entities, transcribe speech and read text on images? Should the mood of a conversation be detected?",
+          "An answer is only as good as the data is fresh. How often is it refreshed — immediately on an event (an email arrived, a deal changed status), every few minutes, hourly, on a schedule? Where is a delay acceptable and where is it not?",
+          "Some answers are numbers that must be calculated rather than found. Which figures must the system compute on request (customer lifetime value, cost of acquisition, average deal size, deal margin, debts, late payments, the sales funnel, sources of enquiries, delivery load)?",
+          "A separate class of questions is about people's work. How should the system answer \"show this salesperson's conversion this month and the main reasons customers said no\"? Who may see such answers, and does the employee know they are being asked about?",
+          "A salesperson's correspondence can be not only stored but checked against how the company expects people to speak. Do you need such checking against the rulebook with mistakes highlighted — and do you understand that this is oversight of people, not only of quality?",
+          "The most valuable answer is not \"what happened\" but \"why\". Should the system explain causes: why a deal was lost, why conversion fell, why delivery was late? How far can that explanation be trusted, and must it point back at the records it came from?",
+          "A break in the supply chain shows in the data before it shows in a complaint. Should the system flag bottlenecks itself — that delivery to this customer is late because of the carrier, that a supplier's dates keep slipping?",
+          "The system can write first, without waiting for a question: \"a key client did not renew, though they always paid before the fifteenth\", \"this deal has stalled\", \"a harsh review came in\". Do you need such messages, on which events, to whom exactly, and what keeps them from becoming noise?",
+          "Data from different systems will inevitably disagree: sales says paid, the bank shows nothing. What should the system do — trust one source, show both and flag the discrepancy, raise an alarm? Who resolves it?",
+          "The answer must arrive where the person works. Through what do we talk (a messenger bot for managers, a chat inside the portal, a panel right inside the sales system, email), and which is primary at launch?",
+          "Working through a difficult client rarely fits into one question. Should the assistant hold a long conversation, remembering what was said, and ask clarifying questions — or are pinpoint answers enough?",
+          "Here, separating rights is not a convenience but a duty. May an ordinary salesperson ask the bot for the company's net profit or a colleague's salary? Which roles are needed and what does each see: their own clients, the whole team, the finances, anonymised statistics?",
+          "These data hold other people's personal details and commercial secrets. Which rules do we lay down at once: what to hide in answers (card numbers, documents, private phone numbers), how to meet data-protection law, how long to keep, how to delete on request, what to do when someone demands erasure?",
+          "Some answers are better shown than described. Should the system build charts, summary tables and exports right inside the answer — and in what form is it most convenient for you to take them?",
+          "No system knows what was never written down, and none is free of error. Do you need a way to add knowledge by hand — an important note on a client, an arrangement, a correction to a misread sum? And by what will you measure the brain's quality: speed of answer, completeness, the share of questions that got a useful answer, time saved on working things out?"
+        ]
+      },
+      "custom": {
+        "title": "Your own direction",
+        "tagline": "No questions prepared",
+        "definition": "A direction for what is not in the list above. There are no ready questions here and there will not be: you write them. The twenty sets beside it cover what could be foreseen; this one exists precisely for what could not — dropping in \"seven universal questions\" would bring back the very trouble that choosing a direction was meant to end.",
+        "examples": [
+          "A product unlike any of its neighbours",
+          "Your own industry, with its own words and rules",
+          "An internal tool for a single task",
+          "An idea that does not have a name yet"
+        ],
+        "signals": [
+          "None of the directions above describes what you are building",
+          "Ready-made questions would steer the conversation the wrong way",
+          "You know what you need to be asked better than we do"
+        ],
+        "questions": []
       }
     },
     "projectPicker": {
@@ -4421,150 +4486,6 @@
           "Технические и организационные пожелания: есть ли требования и ограничения (фильтры проектов по категориям, тёмная и светлая тема, мультиязычность, форма связи, связь с Behance/Dribbble/GitHub, анимации, мобильная версия, самостоятельное обновление работ)?"
         ]
       },
-      "store": {
-        "title": "Интернет-магазин",
-        "tagline": "Товар, корзина, оплата, доставка",
-        "definition": "Витрина ваших собственных товаров с корзиной, оплатой и доставкой. Продавец один — вы; покупатель выбирает из вашего склада и оформляет заказ на сайте.",
-        "examples": [
-          "Свой бренд одежды или косметики",
-          "Магазин при производстве",
-          "Цифровые товары: файлы, ключи, доступы",
-          "Продуктовая лавка с доставкой по городу"
-        ],
-        "signals": [
-          "Позиции повторяются: один товар продаётся много раз",
-          "Есть остатки, и они меняются",
-          "Заказ оформляется на сайте, даже если оплата при получении"
-        ],
-        "questions": [
-          "Ассортимент и бизнес-модель: Что именно вы продаёте — категории, примерное число товаров, есть ли вариации (размер, цвет, комплектация)? И как устроен магазин: продаёте собственный товар, работаете по дропшиппингу, площадкой для других продавцов или производите под заказ?",
-          "Целевая аудитория и сегментация: Кто ваши покупатели? Опишите все ключевые типы — розница и опт, частные лица и компании, покупки импульсивные и обдуманные, — а также возраст, доход, географию и то, как часто они покупают подобное.",
-          "Проблема и боль: Какую главную задачу магазин решает для покупателя (уникальный ассортимент, лучшая цена, скорость доставки, удобство подбора)? Почему покупать должны именно у вас?",
-          "Альтернативные решения: Где и как покупатели приобретают подобные товары сейчас, если вашего магазина нет (обычные магазины, маркетплейсы, доски объявлений, покупка за рубежом)?",
-          "Идеальный результат: Что для покупателя является идеальным опытом покупки — таким, после которого он вернётся снова?",
-          "Конкурентное окружение: Кто ваши главные конкуренты? Назовите компании и ссылки на их магазины или маркетплейсы — и скажите, что вам в них нравится, а что раздражает.",
-          "Чем вы принципиально отличаетесь: в чём ваше главное отличие от конкурентов (ассортимент, цены, сервис, скорость, экспертиза, эксклюзивность, отношение к клиенту)?",
-          "Структура каталога и карточка товара: Какова вложенность категорий? Какие характеристики и вариации обязательны у товара (размер, цвет, комплектация, галерея, видео)? Товар физический, цифровой или и тот и другой?",
-          "Поиск, фильтры и сортировка: Как покупатель находит нужное (умный поиск с подсказками, фильтры по параметрам, тегам и цене, сортировка, сравнение товаров между собой)?",
-          "Путь покупателя, корзина и оформление заказа: Как человек проходит путь от первого захода до оплаты? Какое оформление нужно — покупка в один клик, многошаговое оформление, заказ без регистрации, личный кабинет с историей?",
-          "Оплата: Какие способы и службы оплаты нужно подключить (банковские карты, быстрые платежи, рассрочка и оплата долями, криптовалюта, оплата при получении, счёт для юридических лиц)?",
-          "Доставка и гео-логика: Как рассчитывается и оформляется доставка (свои курьеры или службы доставки, пункты выдачи и самовывоз, выбор города и страны, расчёт по весу и габаритам, международная отправка)?",
-          "Склад и остатки: Откуда берутся данные о наличии (ручной ввод в панели, синхронизация с 1С или МойСклад, импорт файлом, остатки в реальном времени)? Что происходит, когда товар заканчивается во время оформления заказа?",
-          "Личный кабинет и сервис для покупателя: Какие возможности нужны человеку после входа (история заказов, избранное, отзывы и рейтинги товаров, онлайн-чат, повторный заказ в одно нажатие)?",
-          "Маркетинг и удержание: Нужны ли скидочные механизмы (промокоды, накопительные бонусы, программа лояльности, зачёркнутые цены, таймеры акций, письма о брошенной корзине)?",
-          "Уведомления и интеграции: Куда и как сообщать о статусе заказа покупателю и менеджеру (push, SMS, Telegram-бот, письма, передача заказа в CRM)?",
-          "Стиль и атмосфера: Какое впечатление должен оставлять магазин (премиум, минимализм, яркий и молодёжный, экспертный, уютный, технологичный)? Есть ли референсы, которые вам нравятся?",
-          "Доказательства и социальное доказательство: Что вы хотите показать в подтверждение (отзывы, рейтинги, число продаж, известные покупатели, сертификаты, гарантии, упоминания в СМИ)?",
-          "Технические, юридические и организационные ограничения: Есть ли требования, о которых нужно знать заранее (мультиязычность, несколько валют, обязательная сертификация или маркировка товара, сроки запуска, кто и как будет наполнять каталог)?"
-        ]
-      },
-      "saas": {
-        "title": "SaaS-сервис",
-        "tagline": "Продукт по подписке",
-        "definition": "Программа, за пользование которой платят регулярно. Ценность — в работе, которую она делает вместо пользователя; у каждого свой аккаунт, тариф и свои данные.",
-        "examples": [
-          "Сервис учёта или планирования",
-          "Инструмент для маркетологов, врачей, юристов",
-          "Личный кабинет с расчётами и отчётами",
-          "Сервис для команд с ролями и правами"
-        ],
-        "signals": [
-          "Деньги приходят повторно, а не один раз",
-          "У пользователя есть аккаунт и собственные данные внутри него",
-          "Главный риск — что не продлят, а не что не купят"
-        ],
-        "questions": [
-          "Задача продукта и главный сценарий: что именно человек или компания получает от вашего сервиса? Опишите основной путь — от первого входа до момента, когда пользователь получил результат, ради которого пришёл.",
-          "Целевая аудитория и роли: кто ваши клиенты (частные лица, соло-предприниматели, малый бизнес, крупные компании) и кто внутри них работает с продуктом — владельцы, руководители, рядовые специалисты? Опишите каждый тип: отрасль, размер, должность.",
-          "Проблема и боль: какую ключевую рабочую задачу или боль вы закрываете для этой аудитории?",
-          "Альтернативные решения: как эту задачу решают сейчас, если вашего сервиса и сервисов конкурентов нет (таблицы, чужой продукт «не про то», ручная работа, наёмный человек, никак)?",
-          "Идеальный результат: что для клиента идеальный итог — такой, ради которого он продлевает подписку каждый месяц? В какой момент он понимает, что платит не зря?",
-          "Конкуренты: кто ваши прямые и косвенные конкуренты? Назовите продукты и ссылки, скажите, что вам в них нравится и что считаете слабым.",
-          "Чем вы принципиально отличаетесь: подход, возможности, простота, цена, скорость внедрения, узкая специализация под отрасль?",
-          "Ядро продукта на старте: какие возможности обязаны быть в первой версии, а какие подождут? Опишите то, без чего продукт не имеет смысла.",
-          "Тарифы и монетизация: как устроена оплата (бесплатный уровень, фиксированная подписка, оплата за каждого пользователя, оплата за объём использования, разовые покупки, корпоративные условия)? Назовите уровни тарифов и что входит в каждый.",
-          "Пределы и просрочка: что происходит, когда пользователь превысил лимит тарифа или не оплатил новый период — доступ закрывается сразу, продукт переходит на бесплатный уровень, даётся льготный срок с предупреждением? Что при этом происходит с его данными?",
-          "Команды и организации: как устроены учётные записи (личный аккаунт, общее рабочее пространство с ролями, несколько организаций у одного человека)? Кто кого приглашает, кто что видит и что бывает при уходе сотрудника?",
-          "Приём денег: какие платёжные службы и возможности нужны (регулярные списания, счета для юридических лиц, несколько валют, налоги, возвраты, смена тарифа в середине периода)?",
-          "Вход и безопасность: какими способами входят (почта и пароль, вход через сторонние сервисы, единый вход для крупных клиентов, двухшаговое подтверждение)? Есть ли требования к защите данных со стороны ваших клиентов?",
-          "Первый опыт и активация: как новый пользователь доходит до первой пользы (пошаговый мастер настройки, подсказки по интерфейсу, готовые шаблоны и учебные данные, пустой экран с одной кнопкой)? Через сколько минут он должен увидеть результат?",
-          "Открытый доступ и интеграции: нужен ли клиентам свой доступ к вашему API и исходящие уведомления о событиях? С какими сторонними системами продукт должен связываться в первую очередь?",
-          "Метрики и рабочее место владельца: что вам нужно видеть о собственном сервисе (выручка и её рост, отток, срок жизни клиента, активные пользователи) и нужна ли служебная панель для поддержки — найти клиента, продлить подписку, войти под ним для разбора?",
-          "Стиль интерфейса и уровень сложности: какой продукт вы хотите — предельно простой и быстрый или мощный и гибкий с множеством настроек? Есть ли интерфейсы, на которые стоит равняться?",
-          "Технические и организационные ограничения: есть ли требования, о которых нужно знать заранее (мобильная версия или приложение, где хранятся данные и требования к ним, ожидаемая нагрузка, сроки запуска, кто будет поддерживать продукт после запуска)?"
-        ]
-      },
-      "agents": {
-        "title": "Агентная автоматизация",
-        "tagline": "Маршрут строится по ходу дела",
-        "definition": "Система, которой ставят одну цель, а она сама решает, из каких шагов её достичь: обходит источники, читает найденное, отбрасывает противоречивое и сводит остальное в документ. Отличие от расписания в том, что следующий шаг здесь зависит от предыдущего — заранее известен только результат, которого нужно добиться.",
-        "examples": [
-          "Разбор рынка по десяткам источников с готовым отчётом",
-          "Досье на компанию или кандидата перед встречей",
-          "Свод отраслевых новостей с проверкой первоисточников",
-          "Регулярное исследование, повторяемое из месяца в месяц"
-        ],
-        "signals": [
-          "Задача не раскладывается в один запрос — нужен десяток шагов",
-          "Что искать дальше, становится ясно только из уже найденного",
-          "Итог — документ с выводами, а не строка данных"
-        ],
-        "questions": [
-          "Задачи для агента: какие сложные многошаговые задачи он должен решать (разбор рынка, досье на компанию или кандидата, правовая проверка, сбор аналитики, исследование содержания, ведение процесса с ветвлениями)? Назовите две-три, с которых начнёте.",
-          "Целевая аудитория: кто ставит задачи агенту и читает результат? Опишите все типы — аналитики, исследователи, маркетологи, операционные менеджеры, владельцы дела, разработчики — и насколько каждый готов проверять работу агента.",
-          "Проблема и боль: чего именно НЕ закрывают обычные скрипты и автоматизация по таймеру? Что сейчас отнимает время у человека — ручной обход десятка источников, поверхностность, пропуски важного, сложность свести разрозненное в один документ?",
-          "Альтернативные решения: как такие исследования делаются сейчас (ручной поиск и сборка отчёта в редакторе, наём фрилансера или консультанта, покупка готового отчёта, никак)?",
-          "Идеальный результат и его формат: что для человека «золотой стандарт» ответа (структурированный документ со ссылками на первоисточники и графиками, интерактивная сводка, заполненные таблицы с обоснованием)? В каком виде он должен приходить?",
-          "Конкуренты и аналоги: на что вы ориентируетесь (AutoGPT, CrewAI, Devin, глубокий поиск в Perplexity, свои агентные сборки)? Что в их работе привлекает, а что кажется лишним?",
-          "Чем вы принципиально отличаетесь — и от автоматизации по расписанию, и от существующих агентных площадок (глубина рассуждения, последовательный сбор, приспособляемость, прозрачность действий, контроль человека)?",
-          "Постановка задачи и план: в каком виде человек формулирует цель (свободная фраза, структурированное задание, готовый шаблон исследования, сборщик целей)? Строит ли агент план сам, вправе ли менять его по ходу и видит ли человек этот план до запуска?",
-          "Устройство агентов: работает один агент с набором инструментов или несколько с ролями — планировщик, поисковик, критик, составитель? Можно ли менять их роли и указания владельцу?",
-          "Инструменты и источники: чем агент вправе пользоваться (поиск в сети, чтение страниц, разбор файлов PDF, документов и таблиц, вызов чужих API, выполнение кода, внутренние базы и системы компании, почта)?",
-          "Уровень самостоятельности: что агент делает без спроса, а где обязан остановиться и подтвердить (только собирает данные · собирает и рекомендует · действует с подтверждением · действует сам в заданных рамках)? Перед чем подтверждение обязательно — платный вызов, отправка наружу, запись в чужую систему?",
-          "Противоречия и неполнота: как агент поступает, когда источники расходятся (ищет дополнительные, взвешивает надёжность, честно показывает развилку в отчёте, отказывается от вывода)? Что он делает, когда данных не хватает вовсе?",
-          "Глубина и пределы одного исследования: чем ограничен прогон (число шагов, число прочитанных страниц, расход на модель, общее время)? Что происходит при достижении предела — обрывается или отдаёт то, что успел?",
-          "Ссылки на первоисточники: как в итоговом документе доказывается каждое утверждение (сноска с адресом, сохранённая цитата или снимок страницы, дата сбора)? Что делать с утверждением, у которого источника нет?",
-          "Прозрачность хода работы: видит ли человек шаги в реальном времени — что агент ищет сейчас, что читает, что проверяет? Нужна ли полная запись хода для последующего разбора?",
-          "Память между запусками: должны ли результаты прошлых исследований складываться в общий склад знаний, чтобы агент не искал дважды одно и то же? Как отличать устаревшее от актуального?",
-          "Шаблоны, отказы и уведомления: нужны ли готовые сценарии частых исследований? Что происходит, когда шаг не удался — повтор, обход, остановка? Как человек узнаёт, что работа закончена или сломалась?",
-          "Ограничения и безопасность: есть ли требования, о которых нужно знать заранее (своё размещение или облако, работа с закрытыми данными, что агенту запрещено делать в принципе, обязательный контроль человека, сроки запуска)?"
-        ]
-      },
-      "scheduler": {
-        "title": "Автоматизация по расписанию",
-        "tagline": "Правило и таймер вместо суждения",
-        "definition": "Служба, которая сама просыпается в назначенный час, ходит куда велено, сравнивает найденное с условием и присылает результат. Решать ей нечего: где нужно суждение — там агент, а здесь правило. Продукт держится на трёх вещах, невидимых снаружи: расписании, поведении при отказе и журнале выполнения.",
-        "examples": [
-          "Слежение за ценой и сообщение, когда она упала",
-          "Разбор входящей почты и сводка раз в день",
-          "Сбор данных с сайтов, у которых нет открытого доступа",
-          "Регулярный отчёт, который собирается и уходит сам"
-        ],
-        "signals": [
-          "Человек сегодня проверяет что-то руками по многу раз в день",
-          "Правило можно записать одной фразой «если… то…»",
-          "Важно не пропустить момент, а не поговорить"
-        ],
-        "questions": [
-          "Сценарии в первую очередь: какие регулярные задачи вы покрываете (проверка почты, слежение за ценами и скидками, сбор данных с сайтов, регулярные отчёты, публикация, синхронизация данных, обращение к чужому API)? Перечислите самые важные — с них всё и начнётся.",
-          "Целевая аудитория: кто создаёт и использует эти автоматизации? Опишите все типы — обычные люди, фрилансеры, маркетологи, аналитики, владельцы небольшого дела, разработчики — и насколько каждый готов разбираться в настройке.",
-          "Проблема и боль: какую главную задачу решает сервис (время на рутину, страх упустить выгоду или важное письмо, потребность видеть динамику цен)? Что раздражает сильнее всего при ручном повторении?",
-          "Альтернативные решения: как люди справляются сейчас, если вашего сервиса нет (проверяют вручную каждые полчаса, ставят будильники, нанимают помощника, пишут свои скрипты, никак)?",
-          "Идеальный результат: какой итог сделает человека полностью довольным (сообщение в мессенджер в ту же минуту, когда цена упала; одно письмо в день с выжимкой вместо потока)?",
-          "Конкуренты и аналоги: на что вы ориентируетесь (Zapier, Make, n8n, IFTTT, расширения браузера, узкие трекеры цен, самописные скрипты)? Что из их устройства нужно заимствовать, а что считаете слабым?",
-          "Чем вы принципиально отличаетесь: простота, надёжность, цена, глубина автоматизаций, готовые шаблоны, работа без кода, скорость, узкий круг сценариев вместо всего сразу?",
-          "Как человек создаёт автоматизацию: готовыми шаблонами, визуальным сборщиком, описанием задачи обычным языком, кодом или сочетанием? Насколько это должно быть посильно новичку в первый же вечер?",
-          "Расписание и запуск: какие способы запуска нужны (фиксированный интервал вроде «каждые 15 минут», выражение cron, определённые дни и часы, одноразовый отложенный запуск, ручной запуск, событие извне, цепочка из нескольких автоматизаций)?",
-          "Условия срабатывания: как описывается правило «если… то…» (цена ниже порога, в письме встретилось слово, появилась новая запись, значение изменилось с прошлого раза)? Нужен ли сборщик условий мышью или достаточно простой формы?",
-          "Действия и куда уходит результат: что система делает при срабатывании и куда шлёт итог (сообщение в мессенджер, письмо, строка в таблицу, задача в трекер, вызов чужого адреса, заполнение формы)? Сообщать о каждом запуске или только когда есть новость?",
-          "Источники данных и интеграции: с чем инструмент обязан работать (почта, сайты без открытого доступа, чужие API и входящие вызовы, ленты новостей, таблицы, базы данных, календарь, мессенджеры, CRM)? С чего начинаем?",
-          "Чтение сайтов и их защиты: нужно ли обходить помехи при сборе данных (работа через промежуточные серверы, полноценный браузер вместо простого запроса, распознавание проверок «вы не робот», вход в личный кабинет на целевом сайте)? Насколько это законно в вашем случае?",
-          "Отказы и повторные попытки: как система ведёт себя при сбое — целевой сайт лёг, сеть пропала, ответ пришёл пустым? Сколько раз повторять, с какой паузой, когда и кому сообщать о поломке задачи?",
-          "Журнал выполнения: нужна ли человеку подробная история каждой задачи (успех или отказ, время ответа, что именно вернулось, сохранённый ответ для разбора)? Как долго хранить?",
-          "Пределы и оплата: как устроены ограничения и деньги (сколько задач можно держать включёнными, минимальный интервал проверки на бесплатном тарифе, оплата за число запусков или подписка, что происходит при исчерпании лимита)?",
-          "Технические и организационные ограничения: есть ли требования, о которых нужно знать заранее (своё размещение или облако, работа круглосуточно, объём обрабатываемых данных, языки, сроки запуска)?"
-        ]
-      },
       "corporate": {
         "title": "Корпоративный сайт",
         "tagline": "Компания, услуги, доверие",
@@ -4637,75 +4558,40 @@
           "Технические и организационные ограничения: есть ли требования, о которых нужно знать заранее (устанавливаемое приложение, несколько языков, ожидаемая посещаемость, сроки запуска, кто будет вести площадку после запуска)?"
         ]
       },
-      "marketplace": {
-        "title": "Маркетплейс",
-        "tagline": "Две стороны, ваша площадка",
-        "definition": "Площадка, где продают другие. У вас два типа пользователей — продавец и покупатель, — и зарабатываете вы на сделке между ними, а не на своём товаре.",
+      "directory": {
+        "title": "Каталог и справочник",
+        "tagline": "Много объектов, фильтры, карта",
+        "definition": "Собрание однотипных объектов с фильтрами, поиском и часто картой. Ценность — в полноте и точности собрания; каждый объект даёт свою страницу.",
         "examples": [
-          "Доска объявлений города или ниши",
-          "Площадка мастеров и заказчиков",
-          "Общая витрина нескольких магазинов",
-          "Биржа услуг или аренды"
+          "Справочник организаций города",
+          "Каталог специалистов или мастеров",
+          "База объектов недвижимости",
+          "Афиша мест и событий"
         ],
         "signals": [
-          "Товар или услуга принадлежат не вам",
-          "Продавцов нужно привлекать отдельно от покупателей",
-          "Есть комиссия, модерация и споры"
+          "Объектов сотни или тысячи, и они однотипны",
+          "Люди приходят с вопросом «что рядом» или «кто подойдёт»",
+          "Данные устаревают и требуют обновления"
         ],
         "questions": [
-          "Предмет торговли: что именно продаётся на площадке (физические товары, цифровые файлы, услуги и работа по заказу, аренда вещей или помещений, билеты, объявления)? Одна категория или несколько сразу?",
-          "Обе стороны: кто продаёт и кто покупает? Опишите портрет каждой стороны отдельно — кто эти люди или компании, чем занимаются, насколько привычны к таким площадкам.",
-          "Боль каждой стороны: какую проблему вы решаете покупателю (нет выбора, нет гарантий, трудно сравнить) и какую продавцу (высокий порог входа, нет покупателей, сложно принимать деньги)? Ответьте про обоих — это разные боли.",
-          "Как находят друг друга сейчас: где покупатель и продавец встречаются без вашей площадки (социальные сети, доски объявлений, прямые договорённости, посредники и агентства, крупные маркетплейсы)?",
-          "Идеальный результат: как выглядит безупречная сделка, где покупатель получил желаемое, продавец заработал, а площадка взяла своё? Опишите её глазами обоих.",
-          "Конкуренты и образцы: на какие площадки вы ориентируетесь — крупные или узкие? Назовите их и ссылки, скажите, что нравится и что считаете слабым.",
-          "Чем принципиально отличаетесь: узкая ниша, лучший подбор, размер комиссии, удобство, доверие, дополнительные услуги?",
-          "Процесс сделки: как проходит путь от поиска до завершения (нашёл, выбрал, списался с продавцом, оплатил, получил, подтвердил, оставил отзыв)? Где нужна переписка между сторонами и на каких шагах особенно важна безопасность?",
-          "Как площадка зарабатывает: комиссия с каждой сделки, плата за размещение, подписка для продавцов, платное продвижение в выдаче, дополнительные услуги? Кто платит — продавец, покупатель или оба?",
-          "Движение денег: через чей счёт они идут (площадка удерживает до подтверждения получения, оплата идёт напрямую продавцу, часть удерживается как залог)? Когда продавец получает выплату и что происходит с деньгами при споре?",
-          "Кабинет продавца: что ему нужно для работы (управление своим каталогом и ценами, остатки и заказы, сводка продаж, вывод заработанного, отчёты для отчётности)?",
-          "Кабинет покупателя: что видит он (избранное, история покупок, отслеживание заказов от РАЗНЫХ продавцов сразу, корзина с товарами нескольких продавцов, повтор заказа)?",
-          "Поиск и подбор: как покупатель находит нужное (фильтры по цене, рейтингу и наличию, поиск по карте и расстоянию, подсказки похожих предложений, сортировка выдачи)? По какому правилу выстраивается порядок предложений?",
-          "Доверие и проверка: как строится доверие между незнакомыми людьми (отзывы в обе стороны, проверка документов продавца, отметка «проверенный», гарантии площадки, модерация объявлений)? Кто и когда проверяет нового продавца?",
-          "Споры и возвраты: как разбираются конфликты (жалоба, разбор с участием поддержки, сценарии возврата денег, удержание выплаты на время спора)? Кто принимает окончательное решение и по каким правилам?",
-          "Доставка и исполнение: как заказ доходит до покупателя (продавец отправляет сам, площадка держит склад, службы доставки, самовывоз, для услуг — как подтверждается выполнение)?",
-          "Технические, географические и организационные ограничения: есть ли требования, о которых нужно знать заранее (регионы и языки запуска, устанавливаемые приложения, платёжные службы и правовая форма расчётов, модерация содержимого, сроки запуска, кто будет управлять площадкой)?"
-        ]
-      },
-      "delivery": {
-        "title": "Сервис доставки",
-        "tagline": "Клиент, курьер и заведение — трое в одном заказе",
-        "definition": "Площадка, где у каждого заказа три стороны: тот, кто заказал, тот, кто везёт, и тот, кто отдаёт. Всё держится на карте и времени — где сейчас курьер, за сколько доедет, сколько это стоит. Ошибка в распределении заказов дороже любой ошибки в вёрстке.",
-        "examples": [
-          "Доставка готовой еды из нескольких заведений",
-          "Продукты и товары из магазинов у дома",
-          "Курьерская доставка документов и посылок по городу",
-          "Своя служба доставки сети, уставшей от чужих комиссий"
-        ],
-        "signals": [
-          "У заказа есть исполнитель, и его надо кому-то назначить",
-          "Клиент хочет видеть на карте, где едет его заказ",
-          "Стоимость зависит от расстояния, веса или времени суток"
-        ],
-        "questions": [
-          "Тип сервиса: что именно вы доставляете и в каком виде (готовая еда, продукты и товары из магазинов, документы и посылки, сборные грузы, доставка от двери до двери, логистическая площадка для бизнеса)? Внутри города, между городами или и то и другое?",
-          "Три стороны и их возможности: кто пользуется системой — заказчики, курьеры (пешие, на велосипеде, на машине), заведения и магазины, диспетчеры, поддержка? Опишите каждую сторону и что именно она может делать.",
-          "Проблема и боль: какую главную проблему решает сервис (долгая доставка, высокая цена, нет контроля за курьером, неудачные маршруты, потерянные заказы)? Что сейчас сильнее всего раздражает — клиента, курьера, заведение?",
-          "Альтернативные решения: как люди и компании отправляют и получают заказы сейчас, если вашего сервиса нет (чужие службы, собственные курьеры, самовывоз, почта, договорённость в мессенджере)?",
-          "Идеальный результат: какой сценарий доставки вы считаете идеальным — таким, где в плюсе остаются все трое: клиент, курьер и бизнес?",
-          "Конкуренты и аналоги: на кого вы ориентируетесь? Назовите сервисы и ссылки, скажите, какие их возможности обязательно нужны, а что считаете слабым местом.",
-          "Чем вы принципиально отличаетесь: в чём главное отличие от конкурентов (скорость, цена, особые зоны доставки, отношения с курьерами, свои возможности)?",
-          "Жизненный цикл заказа: из каких этапов состоит заказ от создания до завершения (создан, подтверждён, готовится, курьер назначен, в пути, доставлен)? Кто его создаёт, как подтверждается доставка и что происходит при отмене, опоздании или отказе клиента?",
-          "Назначение курьера: как курьер получает заказ — автоматически ближайшему свободному, биржей «кто первый взял» или через диспетчера вручную? Что делать, если никто не берёт заказ?",
-          "Карты и геолокация: какая работа с картой нужна (курьер на карте в реальном времени, определение адреса по местоположению, построение маршрута, зоны доставки и их границы, время в пути с учётом пробок)?",
-          "Расчёт стоимости доставки: как складывается цена для клиента (фиксированная ставка, расстояние, вес и габариты, время суток, повышенный спрос, бесплатная доставка от суммы заказа)?",
-          "Модель заработка: на чём зарабатывает сам сервис (комиссия с заказа, комиссия с заведения или с курьера, подписка, плата за размещение, реклама, платная приоритетная доставка)?",
-          "Оплата и взаиморасчёты: как движутся деньги (оплата на сайте или в приложении, наличными курьеру, чаевые, безналичный расчёт для компаний, выплаты курьерам и заведениям — как часто и куда)?",
-          "Интерфейсы и устройства: в каком виде работает каждая сторона (сайт для клиента, устанавливаемое приложение, отдельное приложение курьера с уведомлениями, планшет или панель для заведения, рабочее место диспетчера)?",
-          "Ключевые возможности: что обязательно должно быть (отслеживание на карте, выбор времени доставки, чат с курьером, оценки и отзывы, повтор прошлого заказа, программа лояльности, уведомления о каждом этапе)?",
-          "Интеграции: с чем сервис должен связываться (картографические службы, кассовые и учётные системы заведений, платёжные сервисы, SMS и Telegram, CRM)?",
-          "Стиль и атмосфера: какое впечатление должны оставлять сайт и приложение (быстрый и технологичный, дружелюбный и простой, премиальный, молодёжный)? Есть ли референсы, которые вам нравятся?",
-          "Технические, географические и организационные ограничения: есть ли требования, о которых нужно знать заранее (города и зоны запуска, устанавливаемые приложения, оформление курьеров, ожидаемая нагрузка в час пик, сроки запуска, кто будет держать диспетчерскую)?"
+          "Предмет справочника: что именно каталогизируется (компании и заведения, поставщики, специалисты и врачи, места, товары, цифровые инструменты, персоны, объекты определённой отрасли)? Сколько записей ожидаете в первый год?",
+          "Аудитория обеих сторон: кто ищет и кто хочет попасть в каталог? Опишите тех, кто пользуется поиском, и тех, чьи карточки здесь лежат — владельцы бизнеса, специалисты, представители.",
+          "Задача каталога: что человек должен получить (быстро найти нужное, сравнить варианты, довериться проверенным данным, выбрать исполнителя)? Какую нехватку вы закрываете — нет единой базы в нише, сведения разбросаны, негде взять честные отзывы?",
+          "Как ищут сейчас: где люди находят и сравнивают такие объекты без вашего каталога (поисковики, тематические чаты, знакомые, собственные таблицы, чужие справочники)?",
+          "Идеальный результат: как выглядит безупречный случай — человек нашёл нужное с точными контактами и ценой за десять секунд и сделал осознанный выбор? Что для этого должно быть на экране?",
+          "Конкуренты и образцы: на какие справочники и каталоги вы ориентируетесь? Назовите их и ссылки, скажите, что нравится и чего в них не хватает.",
+          "Чем принципиально отличаетесь: глубина сведений, удобство поиска, свежесть данных, узкая специализация, дополнительные возможности?",
+          "Структура каталога: как устроена навигация (разделы и подразделы, метки, связи между записями, соседние категории)? По какому признаку человек чаще всего начинает поиск?",
+          "Карточка объекта: какие поля обязательны (название, изображения, контакты, адрес) и какие особенные для вашей ниши (часы работы, ценовая категория, способы оплаты, лицензии и сертификаты, языки обслуживания, вместимость)? Эти же поля станут фильтрами.",
+          "Поиск и отбор: как человек находит нужное (живой поиск по названию и синонимам, отбор по десяткам признаков сразу, сортировка по оценке, популярности или новизне, сравнение нескольких записей, избранное)?",
+          "Карта и география: нужна ли привязка к местности (объекты на карте, поиск рядом со мной, отбор по району, городу или станции)? Или география здесь не при чём?",
+          "Откуда берутся данные: чем наполняется база на старте и дальше (заносит администратор, собирается автоматически из открытых источников, компании подают заявки сами, ввозится готовым списком)? Кто и по каким правилам проверяет новую запись?",
+          "Актуальность сведений: как каталог не превращается в кладбище мёртвых телефонов? Кто и как часто обновляет записи, что происходит с теми, кого никто не подтверждал год, и может ли посетитель сообщить об ошибке?",
+          "Право на свою карточку: нужна ли возможность заявить «это моя компания» — подтвердить право, править контакты, отвечать на отзывы, покупать продвижение? Как вы проверяете, что человек и правда владелец?",
+          "Отзывы и достоверность: как устроены оценки (общая звёздность, подробные отзывы с фотографиями, оценка по отдельным признакам)? Как отсеиваются заказные и мстительные — предварительная проверка, подтверждение факта обращения, ответ владельца?",
+          "Монетизация: как каталог зарабатывает (платное размещение или подписка для компаний, поднятие в выдаче и выделение карточки, реклама, продажа обращений из карточки, платный доступ к расширенным сведениям)? Что остаётся бесплатным всегда?",
+          "Страницы под запросы: нужно ли автоматически создавать страницы на пересечении признаков — вида «нужное в таком-то городе с таким-то условием»? Для справочников это главный источник посетителей, но и главный источник пустых страниц: как не создавать те, за которыми ничего нет?",
+          "Технические и организационные требования: есть ли то, о чём нужно знать заранее (объём базы, языки, мобильная версия, связи с внешними источниками данных, кто будет вести модерацию после запуска, сроки)?"
         ]
       },
       "booking": {
@@ -4779,40 +4665,41 @@
           "Технические и организационные ограничения: есть ли требования, о которых нужно знать заранее (работа при слабой связи в зале, устанавливаемое приложение или только страница по коду, тёмное оформление, кто будет вести меню после запуска, сроки)?"
         ]
       },
-      "tours": {
-        "title": "Агрегатор экскурсий",
-        "tagline": "Место, дата и человек, который проведёт",
-        "definition": "Площадка, где путешественник ищет впечатление на конкретный день в конкретном городе, а гид получает подтверждённый заказ без переписки. Держится на трёх вещах разом: география, календарь и деньги между двумя сторонами. Отдельно от маркетплейса и бронирования — потому что здесь есть погода, сезон и чужой город.",
+      "store": {
+        "title": "Интернет-магазин",
+        "tagline": "Товар, корзина, оплата, доставка",
+        "definition": "Витрина ваших собственных товаров с корзиной, оплатой и доставкой. Продавец один — вы; покупатель выбирает из вашего склада и оформляет заказ на сайте.",
         "examples": [
-          "Авторские прогулки по городу от местных жителей",
-          "Экскурсионное бюро, уставшее вести брони в переписке",
-          "Впечатления одного региона: горы, море, гастрономия",
-          "Мастер-классы и живые события для приезжих"
+          "Свой бренд одежды или косметики",
+          "Магазин при производстве",
+          "Цифровые товары: файлы, ключи, доступы",
+          "Продуктовая лавка с доставкой по городу"
         ],
         "signals": [
-          "Человек ищет не товар, а «что посмотреть здесь и в эти даты»",
-          "У каждого предложения свой ведущий и своё расписание",
-          "Экскурсия может не состояться из-за погоды, и это никто не виноват"
+          "Позиции повторяются: один товар продаётся много раз",
+          "Есть остатки, и они меняются",
+          "Заказ оформляется на сайте, даже если оплата при получении"
         ],
         "questions": [
-          "Что агрегируем: какие экскурсии и туры будут на площадке (пешие и на транспорте, индивидуальные и групповые, однодневные и многодневные, детские, приключенческие, мастер-классы, онлайн-встречи)? Есть ли специализация — город, страна, тема?",
-          "Обе стороны: кто путешествует и кто проводит? Опишите каждую сторону — туристы (в одиночку, семьями, дорогой сегмент, приезжие или местные) и организаторы (частные гиды, бюро, гиды со знанием языков).",
-          "Боль каждой стороны: что решаем туристу (трудно выбрать, страшно нарваться, непонятно, состоится ли) и что гиду (нет постоянного потока, брони теряются в переписке, время уходит на согласования)?",
-          "Как находят сейчас: где турист берёт экскурсию без вашей площадки (стойка в отеле, зазывалы на улице, объявления в социальных сетях, знакомые, крупные агрегаторы)?",
-          "Идеальный результат: как выглядит безупречный случай — турист за два действия нашёл нужное на нужную дату, гид получил подтверждённый заказ без единого сообщения? Опишите с обеих сторон.",
-          "Конкуренты и образцы: на какие площадки вы ориентируетесь? Назовите их и ссылки, скажите, что нравится больше всего и чего не хватает.",
-          "Чем принципиально отличаетесь: узкая тема, качество отбора гидов, удобство, цена, необычные форматы, сильный упор на конкретные города или страны?",
-          "Путь туриста: как проходит дорога от поиска до самой экскурсии (поиск и отбор, карточка предложения, выбор даты, бронирование, оплата, подтверждение и ваучер, напоминание накануне, отзыв после)? Нужны ли избранное и переписка с гидом до встречи?",
-          "Поиск, карта и отбор: как человек находит нужное (по городу, стране или достопримечательности, на карте с точками сбора, отбор по дате, цене, длительности, языку проведения, формату)? Что показывать тому, кто ещё не выбрал город?",
-          "Календарь гида и цены: как организатор ведёт своё расписание (доступные дни и часы, перерыв между экскурсиями, разное число мест, цена выше в сезон и в выходные, закрытие дат вручную)?",
-          "Как подтверждается бронь: мгновенно с немедленной оплатой или гид подтверждает в течение оговорённого срока? Что происходит, если он не ответил вовсе, и видит ли турист это ожидание?",
-          "Как площадка зарабатывает: комиссия с брони, подписка для организаторов, платное продвижение в выдаче, реклама? Кто платит комиссию — турист, гид или оба?",
-          "Движение денег: как проходит расчёт (полная оплата онлайн с переводом гиду после проведения, частичная предоплата и доплата на месте, оплата целиком на месте)? Когда гид получает деньги и что удерживается при споре?",
-          "Кабинет организатора: что нужно гиду для работы (добавление и правка программ, фотографии и видео, своё расписание, список записавшихся на конкретную дату, переписка с туристом, вывод заработанного, отчёты)?",
-          "Доверие и качество: как отбираются гиды и как строится доверие (проверка документов и разрешений, отзыв можно оставить только после состоявшейся экскурсии, оценки в обе стороны, разбор жалоб, снятие с площадки)? Кто проверяет новичка?",
-          "Отмены, погода и форс-мажор: каковы правила возврата при отмене туристом (за сутки, за час, в день экскурсии)? Что происходит при отмене гидом и что — когда виновата погода, то есть никто? Есть ли наказание для гида за неявку?",
-          "Уведомления и связи: что нужно подключить (карты, сообщения туристу и гиду о предстоящей встрече и её изменениях, пересчёт валют, календари организаторов)? За сколько напоминать о встрече?",
-          "Технические, географические и организационные ограничения: есть ли требования, о которых нужно знать заранее (города и страны запуска, языки и валюты, устанавливаемое приложение, платёжные службы и правовая форма расчётов с гидами, сроки запуска, кто будет вести площадку)?"
+          "Ассортимент и бизнес-модель: Что именно вы продаёте — категории, примерное число товаров, есть ли вариации (размер, цвет, комплектация)? И как устроен магазин: продаёте собственный товар, работаете по дропшиппингу, площадкой для других продавцов или производите под заказ?",
+          "Целевая аудитория и сегментация: Кто ваши покупатели? Опишите все ключевые типы — розница и опт, частные лица и компании, покупки импульсивные и обдуманные, — а также возраст, доход, географию и то, как часто они покупают подобное.",
+          "Проблема и боль: Какую главную задачу магазин решает для покупателя (уникальный ассортимент, лучшая цена, скорость доставки, удобство подбора)? Почему покупать должны именно у вас?",
+          "Альтернативные решения: Где и как покупатели приобретают подобные товары сейчас, если вашего магазина нет (обычные магазины, маркетплейсы, доски объявлений, покупка за рубежом)?",
+          "Идеальный результат: Что для покупателя является идеальным опытом покупки — таким, после которого он вернётся снова?",
+          "Конкурентное окружение: Кто ваши главные конкуренты? Назовите компании и ссылки на их магазины или маркетплейсы — и скажите, что вам в них нравится, а что раздражает.",
+          "Чем вы принципиально отличаетесь: в чём ваше главное отличие от конкурентов (ассортимент, цены, сервис, скорость, экспертиза, эксклюзивность, отношение к клиенту)?",
+          "Структура каталога и карточка товара: Какова вложенность категорий? Какие характеристики и вариации обязательны у товара (размер, цвет, комплектация, галерея, видео)? Товар физический, цифровой или и тот и другой?",
+          "Поиск, фильтры и сортировка: Как покупатель находит нужное (умный поиск с подсказками, фильтры по параметрам, тегам и цене, сортировка, сравнение товаров между собой)?",
+          "Путь покупателя, корзина и оформление заказа: Как человек проходит путь от первого захода до оплаты? Какое оформление нужно — покупка в один клик, многошаговое оформление, заказ без регистрации, личный кабинет с историей?",
+          "Оплата: Какие способы и службы оплаты нужно подключить (банковские карты, быстрые платежи, рассрочка и оплата долями, криптовалюта, оплата при получении, счёт для юридических лиц)?",
+          "Доставка и гео-логика: Как рассчитывается и оформляется доставка (свои курьеры или службы доставки, пункты выдачи и самовывоз, выбор города и страны, расчёт по весу и габаритам, международная отправка)?",
+          "Склад и остатки: Откуда берутся данные о наличии (ручной ввод в панели, синхронизация с 1С или МойСклад, импорт файлом, остатки в реальном времени)? Что происходит, когда товар заканчивается во время оформления заказа?",
+          "Личный кабинет и сервис для покупателя: Какие возможности нужны человеку после входа (история заказов, избранное, отзывы и рейтинги товаров, онлайн-чат, повторный заказ в одно нажатие)?",
+          "Маркетинг и удержание: Нужны ли скидочные механизмы (промокоды, накопительные бонусы, программа лояльности, зачёркнутые цены, таймеры акций, письма о брошенной корзине)?",
+          "Уведомления и интеграции: Куда и как сообщать о статусе заказа покупателю и менеджеру (push, SMS, Telegram-бот, письма, передача заказа в CRM)?",
+          "Стиль и атмосфера: Какое впечатление должен оставлять магазин (премиум, минимализм, яркий и молодёжный, экспертный, уютный, технологичный)? Есть ли референсы, которые вам нравятся?",
+          "Доказательства и социальное доказательство: Что вы хотите показать в подтверждение (отзывы, рейтинги, число продаж, известные покупатели, сертификаты, гарантии, упоминания в СМИ)?",
+          "Технические, юридические и организационные ограничения: Есть ли требования, о которых нужно знать заранее (мультиязычность, несколько валют, обязательная сертификация или маркировка товара, сроки запуска, кто и как будет наполнять каталог)?"
         ]
       },
       "learning": {
@@ -4851,75 +4738,147 @@
           "Технические и организационные ограничения: есть ли требования, о которых нужно знать заранее (свой сборщик курсов для авторов, языки, связь с платежами и учётом клиентов, устанавливаемое приложение, ожидаемое число учеников одновременно, сроки запуска)?"
         ]
       },
-      "ai-coach": {
-        "title": "AI-коуч и ментор",
-        "tagline": "Ведёт человека, а не выдаёт уроки",
-        "definition": "Собеседник, который помнит вас между разговорами: ставит цели, спрашивает о них сам и замечает, что вы обещали неделю назад. Отличается от курса тем, что ничего не отдаёт заранее записанным, — весь смысл в характере, памяти и в том, где он останавливается и передаёт человека живым специалистам.",
+      "tours": {
+        "title": "Агрегатор экскурсий",
+        "tagline": "Место, дата и человек, который проведёт",
+        "definition": "Площадка, где путешественник ищет впечатление на конкретный день в конкретном городе, а гид получает подтверждённый заказ без переписки. Держится на трёх вещах разом: география, календарь и деньги между двумя сторонами. Отдельно от маркетплейса и бронирования — потому что здесь есть погода, сезон и чужой город.",
         "examples": [
-          "Трекер привычек, который спрашивает первым",
-          "Карьерный ментор для тех, кому дорог живой коуч",
-          "Разбор целей недели для предпринимателя",
-          "Тренер, ведущий к спортивной цели по плану"
+          "Авторские прогулки по городу от местных жителей",
+          "Экскурсионное бюро, уставшее вести брони в переписке",
+          "Впечатления одного региона: горы, море, гастрономия",
+          "Мастер-классы и живые события для приезжих"
         ],
         "signals": [
-          "Ценность в разговоре, а не в записанном заранее материале",
-          "Нужно помнить прошлые сессии, иначе всё начинается с нуля",
-          "Человек бросает без напоминаний, и напоминать должен продукт"
+          "Человек ищет не товар, а «что посмотреть здесь и в эти даты»",
+          "У каждого предложения свой ведущий и своё расписание",
+          "Экскурсия может не состояться из-за погоды, и это никто не виноват"
         ],
         "questions": [
-          "Сфера и методика: в какой области и для каких задач работает ваш коуч (карьера, бизнес, спорт, привычки, обучение навыку, финансы, личностный рост)? По какой методике он ведёт — задаёт вопросы и не советует, даёт прямые рекомендации, строго трекает привычки, играет роль конкретного эксперта?",
-          "Целевая аудитория: кто будет пользоваться сервисом? Опишите подробно все типы людей — возраст, занятие, уровень опыта, что у них болит, что движет, — и насколько они вообще готовы работать с ИИ вместо живого человека.",
-          "Проблема и боль: какую главную задачу решает коуч (живой ментор слишком дорог, не хватает дисциплины, страшно показаться глупым, решения принимаются в одиночку, всё делается урывками)? Что сильнее всего мешает им двигаться прямо сейчас?",
-          "Альтернативные решения: как люди пытаются решить это сейчас, если вашего сервиса нет (работа с живым специалистом, дневник, ролики и книги, разговоры с друзьями, ничего)?",
-          "Идеальный результат: какого изменения должен достичь человек, чтобы считать сервис своим лучшим помощником? Опишите его состояние через месяц и через год.",
-          "Конкуренты и аналоги: с чем вас будут сравнивать? Назовите сервисы, приложения, ботов и площадки живых коучей, укажите ссылки. Что вам в них нравится и что считаете слабым?",
-          "Чем вы принципиально отличаетесь: глубина персонализации, стиль общения, методика, наличие структуры, сочетание с живым человеком, свои техники?",
-          "Характер и стиль общения: каким должен быть коуч — тёплым и поддерживающим, строгим и требовательным, аналитическим, провоцирующим, с юмором? Чего он не делает никогда? Есть ли образцы речи, на которые стоит равняться?",
-          "Память и персонализация: что и как надолго сервис помнит о человеке (только текущий разговор, прошлые сессии, цели и провалы, привычки и предпочтения, ключевые факты о жизни или деле)? Нужны ли входные тесты, диагностика и подстройка программы под ответы?",
-          "Сценарий работы: как устроено взаимодействие (свободный разговор в любое время, сессии по расписанию, короткие ежедневные отметки, длинная программа с этапами, домашние задания и их проверка)? Сколько длится одна сессия и вся программа?",
-          "Формат общения: в каком виде идёт разговор (текст, голосовые сообщения, звонок с синтезированной речью, разбор присланных документов и снимков экрана)?",
-          "Цели и прогресс: нужен ли человеку экран с целями и достижениями (список целей, трекер привычек, графики настроения и продуктивности, сводка за неделю)?",
-          "Проактивность: как коуч начинает разговор сам (напоминание о цели, сообщение «вы обещали сделать это к пятнице», итоги недели, реакция на молчание несколько дней)? Как часто он вправе писать первым?",
-          "Ключевые возможности: что ещё обязательно должно быть (библиотека материалов, сообщество, переход к живому специалисту, связь с календарём, данные с носимых устройств, экспорт своих записей)?",
-          "Монетизация и пределы: как устроена оплата (подписка, оплата за сессию или программу, бесплатный доступ с ограничением числа сообщений в день, пробный период, корпоративные тарифы)? Что именно ограничено в бесплатной версии?",
-          "Границы компетенции и передача человеку: как система должна вести себя с темами вне своей области — кризисные состояния, здоровье, юридические и денежные решения? Куда и как она направляет человека и в какой момент отказывается продолжать сама?",
-          "Технические и организационные ограничения: есть ли требования, о которых нужно знать заранее (обращение с персональными данными и их хранение, устанавливаемое приложение, языки, возможность подстройки под конкретного пользователя, ожидаемая нагрузка, сроки запуска)?"
+          "Что агрегируем: какие экскурсии и туры будут на площадке (пешие и на транспорте, индивидуальные и групповые, однодневные и многодневные, детские, приключенческие, мастер-классы, онлайн-встречи)? Есть ли специализация — город, страна, тема?",
+          "Обе стороны: кто путешествует и кто проводит? Опишите каждую сторону — туристы (в одиночку, семьями, дорогой сегмент, приезжие или местные) и организаторы (частные гиды, бюро, гиды со знанием языков).",
+          "Боль каждой стороны: что решаем туристу (трудно выбрать, страшно нарваться, непонятно, состоится ли) и что гиду (нет постоянного потока, брони теряются в переписке, время уходит на согласования)?",
+          "Как находят сейчас: где турист берёт экскурсию без вашей площадки (стойка в отеле, зазывалы на улице, объявления в социальных сетях, знакомые, крупные агрегаторы)?",
+          "Идеальный результат: как выглядит безупречный случай — турист за два действия нашёл нужное на нужную дату, гид получил подтверждённый заказ без единого сообщения? Опишите с обеих сторон.",
+          "Конкуренты и образцы: на какие площадки вы ориентируетесь? Назовите их и ссылки, скажите, что нравится больше всего и чего не хватает.",
+          "Чем принципиально отличаетесь: узкая тема, качество отбора гидов, удобство, цена, необычные форматы, сильный упор на конкретные города или страны?",
+          "Путь туриста: как проходит дорога от поиска до самой экскурсии (поиск и отбор, карточка предложения, выбор даты, бронирование, оплата, подтверждение и ваучер, напоминание накануне, отзыв после)? Нужны ли избранное и переписка с гидом до встречи?",
+          "Поиск, карта и отбор: как человек находит нужное (по городу, стране или достопримечательности, на карте с точками сбора, отбор по дате, цене, длительности, языку проведения, формату)? Что показывать тому, кто ещё не выбрал город?",
+          "Календарь гида и цены: как организатор ведёт своё расписание (доступные дни и часы, перерыв между экскурсиями, разное число мест, цена выше в сезон и в выходные, закрытие дат вручную)?",
+          "Как подтверждается бронь: мгновенно с немедленной оплатой или гид подтверждает в течение оговорённого срока? Что происходит, если он не ответил вовсе, и видит ли турист это ожидание?",
+          "Как площадка зарабатывает: комиссия с брони, подписка для организаторов, платное продвижение в выдаче, реклама? Кто платит комиссию — турист, гид или оба?",
+          "Движение денег: как проходит расчёт (полная оплата онлайн с переводом гиду после проведения, частичная предоплата и доплата на месте, оплата целиком на месте)? Когда гид получает деньги и что удерживается при споре?",
+          "Кабинет организатора: что нужно гиду для работы (добавление и правка программ, фотографии и видео, своё расписание, список записавшихся на конкретную дату, переписка с туристом, вывод заработанного, отчёты)?",
+          "Доверие и качество: как отбираются гиды и как строится доверие (проверка документов и разрешений, отзыв можно оставить только после состоявшейся экскурсии, оценки в обе стороны, разбор жалоб, снятие с площадки)? Кто проверяет новичка?",
+          "Отмены, погода и форс-мажор: каковы правила возврата при отмене туристом (за сутки, за час, в день экскурсии)? Что происходит при отмене гидом и что — когда виновата погода, то есть никто? Есть ли наказание для гида за неявку?",
+          "Уведомления и связи: что нужно подключить (карты, сообщения туристу и гиду о предстоящей встрече и её изменениях, пересчёт валют, календари организаторов)? За сколько напоминать о встрече?",
+          "Технические, географические и организационные ограничения: есть ли требования, о которых нужно знать заранее (города и страны запуска, языки и валюты, устанавливаемое приложение, платёжные службы и правовая форма расчётов с гидами, сроки запуска, кто будет вести площадку)?"
         ]
       },
-      "directory": {
-        "title": "Каталог и справочник",
-        "tagline": "Много объектов, фильтры, карта",
-        "definition": "Собрание однотипных объектов с фильтрами, поиском и часто картой. Ценность — в полноте и точности собрания; каждый объект даёт свою страницу.",
+      "delivery": {
+        "title": "Сервис доставки",
+        "tagline": "Клиент, курьер и заведение — трое в одном заказе",
+        "definition": "Площадка, где у каждого заказа три стороны: тот, кто заказал, тот, кто везёт, и тот, кто отдаёт. Всё держится на карте и времени — где сейчас курьер, за сколько доедет, сколько это стоит. Ошибка в распределении заказов дороже любой ошибки в вёрстке.",
         "examples": [
-          "Справочник организаций города",
-          "Каталог специалистов или мастеров",
-          "База объектов недвижимости",
-          "Афиша мест и событий"
+          "Доставка готовой еды из нескольких заведений",
+          "Продукты и товары из магазинов у дома",
+          "Курьерская доставка документов и посылок по городу",
+          "Своя служба доставки сети, уставшей от чужих комиссий"
         ],
         "signals": [
-          "Объектов сотни или тысячи, и они однотипны",
-          "Люди приходят с вопросом «что рядом» или «кто подойдёт»",
-          "Данные устаревают и требуют обновления"
+          "У заказа есть исполнитель, и его надо кому-то назначить",
+          "Клиент хочет видеть на карте, где едет его заказ",
+          "Стоимость зависит от расстояния, веса или времени суток"
         ],
         "questions": [
-          "Предмет справочника: что именно каталогизируется (компании и заведения, поставщики, специалисты и врачи, места, товары, цифровые инструменты, персоны, объекты определённой отрасли)? Сколько записей ожидаете в первый год?",
-          "Аудитория обеих сторон: кто ищет и кто хочет попасть в каталог? Опишите тех, кто пользуется поиском, и тех, чьи карточки здесь лежат — владельцы бизнеса, специалисты, представители.",
-          "Задача каталога: что человек должен получить (быстро найти нужное, сравнить варианты, довериться проверенным данным, выбрать исполнителя)? Какую нехватку вы закрываете — нет единой базы в нише, сведения разбросаны, негде взять честные отзывы?",
-          "Как ищут сейчас: где люди находят и сравнивают такие объекты без вашего каталога (поисковики, тематические чаты, знакомые, собственные таблицы, чужие справочники)?",
-          "Идеальный результат: как выглядит безупречный случай — человек нашёл нужное с точными контактами и ценой за десять секунд и сделал осознанный выбор? Что для этого должно быть на экране?",
-          "Конкуренты и образцы: на какие справочники и каталоги вы ориентируетесь? Назовите их и ссылки, скажите, что нравится и чего в них не хватает.",
-          "Чем принципиально отличаетесь: глубина сведений, удобство поиска, свежесть данных, узкая специализация, дополнительные возможности?",
-          "Структура каталога: как устроена навигация (разделы и подразделы, метки, связи между записями, соседние категории)? По какому признаку человек чаще всего начинает поиск?",
-          "Карточка объекта: какие поля обязательны (название, изображения, контакты, адрес) и какие особенные для вашей ниши (часы работы, ценовая категория, способы оплаты, лицензии и сертификаты, языки обслуживания, вместимость)? Эти же поля станут фильтрами.",
-          "Поиск и отбор: как человек находит нужное (живой поиск по названию и синонимам, отбор по десяткам признаков сразу, сортировка по оценке, популярности или новизне, сравнение нескольких записей, избранное)?",
-          "Карта и география: нужна ли привязка к местности (объекты на карте, поиск рядом со мной, отбор по району, городу или станции)? Или география здесь не при чём?",
-          "Откуда берутся данные: чем наполняется база на старте и дальше (заносит администратор, собирается автоматически из открытых источников, компании подают заявки сами, ввозится готовым списком)? Кто и по каким правилам проверяет новую запись?",
-          "Актуальность сведений: как каталог не превращается в кладбище мёртвых телефонов? Кто и как часто обновляет записи, что происходит с теми, кого никто не подтверждал год, и может ли посетитель сообщить об ошибке?",
-          "Право на свою карточку: нужна ли возможность заявить «это моя компания» — подтвердить право, править контакты, отвечать на отзывы, покупать продвижение? Как вы проверяете, что человек и правда владелец?",
-          "Отзывы и достоверность: как устроены оценки (общая звёздность, подробные отзывы с фотографиями, оценка по отдельным признакам)? Как отсеиваются заказные и мстительные — предварительная проверка, подтверждение факта обращения, ответ владельца?",
-          "Монетизация: как каталог зарабатывает (платное размещение или подписка для компаний, поднятие в выдаче и выделение карточки, реклама, продажа обращений из карточки, платный доступ к расширенным сведениям)? Что остаётся бесплатным всегда?",
-          "Страницы под запросы: нужно ли автоматически создавать страницы на пересечении признаков — вида «нужное в таком-то городе с таким-то условием»? Для справочников это главный источник посетителей, но и главный источник пустых страниц: как не создавать те, за которыми ничего нет?",
-          "Технические и организационные требования: есть ли то, о чём нужно знать заранее (объём базы, языки, мобильная версия, связи с внешними источниками данных, кто будет вести модерацию после запуска, сроки)?"
+          "Тип сервиса: что именно вы доставляете и в каком виде (готовая еда, продукты и товары из магазинов, документы и посылки, сборные грузы, доставка от двери до двери, логистическая площадка для бизнеса)? Внутри города, между городами или и то и другое?",
+          "Три стороны и их возможности: кто пользуется системой — заказчики, курьеры (пешие, на велосипеде, на машине), заведения и магазины, диспетчеры, поддержка? Опишите каждую сторону и что именно она может делать.",
+          "Проблема и боль: какую главную проблему решает сервис (долгая доставка, высокая цена, нет контроля за курьером, неудачные маршруты, потерянные заказы)? Что сейчас сильнее всего раздражает — клиента, курьера, заведение?",
+          "Альтернативные решения: как люди и компании отправляют и получают заказы сейчас, если вашего сервиса нет (чужие службы, собственные курьеры, самовывоз, почта, договорённость в мессенджере)?",
+          "Идеальный результат: какой сценарий доставки вы считаете идеальным — таким, где в плюсе остаются все трое: клиент, курьер и бизнес?",
+          "Конкуренты и аналоги: на кого вы ориентируетесь? Назовите сервисы и ссылки, скажите, какие их возможности обязательно нужны, а что считаете слабым местом.",
+          "Чем вы принципиально отличаетесь: в чём главное отличие от конкурентов (скорость, цена, особые зоны доставки, отношения с курьерами, свои возможности)?",
+          "Жизненный цикл заказа: из каких этапов состоит заказ от создания до завершения (создан, подтверждён, готовится, курьер назначен, в пути, доставлен)? Кто его создаёт, как подтверждается доставка и что происходит при отмене, опоздании или отказе клиента?",
+          "Назначение курьера: как курьер получает заказ — автоматически ближайшему свободному, биржей «кто первый взял» или через диспетчера вручную? Что делать, если никто не берёт заказ?",
+          "Карты и геолокация: какая работа с картой нужна (курьер на карте в реальном времени, определение адреса по местоположению, построение маршрута, зоны доставки и их границы, время в пути с учётом пробок)?",
+          "Расчёт стоимости доставки: как складывается цена для клиента (фиксированная ставка, расстояние, вес и габариты, время суток, повышенный спрос, бесплатная доставка от суммы заказа)?",
+          "Модель заработка: на чём зарабатывает сам сервис (комиссия с заказа, комиссия с заведения или с курьера, подписка, плата за размещение, реклама, платная приоритетная доставка)?",
+          "Оплата и взаиморасчёты: как движутся деньги (оплата на сайте или в приложении, наличными курьеру, чаевые, безналичный расчёт для компаний, выплаты курьерам и заведениям — как часто и куда)?",
+          "Интерфейсы и устройства: в каком виде работает каждая сторона (сайт для клиента, устанавливаемое приложение, отдельное приложение курьера с уведомлениями, планшет или панель для заведения, рабочее место диспетчера)?",
+          "Ключевые возможности: что обязательно должно быть (отслеживание на карте, выбор времени доставки, чат с курьером, оценки и отзывы, повтор прошлого заказа, программа лояльности, уведомления о каждом этапе)?",
+          "Интеграции: с чем сервис должен связываться (картографические службы, кассовые и учётные системы заведений, платёжные сервисы, SMS и Telegram, CRM)?",
+          "Стиль и атмосфера: какое впечатление должны оставлять сайт и приложение (быстрый и технологичный, дружелюбный и простой, премиальный, молодёжный)? Есть ли референсы, которые вам нравятся?",
+          "Технические, географические и организационные ограничения: есть ли требования, о которых нужно знать заранее (города и зоны запуска, устанавливаемые приложения, оформление курьеров, ожидаемая нагрузка в час пик, сроки запуска, кто будет держать диспетчерскую)?"
+        ]
+      },
+      "marketplace": {
+        "title": "Маркетплейс",
+        "tagline": "Две стороны, ваша площадка",
+        "definition": "Площадка, где продают другие. У вас два типа пользователей — продавец и покупатель, — и зарабатываете вы на сделке между ними, а не на своём товаре.",
+        "examples": [
+          "Доска объявлений города или ниши",
+          "Площадка мастеров и заказчиков",
+          "Общая витрина нескольких магазинов",
+          "Биржа услуг или аренды"
+        ],
+        "signals": [
+          "Товар или услуга принадлежат не вам",
+          "Продавцов нужно привлекать отдельно от покупателей",
+          "Есть комиссия, модерация и споры"
+        ],
+        "questions": [
+          "Предмет торговли: что именно продаётся на площадке (физические товары, цифровые файлы, услуги и работа по заказу, аренда вещей или помещений, билеты, объявления)? Одна категория или несколько сразу?",
+          "Обе стороны: кто продаёт и кто покупает? Опишите портрет каждой стороны отдельно — кто эти люди или компании, чем занимаются, насколько привычны к таким площадкам.",
+          "Боль каждой стороны: какую проблему вы решаете покупателю (нет выбора, нет гарантий, трудно сравнить) и какую продавцу (высокий порог входа, нет покупателей, сложно принимать деньги)? Ответьте про обоих — это разные боли.",
+          "Как находят друг друга сейчас: где покупатель и продавец встречаются без вашей площадки (социальные сети, доски объявлений, прямые договорённости, посредники и агентства, крупные маркетплейсы)?",
+          "Идеальный результат: как выглядит безупречная сделка, где покупатель получил желаемое, продавец заработал, а площадка взяла своё? Опишите её глазами обоих.",
+          "Конкуренты и образцы: на какие площадки вы ориентируетесь — крупные или узкие? Назовите их и ссылки, скажите, что нравится и что считаете слабым.",
+          "Чем принципиально отличаетесь: узкая ниша, лучший подбор, размер комиссии, удобство, доверие, дополнительные услуги?",
+          "Процесс сделки: как проходит путь от поиска до завершения (нашёл, выбрал, списался с продавцом, оплатил, получил, подтвердил, оставил отзыв)? Где нужна переписка между сторонами и на каких шагах особенно важна безопасность?",
+          "Как площадка зарабатывает: комиссия с каждой сделки, плата за размещение, подписка для продавцов, платное продвижение в выдаче, дополнительные услуги? Кто платит — продавец, покупатель или оба?",
+          "Движение денег: через чей счёт они идут (площадка удерживает до подтверждения получения, оплата идёт напрямую продавцу, часть удерживается как залог)? Когда продавец получает выплату и что происходит с деньгами при споре?",
+          "Кабинет продавца: что ему нужно для работы (управление своим каталогом и ценами, остатки и заказы, сводка продаж, вывод заработанного, отчёты для отчётности)?",
+          "Кабинет покупателя: что видит он (избранное, история покупок, отслеживание заказов от РАЗНЫХ продавцов сразу, корзина с товарами нескольких продавцов, повтор заказа)?",
+          "Поиск и подбор: как покупатель находит нужное (фильтры по цене, рейтингу и наличию, поиск по карте и расстоянию, подсказки похожих предложений, сортировка выдачи)? По какому правилу выстраивается порядок предложений?",
+          "Доверие и проверка: как строится доверие между незнакомыми людьми (отзывы в обе стороны, проверка документов продавца, отметка «проверенный», гарантии площадки, модерация объявлений)? Кто и когда проверяет нового продавца?",
+          "Споры и возвраты: как разбираются конфликты (жалоба, разбор с участием поддержки, сценарии возврата денег, удержание выплаты на время спора)? Кто принимает окончательное решение и по каким правилам?",
+          "Доставка и исполнение: как заказ доходит до покупателя (продавец отправляет сам, площадка держит склад, службы доставки, самовывоз, для услуг — как подтверждается выполнение)?",
+          "Технические, географические и организационные ограничения: есть ли требования, о которых нужно знать заранее (регионы и языки запуска, устанавливаемые приложения, платёжные службы и правовая форма расчётов, модерация содержимого, сроки запуска, кто будет управлять площадкой)?"
+        ]
+      },
+      "saas": {
+        "title": "SaaS-сервис",
+        "tagline": "Продукт по подписке",
+        "definition": "Программа, за пользование которой платят регулярно. Ценность — в работе, которую она делает вместо пользователя; у каждого свой аккаунт, тариф и свои данные.",
+        "examples": [
+          "Сервис учёта или планирования",
+          "Инструмент для маркетологов, врачей, юристов",
+          "Личный кабинет с расчётами и отчётами",
+          "Сервис для команд с ролями и правами"
+        ],
+        "signals": [
+          "Деньги приходят повторно, а не один раз",
+          "У пользователя есть аккаунт и собственные данные внутри него",
+          "Главный риск — что не продлят, а не что не купят"
+        ],
+        "questions": [
+          "Задача продукта и главный сценарий: что именно человек или компания получает от вашего сервиса? Опишите основной путь — от первого входа до момента, когда пользователь получил результат, ради которого пришёл.",
+          "Целевая аудитория и роли: кто ваши клиенты (частные лица, соло-предприниматели, малый бизнес, крупные компании) и кто внутри них работает с продуктом — владельцы, руководители, рядовые специалисты? Опишите каждый тип: отрасль, размер, должность.",
+          "Проблема и боль: какую ключевую рабочую задачу или боль вы закрываете для этой аудитории?",
+          "Альтернативные решения: как эту задачу решают сейчас, если вашего сервиса и сервисов конкурентов нет (таблицы, чужой продукт «не про то», ручная работа, наёмный человек, никак)?",
+          "Идеальный результат: что для клиента идеальный итог — такой, ради которого он продлевает подписку каждый месяц? В какой момент он понимает, что платит не зря?",
+          "Конкуренты: кто ваши прямые и косвенные конкуренты? Назовите продукты и ссылки, скажите, что вам в них нравится и что считаете слабым.",
+          "Чем вы принципиально отличаетесь: подход, возможности, простота, цена, скорость внедрения, узкая специализация под отрасль?",
+          "Ядро продукта на старте: какие возможности обязаны быть в первой версии, а какие подождут? Опишите то, без чего продукт не имеет смысла.",
+          "Тарифы и монетизация: как устроена оплата (бесплатный уровень, фиксированная подписка, оплата за каждого пользователя, оплата за объём использования, разовые покупки, корпоративные условия)? Назовите уровни тарифов и что входит в каждый.",
+          "Пределы и просрочка: что происходит, когда пользователь превысил лимит тарифа или не оплатил новый период — доступ закрывается сразу, продукт переходит на бесплатный уровень, даётся льготный срок с предупреждением? Что при этом происходит с его данными?",
+          "Команды и организации: как устроены учётные записи (личный аккаунт, общее рабочее пространство с ролями, несколько организаций у одного человека)? Кто кого приглашает, кто что видит и что бывает при уходе сотрудника?",
+          "Приём денег: какие платёжные службы и возможности нужны (регулярные списания, счета для юридических лиц, несколько валют, налоги, возвраты, смена тарифа в середине периода)?",
+          "Вход и безопасность: какими способами входят (почта и пароль, вход через сторонние сервисы, единый вход для крупных клиентов, двухшаговое подтверждение)? Есть ли требования к защите данных со стороны ваших клиентов?",
+          "Первый опыт и активация: как новый пользователь доходит до первой пользы (пошаговый мастер настройки, подсказки по интерфейсу, готовые шаблоны и учебные данные, пустой экран с одной кнопкой)? Через сколько минут он должен увидеть результат?",
+          "Открытый доступ и интеграции: нужен ли клиентам свой доступ к вашему API и исходящие уведомления о событиях? С какими сторонними системами продукт должен связываться в первую очередь?",
+          "Метрики и рабочее место владельца: что вам нужно видеть о собственном сервисе (выручка и её рост, отток, срок жизни клиента, активные пользователи) и нужна ли служебная панель для поддержки — найти клиента, продлить подписку, войти под ним для разбора?",
+          "Стиль интерфейса и уровень сложности: какой продукт вы хотите — предельно простой и быстрый или мощный и гибкий с множеством настроек? Есть ли интерфейсы, на которые стоит равняться?",
+          "Технические и организационные ограничения: есть ли требования, о которых нужно знать заранее (мобильная версия или приложение, где хранятся данные и требования к ним, ожидаемая нагрузка, сроки запуска, кто будет поддерживать продукт после запуска)?"
         ]
       },
       "crm": {
@@ -4957,6 +4916,112 @@
           "Импорт, экспорт и переезд: нужно ли переносить существующую базу и в каком виде (таблицы, выгрузка из прежней CRM)? Нужна ли выгрузка отчётов и данных наружу?",
           "Интерфейс и уровень сложности: какой системы вы хотите — предельно простой и быстрой или гибкой и мощной с множеством настроек? Есть ли интерфейсы, которые вам нравятся?",
           "Технические, организационные и юридические ограничения: есть ли требования, о которых нужно знать заранее (свой сервер или облако, сколько пользователей, требования к защите персональных данных, мобильные приложения, работа без сети, сроки запуска, кто будет администрировать систему)?"
+        ]
+      },
+      "scheduler": {
+        "title": "Автоматизация по расписанию",
+        "tagline": "Правило и таймер вместо суждения",
+        "definition": "Служба, которая сама просыпается в назначенный час, ходит куда велено, сравнивает найденное с условием и присылает результат. Решать ей нечего: где нужно суждение — там агент, а здесь правило. Продукт держится на трёх вещах, невидимых снаружи: расписании, поведении при отказе и журнале выполнения.",
+        "examples": [
+          "Слежение за ценой и сообщение, когда она упала",
+          "Разбор входящей почты и сводка раз в день",
+          "Сбор данных с сайтов, у которых нет открытого доступа",
+          "Регулярный отчёт, который собирается и уходит сам"
+        ],
+        "signals": [
+          "Человек сегодня проверяет что-то руками по многу раз в день",
+          "Правило можно записать одной фразой «если… то…»",
+          "Важно не пропустить момент, а не поговорить"
+        ],
+        "questions": [
+          "Сценарии в первую очередь: какие регулярные задачи вы покрываете (проверка почты, слежение за ценами и скидками, сбор данных с сайтов, регулярные отчёты, публикация, синхронизация данных, обращение к чужому API)? Перечислите самые важные — с них всё и начнётся.",
+          "Целевая аудитория: кто создаёт и использует эти автоматизации? Опишите все типы — обычные люди, фрилансеры, маркетологи, аналитики, владельцы небольшого дела, разработчики — и насколько каждый готов разбираться в настройке.",
+          "Проблема и боль: какую главную задачу решает сервис (время на рутину, страх упустить выгоду или важное письмо, потребность видеть динамику цен)? Что раздражает сильнее всего при ручном повторении?",
+          "Альтернативные решения: как люди справляются сейчас, если вашего сервиса нет (проверяют вручную каждые полчаса, ставят будильники, нанимают помощника, пишут свои скрипты, никак)?",
+          "Идеальный результат: какой итог сделает человека полностью довольным (сообщение в мессенджер в ту же минуту, когда цена упала; одно письмо в день с выжимкой вместо потока)?",
+          "Конкуренты и аналоги: на что вы ориентируетесь (Zapier, Make, n8n, IFTTT, расширения браузера, узкие трекеры цен, самописные скрипты)? Что из их устройства нужно заимствовать, а что считаете слабым?",
+          "Чем вы принципиально отличаетесь: простота, надёжность, цена, глубина автоматизаций, готовые шаблоны, работа без кода, скорость, узкий круг сценариев вместо всего сразу?",
+          "Как человек создаёт автоматизацию: готовыми шаблонами, визуальным сборщиком, описанием задачи обычным языком, кодом или сочетанием? Насколько это должно быть посильно новичку в первый же вечер?",
+          "Расписание и запуск: какие способы запуска нужны (фиксированный интервал вроде «каждые 15 минут», выражение cron, определённые дни и часы, одноразовый отложенный запуск, ручной запуск, событие извне, цепочка из нескольких автоматизаций)?",
+          "Условия срабатывания: как описывается правило «если… то…» (цена ниже порога, в письме встретилось слово, появилась новая запись, значение изменилось с прошлого раза)? Нужен ли сборщик условий мышью или достаточно простой формы?",
+          "Действия и куда уходит результат: что система делает при срабатывании и куда шлёт итог (сообщение в мессенджер, письмо, строка в таблицу, задача в трекер, вызов чужого адреса, заполнение формы)? Сообщать о каждом запуске или только когда есть новость?",
+          "Источники данных и интеграции: с чем инструмент обязан работать (почта, сайты без открытого доступа, чужие API и входящие вызовы, ленты новостей, таблицы, базы данных, календарь, мессенджеры, CRM)? С чего начинаем?",
+          "Чтение сайтов и их защиты: нужно ли обходить помехи при сборе данных (работа через промежуточные серверы, полноценный браузер вместо простого запроса, распознавание проверок «вы не робот», вход в личный кабинет на целевом сайте)? Насколько это законно в вашем случае?",
+          "Отказы и повторные попытки: как система ведёт себя при сбое — целевой сайт лёг, сеть пропала, ответ пришёл пустым? Сколько раз повторять, с какой паузой, когда и кому сообщать о поломке задачи?",
+          "Журнал выполнения: нужна ли человеку подробная история каждой задачи (успех или отказ, время ответа, что именно вернулось, сохранённый ответ для разбора)? Как долго хранить?",
+          "Пределы и оплата: как устроены ограничения и деньги (сколько задач можно держать включёнными, минимальный интервал проверки на бесплатном тарифе, оплата за число запусков или подписка, что происходит при исчерпании лимита)?",
+          "Технические и организационные ограничения: есть ли требования, о которых нужно знать заранее (своё размещение или облако, работа круглосуточно, объём обрабатываемых данных, языки, сроки запуска)?"
+        ]
+      },
+      "ai-coach": {
+        "title": "AI-коуч и ментор",
+        "tagline": "Ведёт человека, а не выдаёт уроки",
+        "definition": "Собеседник, который помнит вас между разговорами: ставит цели, спрашивает о них сам и замечает, что вы обещали неделю назад. Отличается от курса тем, что ничего не отдаёт заранее записанным, — весь смысл в характере, памяти и в том, где он останавливается и передаёт человека живым специалистам.",
+        "examples": [
+          "Трекер привычек, который спрашивает первым",
+          "Карьерный ментор для тех, кому дорог живой коуч",
+          "Разбор целей недели для предпринимателя",
+          "Тренер, ведущий к спортивной цели по плану"
+        ],
+        "signals": [
+          "Ценность в разговоре, а не в записанном заранее материале",
+          "Нужно помнить прошлые сессии, иначе всё начинается с нуля",
+          "Человек бросает без напоминаний, и напоминать должен продукт"
+        ],
+        "questions": [
+          "Сфера и методика: в какой области и для каких задач работает ваш коуч (карьера, бизнес, спорт, привычки, обучение навыку, финансы, личностный рост)? По какой методике он ведёт — задаёт вопросы и не советует, даёт прямые рекомендации, строго трекает привычки, играет роль конкретного эксперта?",
+          "Целевая аудитория: кто будет пользоваться сервисом? Опишите подробно все типы людей — возраст, занятие, уровень опыта, что у них болит, что движет, — и насколько они вообще готовы работать с ИИ вместо живого человека.",
+          "Проблема и боль: какую главную задачу решает коуч (живой ментор слишком дорог, не хватает дисциплины, страшно показаться глупым, решения принимаются в одиночку, всё делается урывками)? Что сильнее всего мешает им двигаться прямо сейчас?",
+          "Альтернативные решения: как люди пытаются решить это сейчас, если вашего сервиса нет (работа с живым специалистом, дневник, ролики и книги, разговоры с друзьями, ничего)?",
+          "Идеальный результат: какого изменения должен достичь человек, чтобы считать сервис своим лучшим помощником? Опишите его состояние через месяц и через год.",
+          "Конкуренты и аналоги: с чем вас будут сравнивать? Назовите сервисы, приложения, ботов и площадки живых коучей, укажите ссылки. Что вам в них нравится и что считаете слабым?",
+          "Чем вы принципиально отличаетесь: глубина персонализации, стиль общения, методика, наличие структуры, сочетание с живым человеком, свои техники?",
+          "Характер и стиль общения: каким должен быть коуч — тёплым и поддерживающим, строгим и требовательным, аналитическим, провоцирующим, с юмором? Чего он не делает никогда? Есть ли образцы речи, на которые стоит равняться?",
+          "Память и персонализация: что и как надолго сервис помнит о человеке (только текущий разговор, прошлые сессии, цели и провалы, привычки и предпочтения, ключевые факты о жизни или деле)? Нужны ли входные тесты, диагностика и подстройка программы под ответы?",
+          "Сценарий работы: как устроено взаимодействие (свободный разговор в любое время, сессии по расписанию, короткие ежедневные отметки, длинная программа с этапами, домашние задания и их проверка)? Сколько длится одна сессия и вся программа?",
+          "Формат общения: в каком виде идёт разговор (текст, голосовые сообщения, звонок с синтезированной речью, разбор присланных документов и снимков экрана)?",
+          "Цели и прогресс: нужен ли человеку экран с целями и достижениями (список целей, трекер привычек, графики настроения и продуктивности, сводка за неделю)?",
+          "Проактивность: как коуч начинает разговор сам (напоминание о цели, сообщение «вы обещали сделать это к пятнице», итоги недели, реакция на молчание несколько дней)? Как часто он вправе писать первым?",
+          "Ключевые возможности: что ещё обязательно должно быть (библиотека материалов, сообщество, переход к живому специалисту, связь с календарём, данные с носимых устройств, экспорт своих записей)?",
+          "Монетизация и пределы: как устроена оплата (подписка, оплата за сессию или программу, бесплатный доступ с ограничением числа сообщений в день, пробный период, корпоративные тарифы)? Что именно ограничено в бесплатной версии?",
+          "Границы компетенции и передача человеку: как система должна вести себя с темами вне своей области — кризисные состояния, здоровье, юридические и денежные решения? Куда и как она направляет человека и в какой момент отказывается продолжать сама?",
+          "Технические и организационные ограничения: есть ли требования, о которых нужно знать заранее (обращение с персональными данными и их хранение, устанавливаемое приложение, языки, возможность подстройки под конкретного пользователя, ожидаемая нагрузка, сроки запуска)?"
+        ]
+      },
+      "agents": {
+        "title": "Агентная автоматизация",
+        "tagline": "Маршрут строится по ходу дела",
+        "definition": "Система, которой ставят одну цель, а она сама решает, из каких шагов её достичь: обходит источники, читает найденное, отбрасывает противоречивое и сводит остальное в документ. Отличие от расписания в том, что следующий шаг здесь зависит от предыдущего — заранее известен только результат, которого нужно добиться.",
+        "examples": [
+          "Разбор рынка по десяткам источников с готовым отчётом",
+          "Досье на компанию или кандидата перед встречей",
+          "Свод отраслевых новостей с проверкой первоисточников",
+          "Регулярное исследование, повторяемое из месяца в месяц"
+        ],
+        "signals": [
+          "Задача не раскладывается в один запрос — нужен десяток шагов",
+          "Что искать дальше, становится ясно только из уже найденного",
+          "Итог — документ с выводами, а не строка данных"
+        ],
+        "questions": [
+          "Задачи для агента: какие сложные многошаговые задачи он должен решать (разбор рынка, досье на компанию или кандидата, правовая проверка, сбор аналитики, исследование содержания, ведение процесса с ветвлениями)? Назовите две-три, с которых начнёте.",
+          "Целевая аудитория: кто ставит задачи агенту и читает результат? Опишите все типы — аналитики, исследователи, маркетологи, операционные менеджеры, владельцы дела, разработчики — и насколько каждый готов проверять работу агента.",
+          "Проблема и боль: чего именно НЕ закрывают обычные скрипты и автоматизация по таймеру? Что сейчас отнимает время у человека — ручной обход десятка источников, поверхностность, пропуски важного, сложность свести разрозненное в один документ?",
+          "Альтернативные решения: как такие исследования делаются сейчас (ручной поиск и сборка отчёта в редакторе, наём фрилансера или консультанта, покупка готового отчёта, никак)?",
+          "Идеальный результат и его формат: что для человека «золотой стандарт» ответа (структурированный документ со ссылками на первоисточники и графиками, интерактивная сводка, заполненные таблицы с обоснованием)? В каком виде он должен приходить?",
+          "Конкуренты и аналоги: на что вы ориентируетесь (AutoGPT, CrewAI, Devin, глубокий поиск в Perplexity, свои агентные сборки)? Что в их работе привлекает, а что кажется лишним?",
+          "Чем вы принципиально отличаетесь — и от автоматизации по расписанию, и от существующих агентных площадок (глубина рассуждения, последовательный сбор, приспособляемость, прозрачность действий, контроль человека)?",
+          "Постановка задачи и план: в каком виде человек формулирует цель (свободная фраза, структурированное задание, готовый шаблон исследования, сборщик целей)? Строит ли агент план сам, вправе ли менять его по ходу и видит ли человек этот план до запуска?",
+          "Устройство агентов: работает один агент с набором инструментов или несколько с ролями — планировщик, поисковик, критик, составитель? Можно ли менять их роли и указания владельцу?",
+          "Инструменты и источники: чем агент вправе пользоваться (поиск в сети, чтение страниц, разбор файлов PDF, документов и таблиц, вызов чужих API, выполнение кода, внутренние базы и системы компании, почта)?",
+          "Уровень самостоятельности: что агент делает без спроса, а где обязан остановиться и подтвердить (только собирает данные · собирает и рекомендует · действует с подтверждением · действует сам в заданных рамках)? Перед чем подтверждение обязательно — платный вызов, отправка наружу, запись в чужую систему?",
+          "Противоречия и неполнота: как агент поступает, когда источники расходятся (ищет дополнительные, взвешивает надёжность, честно показывает развилку в отчёте, отказывается от вывода)? Что он делает, когда данных не хватает вовсе?",
+          "Глубина и пределы одного исследования: чем ограничен прогон (число шагов, число прочитанных страниц, расход на модель, общее время)? Что происходит при достижении предела — обрывается или отдаёт то, что успел?",
+          "Ссылки на первоисточники: как в итоговом документе доказывается каждое утверждение (сноска с адресом, сохранённая цитата или снимок страницы, дата сбора)? Что делать с утверждением, у которого источника нет?",
+          "Прозрачность хода работы: видит ли человек шаги в реальном времени — что агент ищет сейчас, что читает, что проверяет? Нужна ли полная запись хода для последующего разбора?",
+          "Память между запусками: должны ли результаты прошлых исследований складываться в общий склад знаний, чтобы агент не искал дважды одно и то же? Как отличать устаревшее от актуального?",
+          "Шаблоны, отказы и уведомления: нужны ли готовые сценарии частых исследований? Что происходит, когда шаг не удался — повтор, обход, остановка? Как человек узнаёт, что работа закончена или сломалась?",
+          "Ограничения и безопасность: есть ли требования, о которых нужно знать заранее (своё размещение или облако, работа с закрытыми данными, что агенту запрещено делать в принципе, обязательный контроль человека, сроки запуска)?"
         ]
       },
       "competitors": {
@@ -5008,7 +5073,7 @@
         ]
       },
       "company-brain": {
-        "title": "Мозг компании",
+        "title": "Мозг компании — разработка",
         "tagline": "Всё знание компании в одном месте",
         "definition": "Проект, который собирает знание компании — документы, переписки, задачи, кодовую базу, людей и их роли, — приводит его в структуру, хранит в вашей базе и отдаёт отчётами и ответами со ссылкой на источник.",
         "examples": [
@@ -5054,6 +5119,71 @@
           "Гипотеза этой архитектуры проста: карты репозиториев плюс поиск по смыслу дадут общее видение проекта. Как всякая гипотеза, она где-то сработает, а где-то нет. На какие вопросы она, по-вашему, ответит хорошо, а где окажется слабой? Есть ли у вас репозитории или части проекта, особенно хорошо или особенно плохо подходящие под такой подход?",
           "Система читает весь код компании, и вместе с ним — то, что в коде оказалось случайно. Какие правила безопасности закладываем сразу: что нельзя показывать определённым ролям, как поступать с найденными ключами и паролями, с настройками боевых систем, с личными данными сотрудников в истории изменений? Есть ли репозитории, куда системе нельзя вовсе?"
         ]
+      },
+      "business-brain": {
+        "title": "Мозг компании — бизнес",
+        "tagline": "Один ответ вместо шести вкладок",
+        "definition": "Сводит в одно место всё, что вращается вокруг клиента: заявки, переписку, звонки, сделки, счета, доставку и обращения в поддержку. Любой сотрудник спрашивает словами и получает ответ, на который иначе ушёл бы час поисков по шести системам. Цена такого удобства — вся коммерческая тайна компании в одном месте.",
+        "examples": [
+          "«Что происходит с клиентом и почему он просил скидку»",
+          "Сводка по менеджеру: конверсия и причины отказов",
+          "История отношений с поставщиком за три года",
+          "Разбор: почему сорвалась сделка и что этому предшествовало"
+        ],
+        "signals": [
+          "Ответ на простой вопрос требует открыть несколько систем",
+          "Знание о клиенте живёт в голове одного менеджера",
+          "Руководитель узнаёт о проблеме, когда она уже случилась"
+        ],
+        "questions": [
+          "Система сводит в одно место продажи, маркетинг, финансы, доставку и поддержку, чтобы на вопрос о клиенте отвечал не человек с хорошей памятью, а сама компания. Какую главную боль вашей команды это должно снять и какие из этих областей обязаны попасть уже в первую версию?",
+          "Ценность измеряется вопросами, на которые система отвечает. Какие вопросы люди должны задавать первыми — «что происходит с этим клиентом», «какие заявки у этого менеджера», «почему сорвалась эта сделка», «какова история с этим поставщиком», «сколько мы заработали на нём за год»? Какие ситуации «не могу быстро понять, что происходит» болят сегодня сильнее всего?",
+          "Знания системы держатся на нескольких главных сущностях, вокруг которых собирается всё остальное. Какие из них у вас центральные — клиенты, сделки и заявки, менеджеры, поставщики, товары и услуги, платежи, обращения в поддержку, рекламные кампании?",
+          "Один и тот же человек пишет с личной почты, отвечает в мессенджере и числится в системе продаж под другим именем. Пока система не понимает, что это один клиент, полного ответа не будет. По каким признакам склеивать записи в одного человека или одну компанию, и что делать при сомнении — объединять или спрашивать?",
+          "Итог этой склейки — единая карточка, куда стекается всё об одном клиенте. Что вы вкладываете в «исчерпывающую информацию»: история покупок и суммы, вся переписка и звонки, обращения в поддержку, персональные скидки и особые договорённости, задолженности, внутренние заметки менеджеров? Что из этого обязательно, а что желательно?",
+          "Отдельные записи мало что значат без связей между ними. Должна ли система показывать, кто из менеджеров работал с клиентом, какие поставщики стоят за какими сделками, какая реклама привела эту заявку, и как одно повлияло на другое?",
+          "Обращения приходят одновременно из нескольких мест, и потерянный канал означает потерянного клиента. Какие каналы подключаем обязательно (почтовые ящики, формы на сайте, мессенджеры, телефония с записью разговоров, партнёрские заявки, торговые площадки)?",
+          "Система продаж обычно считается главной, но она же чаще всего расходится с действительностью. С какой системой нужно связаться и какова её роль: единственный источник правды, один из источников, или система вправе дополнять и поправлять её данными из переписки и банка? С чем ещё связываемся на первом этапе?",
+          "Деньги — самая проверяемая часть ответа и самая чувствительная. Откуда берутся финансовые сведения (бухгалтерская система, складской учёт, выписки банка, платёжные службы, таблицы расходов) и кто отвечает за их достоверность?",
+          "Путь денег начинается задолго до сделки — с рекламного показа. С какими рекламными и аналитическими системами связываться, чтобы видеть дорогу от объявления до выручки?",
+          "Продажа не заканчивается оплатой: дальше склад, отгрузка и доставка. С какими системами учёта и службами доставки нужна связь, чтобы отвечать про остатки, сроки и статус конкретной посылки?",
+          "После продажи начинается поддержка, и именно там видно правду о продукте. Как собирать обращения, претензии и возвраты, и как система должна отвечать на вопрос «какие три беды чаще всего случаются у клиентов после покупки этого товара и как их решают»?",
+          "Отношения с поставщиком — такая же история, как с клиентом, только с другой стороны. Что накапливать (история закупочных цен, условия и отсрочки, надёжность и срывы сроков, плечи доставки) и на какие вопросы это должно отвечать?",
+          "Договоры живут годами, а помнит о них обычно один человек. Нужен ли поиск по текстам договоров и слежение за сроками — когда заканчивается, когда автоматически продлевается, где какие особые условия?",
+          "При первом запуске надо решить, с какой глубины начинать: прошлое можно загрузить, но это время и деньги. За какой срок поднимать историю — год, три, всё что есть, или начинаем с чистого листа? И какая глубина нужна по каждой сделке: только текущее состояние или вся хронология касаний с перепиской, звонками и внутренними комментариями?",
+          "Большая часть знания о клиенте лежит не в полях, а в словах: длинные переписки, записи звонков, заметки менеджера, сканы актов. Как с этим поступать — хранить целиком, сокращать до сути, вытаскивать только факты и сущности, распознавать речь и текст на снимках? Нужно ли определять настроение разговора?",
+          "Ответ хорош ровно настолько, насколько свежи данные. Как часто они обновляются — сразу по событию (пришло письмо, изменился статус сделки), раз в несколько минут, раз в час, по расписанию? Где задержка допустима, а где нет?",
+          "Часть ответов — это числа, которые нужно посчитать, а не найти. Какие показатели система обязана считать по запросу (пожизненная ценность клиента, стоимость привлечения, средний чек, доходность сделки, задолженности, просрочки оплат, воронка продаж, источники заявок, загрузка доставки)?",
+          "Отдельный класс вопросов — о работе людей. Как система должна отвечать на «покажи конверсию этого менеджера за месяц и главные причины отказов в его сделках»? Кому такие ответы доступны и знает ли сотрудник, что о нём спрашивают?",
+          "Переписку менеджера можно не только хранить, но и сверять с тем, как в компании положено разговаривать. Нужна ли такая сверка с регламентом и подсветка ошибок — и понимаете ли вы, что это надзор за людьми, а не только за качеством?",
+          "Самый ценный ответ — не «что случилось», а «почему». Должна ли система объяснять причины: почему проиграна сделка, почему упала конверсия, почему задержалась доставка? Насколько такому объяснению можно доверять и обязано ли оно ссылаться на записи, из которых сделано?",
+          "Сбой в цепочке поставок виден в данных раньше, чем в жалобе клиента. Должна ли система сама подсвечивать узкие места — что доставка этому клиенту задерживается из-за перевозчика, что у поставщика систематически съезжают сроки?",
+          "Система может писать первой, не дожидаясь вопроса: «ключевой клиент не продлил подписку, хотя обычно платил до пятнадцатого», «сделка зависла», «пришёл резкий отзыв». Нужны ли такие сообщения, по каким событиям, кому именно и что удержит их от превращения в шум?",
+          "Данные из разных систем неизбежно разойдутся: в продажах «оплачено», в банке денег нет. Как система должна поступать — верить одному источнику, показывать оба и отмечать расхождение, поднимать тревогу? Кто разбирается с расхождением?",
+          "Ответ должен приходить туда, где человек работает. Через что общаемся (бот в мессенджере для руководителей, чат внутри портала, окно прямо в системе продаж, почта) и что главное на старте?",
+          "Разбор сложного клиента редко умещается в один вопрос. Должен ли помощник вести долгий разговор с памятью о сказанном и задавать уточняющие вопросы, или достаточно точечных ответов?",
+          "Здесь разграничение прав — не удобство, а обязанность. Может ли рядовой менеджер спросить у бота чистую прибыль компании или зарплату коллеги? Какие роли нужны и что каждая видит: свои клиенты, вся команда, финансы, обезличенная статистика?",
+          "В этих данных лежат чужие персональные сведения и коммерческая тайна. Какие правила закладываем сразу: что скрывать в ответах (номера карт, документы, личные телефоны), как соблюдать закон о персональных данных, сколько хранить, как удалять по требованию человека, что делать при запросе на удаление?",
+          "Часть ответов лучше показать, чем описать. Должна ли система строить графики, сводные таблицы и выгрузки прямо в ответе — и в каком виде вам удобнее их забирать?",
+          "Ни одна система не знает того, что не записано, и ни одна не безошибочна. Нужна ли возможность дописать знание руками — важный комментарий к клиенту, договорённость, поправка к неверно распознанной сумме? И чем вы будете мерить качество работы «мозга»: скорость ответа, полнота, доля вопросов с полезным ответом, сэкономленное время на разбирательствах?"
+        ]
+      },
+      "custom": {
+        "title": "Своё направление",
+        "tagline": "Ни одного вопроса заранее",
+        "definition": "Направление для того, чего нет в списке выше. Готовых вопросов здесь нет и не будет: их пишете вы. Двадцать наборов рядом покрывают предугаданное, а этот существует ровно для непредугаданного — подставить сюда «универсальные семь вопросов» значило бы вернуть ту самую беду, ради которой выбор направления и появился.",
+        "examples": [
+          "Продукт, не похожий ни на один из соседних",
+          "Своя отрасль со своими словами и своими правилами",
+          "Внутренний инструмент под единственную задачу",
+          "Замысел, для которого названия ещё нет"
+        ],
+        "signals": [
+          "Ни одно из направлений выше не описывает то, что вы строите",
+          "Готовые вопросы увели бы разговор не в ту сторону",
+          "Вы знаете, о чём вас нужно спросить, лучше нас"
+        ],
+        "questions": []
       }
     },
     "projectPicker": {
