@@ -29,7 +29,16 @@ export default async function AdminHomePage({ params }: { params: Promise<{ lang
   // Считается своим вызовом, а не пропсом из макета, и это не второй источник
   // правды: функция читает те же файлы на диске, что и шапка, и страница уже
   // динамическая — снимка сборки здесь не бывает.
-  const alarms = warningsBySlug(collectWarnings());
+  const warnings = collectWarnings();
+  const alarms = warningsBySlug(warnings);
+
+  // 🔒 ОЧЕРЕДНОЙ ШАГ — ТОТ ЖЕ, ЧТО В ПОДВАЛЕ, И ЭТО ОДНА СТРОКА КОДА, А НЕ
+  // СОВПАДЕНИЕ (владелец 2026-08-16). Подвал показывает `warnings[0]` большой
+  // кнопкой; карточка первого экрана показывает ЕГО ЖЕ. Список уже отсортирован
+  // в `collectWarnings()` — сначала красные, потом оранжевые, — и заводить
+  // здесь второй порядок нельзя: карточка и подвал разошлись бы в том, что
+  // считать следующим шагом, а человек читает их одновременно.
+  const next = warnings[0] ?? null;
 
   // Цвет тревоги. Один и тот же набор классов на карту группы и на её дочерние —
   // иначе одно требование выглядело бы в дереве двумя разными оттенками.
@@ -53,7 +62,22 @@ export default async function AdminHomePage({ params }: { params: Promise<{ lang
 
           Мягкий голубой, шрифт чуть крупнее остального текста страницы: это
           единственный абзац, который обязаны прочитать, и он же снимает
-          напряжение, а не добавляет его. */}
+          напряжение, а не добавляет его.
+
+          🔒 КАРТОЧКА ГОЛУБАЯ ВСЕГДА, ЧЕМ БЫ НИ БЫЛ ОЧЕРЕДНОЙ ШАГ (владелец
+          2026-08-16). Красный и оранжевый у неё не появляются, даже когда шаг
+          блокирующий: уровень тревоги живёт в области «Прежде чем начинать», в
+          меню и в подвале — там он и нужен. Здесь другая задача: первый экран
+          обязан успокаивать, а не кричать. Тревога, повторённая четвёртый раз и
+          самым крупным блоком на странице, перестаёт означать срочность и
+          начинает означать «тут всегда так».
+
+          🔒 КАРТОЧКА НЕ ИСЧЕЗАЕТ НИКОГДА. Прежняя знала ровно один шаг —
+          «подключить GitHub» — и была зашита намертво: подключив репозиторий,
+          владелец продолжал бы читать требование подключить репозиторий. Совет,
+          ставший ложью, но выглядящий как совет. Теперь на месте шага либо
+          следующий из очереди, либо `calmDone`: исчезнувшая карточка не
+          отвечает на вопрос «а теперь что?». */}
       <div className="mb-5 rounded-lg border border-sky-500/25 bg-sky-500/5 p-4">
         <p className="text-[14px] font-medium leading-relaxed text-sky-800 dark:text-sky-200">
           {s.home.calmLead}
@@ -61,18 +85,39 @@ export default async function AdminHomePage({ params }: { params: Promise<{ lang
         <p className="mt-2 text-[13px] leading-relaxed text-sky-800/90 dark:text-sky-200/90">
           {s.home.calmOnly}
         </p>
+
+        {next ? (
+          /* Слова берутся из УЖЕ СУЩЕСТВУЮЩИХ словарей: причина — та же, что в
+             меню (`warnings.items`), надпись на кнопке — та же, что в подвале
+             (`footer.warnCta`). Своего перевода на каждый шаг здесь не
+             заводится: два места, говорящие об одном разными словами, однажды
+             разойдутся, и разойдутся молча. */
+          <div className="mt-3 rounded-md border border-sky-500/30 bg-sky-500/10 p-3">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-sky-700 dark:text-sky-300">
+              {s.home.calmNext}
+            </p>
+            <p className="mt-1 text-[13px] font-medium leading-relaxed text-sky-900 dark:text-sky-100">
+              {s.warnings.items[next.id]}
+            </p>
+            <Link
+              href={adminHref(lang, next.slug)}
+              className="mt-2.5 inline-flex h-8 items-center gap-1.5 rounded-md bg-sky-600 px-3 text-[12px] font-medium text-white transition-colors hover:bg-sky-700"
+            >
+              {s.footer.warnCta[next.id]}<ArrowRight size={12} />
+            </Link>
+          </div>
+        ) : (
+          <p className="mt-3 rounded-md border border-sky-500/30 bg-sky-500/10 p-3 text-[13px] font-medium leading-relaxed text-sky-900 dark:text-sky-100">
+            {s.home.calmDone}
+          </p>
+        )}
+
         <p className="mt-2 text-[13px] leading-relaxed text-sky-800/80 dark:text-sky-200/80">
           {s.home.calmRest}
         </p>
         <p className="mt-2 text-[13px] leading-relaxed text-sky-800/80 dark:text-sky-200/80">
           {s.home.calmOptional}
         </p>
-        <Link
-          href={adminHref(lang, "github")}
-          className="mt-3 inline-flex h-8 items-center gap-1.5 rounded-md bg-sky-600 px-3 text-[12px] font-medium text-white transition-colors hover:bg-sky-700"
-        >
-          {s.home.calmAction}<ArrowRight size={12} />
-        </Link>
       </div>
 
       {/* Тот же список, что в гамбургере, — чтобы карту слоя было видно целиком

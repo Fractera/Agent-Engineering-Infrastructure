@@ -1108,10 +1108,11 @@
       "title": "Workspace",
       "hint": "Pick a section from the menu. Every section is its own page now, so it has its own address you can bookmark.",
       "calmLead": "It may look like a lot from here. In truth almost nothing in this control panel has to be set up before you start.",
-      "calmOnly": "There is exactly one thing you really need to do — connect your GitHub repository and sync it with your own machine, where a coding agent is installed (we recommend Claude Code).",
+      "calmOnly": "The way of working is simple: your GitHub repository is synced with your own machine, where a coding agent is installed (we recommend Claude Code). You write there, you push, and the server rebuilds itself.",
       "calmRest": "Nothing else is required at the start. Authorization, the database, storage and everything else behind these sections is already set up and running.",
       "calmOptional": "The rest — dictating your instructions by voice with an OpenAI key, the knowledge graph, the map, the channels — are tools. In our experience they get you to a result faster, but nothing here obliges you to use them.",
-      "calmAction": "Connect GitHub"
+      "calmNext": "Next step",
+      "calmDone": "Nothing required is left. Everything below is a tool you may pick up when you need it."
     },
     "navGroups": {
       "application": "Application",
@@ -3555,10 +3556,11 @@
       "title": "Рабочее место",
       "hint": "Выберите раздел в меню. Каждый раздел теперь отдельная страница со своим адресом, который можно сохранить в закладки.",
       "calmLead": "Отсюда это может выглядеть внушительно. На самом деле почти ничего в этой административной панели настраивать перед стартом не нужно.",
-      "calmOnly": "По-настоящему нужно сделать ровно одно — подключить ваш репозиторий GitHub и синхронизировать его со своей машиной, на которой установлен агент-программист (рекомендуем Claude Code).",
+      "calmOnly": "Способ работы простой: ваш репозиторий GitHub синхронизирован со своей машиной, на которой установлен агент-программист (рекомендуем Claude Code). Вы пишете там, отправляете — сервер пересобирается сам.",
       "calmRest": "Больше никаких критически важных настроек на старте нет. Авторизация, база данных, хранилище и всё остальное за этими разделами уже настроено и работает.",
       "calmOptional": "Всё прочее — голосовой набор ваших инструкций с ключом OpenAI, граф знаний, карта, каналы — это инструменты. По нашему опыту с ними результат приходит быстрее, но пользоваться ими вас никто не обязывает.",
-      "calmAction": "Подключить GitHub"
+      "calmNext": "Следующий шаг",
+      "calmDone": "Обязательных шагов не осталось. Всё, что ниже, — инструменты: берите, когда понадобятся."
     },
     "navGroups": {
       "application": "Приложение",
