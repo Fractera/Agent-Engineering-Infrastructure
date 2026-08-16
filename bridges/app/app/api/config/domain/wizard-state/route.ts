@@ -4,16 +4,9 @@ import Database from "better-sqlite3";
 import { requireAuth } from "@/lib/require-auth";
 import { readServerIp, SUBDOMAINS, hostFor } from "@/lib/server-ip";
 import { readCertInfo, coversAllHostnames } from "@/lib/cert-info";
-import { readEnvFile } from "@/lib/env-file";
+import { isSecureMode } from "@/lib/secure-mode";
 
 const APP_DB = process.env.APP_DB_PATH ?? "/opt/fractera/app/data/app.db";
-
-const ENV_FILES = [
-  "/opt/fractera/services/auth/.env.local",
-  "/opt/fractera/bridges/app/.env.local",
-  "/opt/fractera/app/.env.local",
-  "/opt/fractera/services/data/.env",
-];
 
 type SiteSettingsRow = {
   custom_domain?: string | null;
@@ -54,15 +47,12 @@ async function dnsCheck(domain: string, serverIp: string | null) {
   };
 }
 
-function isStrictMode(): boolean {
-  // Secure mode is active when FRACTERA_IP_NODOMAIN_MODE is explicitly "false"
-  // in ALL four env files. Any one of them still "true" or unset = demo/open.
-  for (const f of ENV_FILES) {
-    const vars = readEnvFile(f);
-    if (vars.FRACTERA_IP_NODOMAIN_MODE !== "false") return false;
-  }
-  return true;
-}
+// 🔒 ПРОВЕРКА ПЕРЕЕХАЛА В `lib/secure-mode.ts` (2026-08-16). Она стояла здесь и
+// отвечала верно, а предупреждения панели спрашивали то же самое у БАЗЫ и
+// отвечали иначе: `domain_status` становится `active` на шаге 2, при выпуске
+// сертификата, а защищённый режим включается на шаге 4. Две правды об одном
+// состоянии — и владелец сидел в открытом режиме, пока панель молчала.
+const isStrictMode = isSecureMode;
 
 export async function GET(req: NextRequest) {
   const ok = await requireAuth(req.headers.get("cookie") ?? "");

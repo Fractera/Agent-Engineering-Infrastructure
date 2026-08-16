@@ -18,8 +18,8 @@
 
 import fs from "fs";
 import path from "path";
-import Database from "better-sqlite3";
 import { contextStateHandoff } from "@/lib/product-docs";
+import { isSecureMode } from "@/lib/secure-mode";
 import { useCasesGate } from "@/lib/use-cases-store";
 import { listProducts } from "@/lib/products-config";
 import { readInstructionSet } from "@/lib/instruction-set";
@@ -28,7 +28,6 @@ import type { AdminPageSlug } from "@/lib/admin-nav";
 
 const APP_DIR = process.env.APP_DIR ?? "/opt/fractera/app";
 const APP_ENV = process.env.APP_ENV_PATH ?? path.join(APP_DIR, ".env.local");
-const APP_DB = process.env.APP_DB_PATH ?? path.join(APP_DIR, "data", "app.db");
 const RAG_ENV = process.env.RAG_ENV_PATH ?? "/opt/fractera/services/rag/.env";
 
 export type WarningLevel = "blocking" | "advised";
@@ -55,19 +54,23 @@ function envHas(file: string, key: string): boolean {
   }
 }
 
-function domainActive(): boolean {
-  try {
-    const db = new Database(APP_DB, { readonly: true });
-    const row = db
-      .prepare("SELECT custom_domain, domain_status FROM site_settings WHERE id = 1")
-      .get() as { custom_domain?: string | null; domain_status?: string } | undefined;
-    db.close();
-    return row?.domain_status === "active" && Boolean(row.custom_domain);
-  } catch {
-    // Таблицы ещё нет — сервер, который не открывал визард домена.
-    return false;
-  }
-}
+// 🪦 ЗДЕСЬ СТОЯЛА ПРОВЕРКА ПО БАЗЕ, И ОНА ГАСИЛА ПРЕДУПРЕЖДЕНИЕ РАНЬШЕ ВРЕМЕНИ
+// (найдено владельцем 2026-08-16).
+//
+// Было: `domain_status === "active" && custom_domain` — то есть «домен заведён и
+// сертификат выпущен». Это состояние наступает на ШАГЕ 2 визарда, а проект
+// переходит на свой домен на ШАГЕ 4. Между ними сервер работает по IP, обычным
+// HTTP и с ОБОЙДЁННОЙ авторизацией (`shouldBypassAuth`), — и всё это время
+// предупреждение молчало, потому что смотрело на намерение вместо факта.
+//
+// Живой случай, которым это нашли: DNS настроен, сертификат выпущен на все пять
+// имён, сквозная проверка пройдена, шаг 4 НЕ нажат. База говорила «active»,
+// окружение — `FRACTERA_IP_NODOMAIN_MODE=true`, панель отдавалась из интернета
+// по `http://<ip>:3002` без входа, и ни одно предупреждение об этом не горело.
+//
+// Теперь спрашивается ФАКТ — тот же источник, что у визарда (`isSecureMode`).
+// База осталась там, где она уместна: `public-app-url.ts` строит по ней адрес
+// сайта, и это правильно — сайт на домене отвечает и до шага 4.
 
 /** Что известно про страницу: уровень тревоги и записи, её породившие. */
 export type SlugAlarm = { level: WarningLevel; ids: AdminWarning["id"][] };
@@ -174,7 +177,10 @@ export function collectWarnings(): AdminWarning[] {
   if (casesReady && !hasOpenAiKey) {
     out.push({ id: "openai", level: "advised", slug: "openai" });
   }
-  if (!domainActive()) {
+  // Пока сервер не в защищённом режиме — предупреждение горит, чем бы ни
+  // закончились шаги визарда. Это единственное состояние, о котором запись
+  // обязана сообщать: не «домен введён», а «проект на нём работает».
+  if (!isSecureMode()) {
     out.push({ id: "domain", level: "advised", slug: "domain" });
   }
 
