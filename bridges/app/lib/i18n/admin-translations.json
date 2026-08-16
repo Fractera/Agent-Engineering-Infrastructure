@@ -1786,13 +1786,23 @@
           "There is a commission, moderation and disputes"
         ],
         "questions": [
-          "Who sells on the platform and who buys — describe both sides separately?",
-          "What must a seller provide to appear on the shop window, and who checks it?",
-          "What do you earn on: commission, seller subscription, paid promotion, payment per lead?",
-          "Do the payments pass through you, or directly between the two sides?",
-          "What happens in a dispute: who judges it, and what proves who is right?",
-          "Which sellers do you already have, so the window does not look empty on launch day?",
-          "How does a buyer find what they need: search, filters, categories, a map, matching?"
+          "What is traded: what exactly is sold on the platform (physical goods, digital files, services and commissioned work, renting things or spaces, tickets, classified ads)? One category or several at once?",
+          "Both sides: who sells and who buys? Describe each side separately — who these people or companies are, what they do, how used they are to platforms like this.",
+          "The pain on each side: what problem do you solve for the buyer (no choice, no guarantees, hard to compare) and what for the seller (a high barrier to entry, no customers, trouble taking money)? Answer for both — they are different pains.",
+          "How they find each other today: where do buyer and seller meet without your platform (social networks, classified boards, direct arrangements, agents and intermediaries, the big marketplaces)?",
+          "The ideal outcome: what does a flawless deal look like, where the buyer got what they wanted, the seller earned, and the platform took its share? Describe it through both pairs of eyes.",
+          "Competitors and models: which platforms do you take your bearings from — the giants or the narrow ones? Name them with links, say what you like and what you find weak.",
+          "What sets you apart: a narrow niche, better matching, the size of the commission, convenience, trust, extra services?",
+          "The deal: how does it run from search to completion (found, chose, messaged the seller, paid, received, confirmed, left a review)? Where do the two sides need to talk, and at which steps does safety matter most?",
+          "How the platform earns: commission on each deal, a listing fee, a subscription for sellers, paid promotion in the results, extra services? Who pays — the seller, the buyer, or both?",
+          "How money moves: whose account does it pass through (the platform holds it until receipt is confirmed, payment goes straight to the seller, part is held as a deposit)? When does the seller get paid, and what happens to the money during a dispute?",
+          "The seller's workplace: what do they need (managing their own catalogue and prices, stock and orders, a sales summary, withdrawing what they earned, reports for their accounts)?",
+          "The buyer's account: what do they see (favourites, purchase history, tracking orders from DIFFERENT sellers at once, a cart holding items from several sellers, reordering)?",
+          "Search and matching: how does a buyer find what they want (filters by price, rating and availability, search on a map and by distance, suggestions of similar offers, sorting)? By what rule are the offers ordered?",
+          "Trust and verification: how is trust built between strangers (reviews in both directions, checking the seller's documents, a \"verified\" mark, guarantees from the platform, moderating listings)? Who checks a new seller, and when?",
+          "Disputes and refunds: how are conflicts resolved (a complaint, a review with support involved, refund scenarios, holding the payout while a dispute runs)? Who makes the final decision, and by what rules?",
+          "Delivery and fulfilment: how does the order reach the buyer (the seller ships it themselves, the platform holds stock, delivery services, collection in person, and for services — how is completion confirmed)?",
+          "Technical, geographic and practical constraints: is there anything to be known upfront (launch regions and languages, installable apps, payment services and the legal form of settlements, moderating content, a launch deadline, who will run the platform)?"
         ]
       },
       "delivery": {
@@ -4493,13 +4503,23 @@
           "Есть комиссия, модерация и споры"
         ],
         "questions": [
-          "Кто продаёт на площадке и кто покупает — опишите обе стороны отдельно?",
-          "Что продавец обязан предоставить, чтобы попасть на витрину, и кто это проверяет?",
-          "На чём вы зарабатываете: комиссия, подписка продавца, платное продвижение, оплата за отклик?",
-          "Деньги идут через вас или напрямую между сторонами?",
-          "Что происходит при споре: кто рассудит и чем подтверждается правота?",
-          "Каких продавцов у вас уже достаточно, чтобы витрина не выглядела пустой в день запуска?",
-          "Как покупатель находит нужное: поиск, фильтры, категории, карта, подбор?"
+          "Предмет торговли: что именно продаётся на площадке (физические товары, цифровые файлы, услуги и работа по заказу, аренда вещей или помещений, билеты, объявления)? Одна категория или несколько сразу?",
+          "Обе стороны: кто продаёт и кто покупает? Опишите портрет каждой стороны отдельно — кто эти люди или компании, чем занимаются, насколько привычны к таким площадкам.",
+          "Боль каждой стороны: какую проблему вы решаете покупателю (нет выбора, нет гарантий, трудно сравнить) и какую продавцу (высокий порог входа, нет покупателей, сложно принимать деньги)? Ответьте про обоих — это разные боли.",
+          "Как находят друг друга сейчас: где покупатель и продавец встречаются без вашей площадки (социальные сети, доски объявлений, прямые договорённости, посредники и агентства, крупные маркетплейсы)?",
+          "Идеальный результат: как выглядит безупречная сделка, где покупатель получил желаемое, продавец заработал, а площадка взяла своё? Опишите её глазами обоих.",
+          "Конкуренты и образцы: на какие площадки вы ориентируетесь — крупные или узкие? Назовите их и ссылки, скажите, что нравится и что считаете слабым.",
+          "Чем принципиально отличаетесь: узкая ниша, лучший подбор, размер комиссии, удобство, доверие, дополнительные услуги?",
+          "Процесс сделки: как проходит путь от поиска до завершения (нашёл, выбрал, списался с продавцом, оплатил, получил, подтвердил, оставил отзыв)? Где нужна переписка между сторонами и на каких шагах особенно важна безопасность?",
+          "Как площадка зарабатывает: комиссия с каждой сделки, плата за размещение, подписка для продавцов, платное продвижение в выдаче, дополнительные услуги? Кто платит — продавец, покупатель или оба?",
+          "Движение денег: через чей счёт они идут (площадка удерживает до подтверждения получения, оплата идёт напрямую продавцу, часть удерживается как залог)? Когда продавец получает выплату и что происходит с деньгами при споре?",
+          "Кабинет продавца: что ему нужно для работы (управление своим каталогом и ценами, остатки и заказы, сводка продаж, вывод заработанного, отчёты для отчётности)?",
+          "Кабинет покупателя: что видит он (избранное, история покупок, отслеживание заказов от РАЗНЫХ продавцов сразу, корзина с товарами нескольких продавцов, повтор заказа)?",
+          "Поиск и подбор: как покупатель находит нужное (фильтры по цене, рейтингу и наличию, поиск по карте и расстоянию, подсказки похожих предложений, сортировка выдачи)? По какому правилу выстраивается порядок предложений?",
+          "Доверие и проверка: как строится доверие между незнакомыми людьми (отзывы в обе стороны, проверка документов продавца, отметка «проверенный», гарантии площадки, модерация объявлений)? Кто и когда проверяет нового продавца?",
+          "Споры и возвраты: как разбираются конфликты (жалоба, разбор с участием поддержки, сценарии возврата денег, удержание выплаты на время спора)? Кто принимает окончательное решение и по каким правилам?",
+          "Доставка и исполнение: как заказ доходит до покупателя (продавец отправляет сам, площадка держит склад, службы доставки, самовывоз, для услуг — как подтверждается выполнение)?",
+          "Технические, географические и организационные ограничения: есть ли требования, о которых нужно знать заранее (регионы и языки запуска, устанавливаемые приложения, платёжные службы и правовая форма расчётов, модерация содержимого, сроки запуска, кто будет управлять площадкой)?"
         ]
       },
       "delivery": {
