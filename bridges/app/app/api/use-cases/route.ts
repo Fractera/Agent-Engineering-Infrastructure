@@ -11,6 +11,7 @@ import { slotLanguages } from "@/lib/slot-languages";
 import {
   addProduct, updateProduct, adoptLegacyProjectType, defaultSurface,
   activeProduct, listProducts, findProduct, giveRootTo, removeProduct,
+  DEV_STATUSES, isDevStatus, normalizeSteps, stepsOf,
 } from "@/lib/products-config";
 
 // Кейсы: чтение папки и действия над ней.
@@ -81,6 +82,19 @@ export async function POST(req: NextRequest) {
      * Пустая строка — законное «убрать описание»; отсутствие поля — «не трогать».
      */
     description?: string;
+    /** Состояние разработки продукта — одно из восьми (`DEV_STATUSES`). */
+    devStatus?: string;
+    /**
+     * Номера шагов разработки этого продукта.
+     *
+     * Три разных намерения различаются полем, а не догадкой: `steps` заменяет
+     * список целиком, `addSteps` дописывает, `dropSteps` убирает. Одно поле на
+     * все три случая означало бы, что «добавить шаг 12» иногда стирает
+     * одиннадцать предыдущих.
+     */
+    steps?: number[];
+    addSteps?: number[];
+    dropSteps?: number[];
   } | null;
   if (!body?.op) return NextResponse.json({ error: "op_required" }, { status: 400 });
 
@@ -88,7 +102,7 @@ export async function POST(req: NextRequest) {
   // им его ещё нет; всем остальным он обязателен.
   const product = activeProduct(body.productId);
   const pid = product?.id ?? "";
-  const NEEDS_PRODUCT = ["seed", "questions", "reset", "append", "edit", "confirm", "unconfirm", "confirm-all", "delete", "migrate"];
+  const NEEDS_PRODUCT = ["seed", "questions", "reset", "append", "edit", "confirm", "unconfirm", "confirm-all", "delete", "migrate", "dev-progress"];
   if (NEEDS_PRODUCT.includes(body.op) && !pid) {
     return NextResponse.json({ error: "no_product" }, { status: 400 });
   }
@@ -198,6 +212,53 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         ok: true, movedFrom: result.movedFrom, movedTo: result.movedTo, products: listProducts(),
       });
+    }
+    // 🔒 СОСТОЯНИЕ РАЗРАБОТКИ И ЕГО ШАГИ — ОДНА ДВЕРЬ (владелец 2026-08-17).
+    //
+    // Они меняются вместе: разложил кейсы на шаги — записал их номера И перевёл
+    // продукт в «декомпозицию»; принял работу — закрыл шаги И поставил
+    // «завершён». Две двери означали бы, что одна половина записалась, а вторая
+    // нет, и никакой экран этого не показывает.
+    //
+    // Дверь нужна не панели, а АГЕНТУ: он работает в локальном клоне владельца и
+    // панель физически не видит (`bridges/app` лежит вне репозитория
+    // пользователя). Без неё «отслеживать статус разработки» означало бы
+    // отмечать его руками — то есть не отслеживать.
+    case "dev-progress": {
+      if (!pid) return NextResponse.json({ error: "no_product" }, { status: 400 });
+      const before = findProduct(pid);
+      if (!before) return NextResponse.json({ error: "not_found" }, { status: 404 });
+
+      const patch: Parameters<typeof updateProduct>[1] = {};
+
+      if (body.devStatus !== undefined) {
+        // Неизвестное состояние — отказ, а не тихое приведение к ближайшему:
+        // приняв опечатку, мы записали бы в конфиг положение, о котором ни
+        // панель, ни агент не знают, и узнал бы об этом владелец по пустому
+        // ярлыку в карточке.
+        if (!isDevStatus(body.devStatus)) {
+          return NextResponse.json(
+            { error: "unknown_dev_status", allowed: DEV_STATUSES }, { status: 400 },
+          );
+        }
+        patch.devStatus = body.devStatus;
+      }
+
+      // Замена списка целиком — только по явному `steps`. Дописывание и удаление
+      // считаются от того, что уже записано.
+      if (body.steps !== undefined) {
+        patch.steps = normalizeSteps(body.steps);
+      } else if (body.addSteps || body.dropSteps) {
+        const drop = new Set(normalizeSteps(body.dropSteps ?? []));
+        patch.steps = normalizeSteps([
+          ...stepsOf(before), ...normalizeSteps(body.addSteps ?? []),
+        ]).filter((n) => !drop.has(n));
+      }
+
+      if (!Object.keys(patch).length) {
+        return NextResponse.json({ error: "nothing_to_change" }, { status: 400 });
+      }
+      return NextResponse.json({ ok: true, product: updateProduct(pid, patch) });
     }
     // Вводные вопросы, утверждённые владельцем. Ложатся файлом в папку продукта:
     // вопрос — половина ответа, и агент должен видеть, о чём спрашивали.

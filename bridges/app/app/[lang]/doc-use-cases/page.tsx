@@ -329,6 +329,7 @@ export default async function UseCasesPage(
               saving: u.saving, failed: u.failed, atLeastOne: u.setupAtLeastOne,
               placeholder: u.setupPlaceholder, voiceFor: u.setupVoice, voiceClose: u.setupVoiceClose,
               count: u.setupCount,
+              more: u.setupMore, moreHint: u.setupMoreHint, fewer: u.setupFewer,
             }}
           />
           </div>

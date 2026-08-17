@@ -35,6 +35,52 @@ export type ProductSurface = "public" | "private" | "headless";
 /** `draft` — его ещё описывают · `building` — строят · `live` — отдают посетителям. */
 export type ProductStatus = "draft" | "building" | "live";
 
+/**
+ * Состояние РАЗРАБОТКИ продукта — восемь позиций, продиктованных владельцем
+ * 2026-08-17.
+ *
+ * 🔒 ЭТО НЕ ТО ЖЕ, ЧТО `status`, И СЛИВАТЬ ИХ НЕЛЬЗЯ. `status` отвечает на вопрос
+ * «видят ли его посетители» — это публикация, и она обратима одним нажатием.
+ * `devStatus` отвечает на вопрос «где мы в работе» и движется в одну сторону
+ * через приёмку. Продукт бывает `live` и при этом в `extra-tasks`: он работает, а
+ * владелец по ходу использования дописывает задания. Одно поле не смогло бы
+ * выразить оба этих факта разом.
+ *
+ * 🔒 ПОРЯДОК В МАССИВЕ ЗНАЧИМ — это очередь, а не набор. По нему считается «что
+ * дальше» и рисуется полоса продвижения; переставишь — сломаешь и то и другое.
+ *
+ *   not-started    — не начат;
+ *   decomposition  — кейсы превращаются в последовательность шагов разработки.
+ *                    Первый шаг всегда один и тот же: минимальный работоспособный
+ *                    состав — вся архитектура в файловой системе, API и навигация
+ *                    на заглушках;
+ *   skeleton       — та самая первая вводная структура создана и завершена;
+ *   revision       — задачи в шагах перечитываются, задание при нужде правится.
+ *                    Отдельная позиция потому, что план, написанный до первой
+ *                    строки кода, всегда расходится с тем, что выяснилось при её
+ *                    написании;
+ *   building       — шаги выполняются последовательно;
+ *   acceptance     — приёмка владельцем;
+ *   extra-tasks    — по ходу использования кейса владелец добавляет задания;
+ *   done           — окончательно завершён.
+ */
+export const DEV_STATUSES = [
+  "not-started",
+  "decomposition",
+  "skeleton",
+  "revision",
+  "building",
+  "acceptance",
+  "extra-tasks",
+  "done",
+] as const;
+
+export type ProductDevStatus = (typeof DEV_STATUSES)[number];
+
+export function isDevStatus(v: unknown): v is ProductDevStatus {
+  return typeof v === "string" && (DEV_STATUSES as readonly string[]).includes(v);
+}
+
 export type Product = {
   id: string;
   title: string;
@@ -81,6 +127,29 @@ export type Product = {
    * Не длиннее 200 знаков — обрезается при записи, а не «желательно».
    */
   description?: string;
+  /**
+   * Где продукт в разработке. Необязательное: запись, сделанная до появления
+   * поля, читается как `not-started` — это правда о ней, а не умолчание ради
+   * умолчания.
+   */
+  devStatus?: ProductDevStatus;
+  /**
+   * Номера шагов разработки, относящихся к этому продукту (владелец 2026-08-17).
+   *
+   * 🔒 ЗДЕСЬ НОМЕРА, А НЕ СОДЕРЖИМОЕ ШАГОВ. Сам шаг — запись со своим текстом,
+   * задачами и историей; держать её в конфиге, который читается на каждый
+   * запрос, значит заставить рантайм разбирать документ. Здесь оглавление: агент
+   * видит, по каким шагам искать, и идёт за подробностями туда, где они лежат.
+   *
+   * 🔒 ЗАЧЕМ ЭТО НУЖНО ИМЕННО В КОНФИГЕ. Связь «шаг → продукт» можно было бы
+   * хранить только у шага. Но агент начинает СЕССИЮ с продукта — с его кейсов и
+   * его четырёх корней, — и обратный список избавляет от обхода всех шагов
+   * ради вопроса «а что уже делали по этому продукту». Это оглавление, и как
+   * всякое оглавление оно производно: расходится — правда за записями шагов.
+   *
+   * Числа, а не строки: шаги нумеруются, и номер — их машинный ключ.
+   */
+  steps?: number[];
 };
 
 /** Предел описания. Живёт здесь, а не в вызывающем коде: обрезать обязан тот, кто хранит. */
@@ -306,6 +375,9 @@ export function addProduct(
     surface,
     route,
     status: "draft",
+    // Разработка не начата — и это записывается прямо, а не выводится из
+    // отсутствия поля: «поля нет» означает ещё и «запись старше поля».
+    devStatus: "not-started",
     createdAt: new Date().toISOString(),
     ...(input.titleAuto ? { titleAuto: true } : {}),
   };
@@ -377,10 +449,41 @@ export function adoptLegacyProjectType(): Product | null {
   }
 }
 
+/**
+ * Где продукт в разработке. Запись без поля — `not-started`: она старше поля,
+ * а значит по ней не начинали.
+ */
+export function devStatusOf(product: Pick<Product, "devStatus">): ProductDevStatus {
+  return isDevStatus(product.devStatus) ? product.devStatus : "not-started";
+}
+
+/**
+ * Номера шагов продукта — приведённые к порядку.
+ *
+ * 🔒 ЧИСТКА ЖИВЁТ У ХРАНИЛИЩА, А НЕ У ТОГО, КТО ПИШЕТ. Писать будут несколько:
+ * панель, дверь API, агент из локального клона владельца. Договориться между
+ * собой о том, что номера уникальны, целы и упорядочены, они не смогут, и первым
+ * же расхождением станет шаг, записанный дважды в разном виде.
+ */
+export function stepsOf(product: Pick<Product, "steps">): number[] {
+  return normalizeSteps(product.steps);
+}
+
+export function normalizeSteps(input: unknown): number[] {
+  if (!Array.isArray(input)) return [];
+  const clean = input
+    .map((n) => Math.trunc(Number(n)))
+    .filter((n) => Number.isFinite(n) && n > 0);
+  return [...new Set(clean)].sort((a, b) => a - b);
+}
+
 /** Правка записи. `id` и `createdAt` неизменны — на них держатся все пути продукта. */
 export function updateProduct(
   id: string,
-  patch: Partial<Pick<Product, "title" | "type" | "surface" | "route" | "status" | "titleAuto" | "description">>,
+  patch: Partial<Pick<
+    Product,
+    "title" | "type" | "surface" | "route" | "status" | "titleAuto" | "description" | "devStatus" | "steps"
+  >>,
 ): Product | null {
   const config = readProductsConfig();
   const i = config.products.findIndex((p) => p.id === id);
@@ -396,6 +499,18 @@ export function updateProduct(
     const d = patch.description.trim().slice(0, DESCRIPTION_MAX);
     if (d) next.description = d;
     else delete next.description;
+  }
+
+  // Список шагов приводится к порядку здесь же и по той же причине, что и
+  // описание: обрезать и чистить обязан тот, кто хранит.
+  if (patch.steps !== undefined) next.steps = normalizeSteps(patch.steps);
+  // Неизвестное состояние разработки НЕ записывается, и прежнее при этом
+  // остаётся: `devStatus` читают и панель, и агент, и строка не из восьми
+  // положила бы туда значение, о котором ни один из них не знает. Стереть поле в
+  // ответ на плохой ввод было бы вторым вредом поверх первого — продукт,
+  // дошедший до приёмки, откатился бы в «не начат».
+  if (patch.devStatus !== undefined && !isDevStatus(patch.devStatus)) {
+    next.devStatus = config.products[i].devStatus;
   }
 
   // 🔒 ПОВЕРХНОСТЬ И АДРЕС МЕНЯЮТСЯ ПАРОЙ (найдено проверкой живьём 2026-08-15).

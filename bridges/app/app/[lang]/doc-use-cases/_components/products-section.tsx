@@ -17,7 +17,10 @@
 
 import Link from "next/link";
 import { Boxes, Check } from "lucide-react";
-import { productPaths, type Product } from "@/lib/products-config";
+import {
+  productPaths, devStatusOf, stepsOf, DEV_STATUSES,
+  type Product, type ProductDevStatus,
+} from "@/lib/products-config";
 import type { AdminStrings } from "@/lib/i18n/admin-strings";
 import { AddProductCard } from "./add-product.client";
 
@@ -50,9 +53,29 @@ export function ProductsSection(
   const statusLabel = (s: Product["status"]) =>
     s === "live" ? p.statusLive : s === "building" ? p.statusBuilding : p.statusDraft;
 
+  // 🔒 ПОДПИСЬ ИЩЕТСЯ ПО МАШИННОМУ ЗНАЧЕНИЮ, А НЕ ПО ПОРЯДКУ В СПИСКЕ. Карта
+  // ключ→ключ выглядит лишней ровно до того дня, когда в очередь вставят девятое
+  // состояние: сопоставление по индексу сдвинулось бы молча, и «приёмка» стала бы
+  // называться «выполнением шагов».
+  const DEV_LABEL: Record<ProductDevStatus, keyof typeof p> = {
+    "not-started": "devNotStarted",
+    decomposition: "devDecomposition",
+    skeleton: "devSkeleton",
+    revision: "devRevision",
+    building: "devBuilding",
+    acceptance: "devAcceptance",
+    "extra-tasks": "devExtraTasks",
+    done: "devDone",
+  };
+
   // Те же четыре пути, что получает агент: одна функция на обоих потребителей,
   // иначе панель однажды покажет одно, а агент пойдёт в другое.
   const roots = current ? productPaths(current) : null;
+  const dev = current ? devStatusOf(current) : null;
+  const devSteps = current ? stepsOf(current) : [];
+  // Сколько позиций очереди пройдено. Считается по порядку в `DEV_STATUSES` —
+  // он и объявлен очередью, а не набором.
+  const devIndex = dev ? DEV_STATUSES.indexOf(dev) : -1;
 
   return (
     <section className="mt-3 rounded-lg border border-border p-3">
@@ -138,6 +161,42 @@ export function ProductsSection(
       <p className="mt-2.5 border-t border-border pt-2 text-[11px] text-foreground">
         {p.current}: <strong className="font-semibold">{current?.title ?? "—"}</strong>
       </p>
+
+      {/* 🔒 ХОД РАЗРАБОТКИ СТОИТ ОТДЕЛЬНОЙ ВРЕЗКОЙ, А НЕ СТРОКОЙ В КАРТОЧКЕ
+          (владелец 2026-08-17). В карточке уже есть `statusDraft/Live` — это
+          публикация, и второе состояние рядом с ним человек прочтёт как его
+          уточнение. Здесь же оно отвечает на другой вопрос: «где мы в работе».
+
+          Полоса из восьми делений — не украшение: восемь состояний словом
+          невозможно расположить в голове, а очередь видна сразу, и по ней ясно,
+          сколько осталось до приёмки. */}
+      {current && dev && (
+        <div className="mt-2 rounded-md border border-border/70 bg-muted/30 p-2.5">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+            {p.devTitle}
+          </p>
+          <div className="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+            <span className="text-[11px] font-medium text-foreground">{p[DEV_LABEL[dev]]}</span>
+            <span className="font-mono text-[10px] text-muted-foreground">
+              {devIndex + 1}/{DEV_STATUSES.length}
+            </span>
+          </div>
+          <div className="mt-1.5 flex gap-1" aria-hidden="true">
+            {DEV_STATUSES.map((s, i) => (
+              <span
+                key={s}
+                className={`h-1 flex-1 rounded-full ${i <= devIndex ? "bg-primary" : "bg-border"}`}
+              />
+            ))}
+          </div>
+          {/* Номера шагов — машинные ключи, поэтому моноширинным и без перевода.
+              Пусто — говорим фразой: пустое место читается как поломка показа. */}
+          <p className="mt-1.5 font-mono text-[10px] text-muted-foreground">
+            {devSteps.length ? p.devSteps.replace("{n}", devSteps.join(", ")) : p.devNoSteps}
+          </p>
+          <p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">{p.devHint}</p>
+        </div>
+      )}
 
       {/* 🔒 ЧЕТЫРЕ КОРНЯ — ТА ЖЕ ГРАНИЦА, ЧТО ЧИТАЕТ АГЕНТ (партия 6). Правило
           «пиши внутри своих корней» живёт в инструкции слота, и владелец о нём
