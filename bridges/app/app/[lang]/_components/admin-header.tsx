@@ -104,6 +104,7 @@ const ICONS: Record<AdminPageSlug, LucideIcon> = {
   "doc-dialogue-format": MessagesSquare,
   "doc-content-engine": FileText,
   "doc-passport": IdCard,
+  "doc-case-to-step": GitBranch,
 };
 
 const MENU_ID = "admin-menu-toggle";

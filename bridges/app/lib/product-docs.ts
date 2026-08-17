@@ -39,6 +39,7 @@ export type DocKey =
   | "doc-content-engine"
   | "doc-sections"
   | "doc-passport"
+  | "doc-case-to-step"
   | "doc-seo"
   | "doc-aio"
   | "doc-pwa";
@@ -104,6 +105,12 @@ export const DOC_FILES: Record<DocKey, string> = {
   // Сущности проекта и состояние каждой. ЕДИНСТВЕННЫЙ документ, который несёт
   // ПРОГРЕСС: кейсы не знают состояния экранов, архитектура не знает, что готово.
   "doc-passport": "development-docs/PASSPORT.md",
+  // Переход «кейс → шаг разработки» (владелец 2026-08-17). ДУБЛИКАТ по замыслу:
+  // сама процедура живёт навыком `.claude/skills/manage-cases-and-steps/`, и
+  // агент грузит её по поводу, а не в каждой сессии. Документ существует, чтобы
+  // ЧЕЛОВЕК мог прочитать то же самое, не запуская агента, и чтобы у способности
+  // был выключатель. Расходятся — прав навык: он и есть то, что исполняется.
+  "doc-case-to-step": "development-docs/CASE-TO-STEP.md",
 };
 
 /**
@@ -169,6 +176,8 @@ export const DOC_KIND: Record<string, "evolving" | "static"> = {
   "doc-dialogue-format": "static",
   "doc-content-engine": "static",
   "doc-passport": "evolving",
+  // ЗАДАННЫЙ: это закон перехода «кейс → шаг», а не наблюдение агента о проекте.
+  "doc-case-to-step": "static",
 };
 
 /**

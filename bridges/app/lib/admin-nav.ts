@@ -139,6 +139,7 @@ export const NAV = [
   { slug: "doc-dialogue-format",  group: "documents" },
   { slug: "doc-content-engine",   group: "documents" },
   { slug: "doc-passport",         group: "documents" },
+  { slug: "doc-case-to-step",     group: "documents" },
 
   { slug: "map-help",         group: "help" },
   { slug: "how-to-build",    group: "help" },

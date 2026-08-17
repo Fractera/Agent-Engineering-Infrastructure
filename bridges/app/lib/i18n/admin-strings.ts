@@ -695,6 +695,19 @@ export type AdminStrings = {
     switchTitle: string; switchWhere: string;
     createDoc: string; creating: string; createdDoc: string; createHint: string; failed: string;
   };
+  /**
+   * Переход «кейс → шаг разработки» (владелец 2026-08-17).
+   *
+   * 🔒 СТРАНИЦА ОБЯЗАНА СКАЗАТЬ, ЧТО ЭТО ДУБЛИКАТ. Владелец видит документ и
+   * навык об одном и том же и вправе решить, что это беспорядок; ответ «кто из
+   * них исполняется» должен стоять на экране, а не подразумеваться.
+   */
+  caseToStep: {
+    whatTitle: string; what: string;
+    whySkillTitle: string; whySkill: string;
+    switchTitle: string; switchWhere: string;
+    surfacesTitle: string; surfaceMcp: string; surfaceSkill: string; surfaceDoc: string;
+  };
   // Документ-запрет: почему мультиагентность закрыта и где её команда.
   // Верхнее меню гостевого приложения: кнопки навигации, их порядок и группы.
   // Слова живут здесь, а не в островке: словарь серверный, 82 языка в браузер

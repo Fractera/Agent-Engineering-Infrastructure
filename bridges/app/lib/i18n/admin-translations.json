@@ -1451,6 +1451,10 @@
       "design-colors": {
         "title": "Colours",
         "hint": "Seven roles in two themes, with a live contrast check."
+      },
+      "doc-case-to-step": {
+        "title": "Case to step",
+        "hint": "How confirmed use cases turn into a queue of development steps."
       }
     },
     "breadcrumbHome": "Panel",
@@ -2562,6 +2566,18 @@
       "createdDoc": "Document created — it is now a file in your repository",
       "createHint": "This project has no PASSPORT.md yet. Create it from the template.",
       "failed": "Could not save"
+    },
+    "caseToStep": {
+      "whatTitle": "What this is.",
+      "what": "The passage from a confirmed use case to a queue of development steps: who starts it, how a step is named, and who may confirm what.",
+      "whySkillTitle": "Why a skill, not an instruction.",
+      "whySkill": "The main instruction is loaded in full at every session start, whether or not one line of it is relevant. A skill is delivered when a request calls for it. This document is a readable duplicate — when the two disagree, the skill is what actually runs.",
+      "switchTitle": "Switching it off.",
+      "switchWhere": "The toggle is in Instruction set. Off means the agent does not run this flow and does not ask for it; the tools stay in place.",
+      "surfacesTitle": "One law, three surfaces",
+      "surfaceMcp": "tools that refuse bad values",
+      "surfaceSkill": "the procedure the agent runs",
+      "surfaceDoc": "this text, for a person"
     },
     "contentEngine": {
       "whyTitle": "Why it exists.",
@@ -4468,6 +4484,10 @@
       "design-colors": {
         "title": "Цвета",
         "hint": "Семь ролей в двух темах и живая проверка контраста."
+      },
+      "doc-case-to-step": {
+        "title": "Кейс → шаг",
+        "hint": "Как подтверждённые кейсы превращаются в очередь шагов разработки."
       }
     },
     "breadcrumbHome": "Панель",
@@ -5579,6 +5599,18 @@
       "createdDoc": "Документ создан — теперь это файл в вашем репозитории",
       "createHint": "В этом проекте ещё нет файла PASSPORT.md. Создайте его из шаблона.",
       "failed": "Сохранить не удалось"
+    },
+    "caseToStep": {
+      "whatTitle": "Что это.",
+      "what": "Переход от подтверждённого кейса к очереди шагов разработки: кто его запускает, как называется шаг и кто что вправе подтверждать.",
+      "whySkillTitle": "Почему навык, а не инструкция.",
+      "whySkill": "Главная инструкция грузится целиком в начале каждой сессии, нужна она этой задаче или нет. Навык приезжает тогда, когда его запросили делом. Этот документ — читаемый дубликат; расходятся — исполняется навык.",
+      "switchTitle": "Как выключить.",
+      "switchWhere": "Выключатель — в разделе «Набор инструкций». Выключено означает, что агент не ведёт этот поток и не требует его; сами инструменты остаются на месте.",
+      "surfacesTitle": "Один закон — три поверхности",
+      "surfaceMcp": "инструменты, отвергающие неверные значения",
+      "surfaceSkill": "процедура, которую исполняет агент",
+      "surfaceDoc": "этот текст, для человека"
     },
     "contentEngine": {
       "whyTitle": "Зачем это нужно.",

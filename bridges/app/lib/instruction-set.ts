@@ -166,6 +166,25 @@ working here. Details: \`SINGLE-AGENT.md\`.`,
 a command. This is a lifted guard, not a forgotten rule — use several agents where they genuinely help,
 say what each one is given, and prefer running them one after another so they can still be corrected.`,
   },
+  // 🔒 ЗАКОН НАЗЫВАЕТ НАВЫК, А НЕ ПЕРЕСКАЗЫВАЕТ ЕГО (владелец 2026-08-17).
+  // Пересказ процедуры здесь был бы третьей копией одного закона — после навыка
+  // и документа, — и разошёлся бы с ними в первую же правку. Инструкция несёт
+  // ровно указатель и один запрет, у которого нет повода и потому нет триггера:
+  // не строить по неподтверждённому кейсу.
+  "doc-case-to-step": {
+    on: `**Cases to steps — ON.** Anything shaped like "start building", "what is next", "decompose the
+cases", "add or close a step", "add or fix a use case" → **load the \`manage-cases-and-steps\` skill and
+work through the \`fractera-project\` MCP.** Never create a folder of step files: steps are rows, cases are
+files, and both are reached through that server.
+
+The one rule that holds even before the skill loads: **no confirmed use case, no building.** Call
+\`cases_gate\`; on \`no-cases\` or \`nothing-confirmed\` say what is missing and point at the panel's Use
+cases section — do not start. Confirmation belongs to the owner alone; there is no tool for you to do it.
+Details: \`development-docs/CASE-TO-STEP.md\`.`,
+    off: `**Cases to steps — OFF.** The owner switched this flow off. Do not open it, do not create the
+decomposition step, and do not ask for it. Work from the request in front of you, and say plainly when it
+is not clear what the work serves.`,
+  },
   "doc-dialogue-format": {
     on: `**Dialogue format — ON.** Open every answer by restating the request **in your own words**: the
 subject, what will actually be done, what should come out — stated so it can be checked — and an
