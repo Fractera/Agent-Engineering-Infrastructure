@@ -86,11 +86,20 @@ export async function POST(req: NextRequest) {
   // Detach pm2 reload — it restarts fractera-admin which is THIS process, so
   // running it in-band would kill the response. Detached + unref lets us reply
   // first and let pm2 handle the rolling restart afterwards (~5 seconds).
+  //
+  // 🔒 СНАЧАЛА ИМЕННОЙ `restart --update-env` СЛУЖБАМ, ЧЕЙ ОБХОД АВТОРИЗАЦИИ
+  // ЗАВИСИТ ОТ ЭТОГО ФЛАГА (2026-08-17). Записать файл мало: `dotenv` читает его
+  // ровно один раз при старте процесса, и служба данных продолжала работать со
+  // старым `true` в памяти. Проверено на сервере владельца: `POST /db/migrate`
+  // выполнял произвольный SQL без ключа и с неверным ключом, пока панель
+  // показывала режим закрытым. Здесь переключатель ровно тот же, значит и
+  // дефект был бы тот же.
   setTimeout(() => {
-    const child = spawn("sh", ["-c", `pm2 reload ${PM2_PROCESSES}`], {
-      detached: true,
-      stdio: "ignore",
-    });
+    const child = spawn(
+      "sh",
+      ["-c", `pm2 restart fractera-data fractera-auth --update-env; pm2 reload ${PM2_PROCESSES}`],
+      { detached: true, stdio: "ignore" },
+    );
     child.unref();
   }, 500);
 

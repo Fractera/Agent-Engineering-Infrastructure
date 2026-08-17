@@ -63,6 +63,15 @@ export async function GET(req: NextRequest) {
     `# through this address. Nothing is copied to your machine, so there are no`,
     `# two versions of the data to drift apart.`,
     `REMOTE_DATA_URL=${data.url}`,
+    // 🔒 ИМЯ КЛЮЧА — `DATA_SECRET` (исправлено 2026-08-17). Здесь выдавалось
+    // `DATA_API_KEY` — имя, которого нет в окружении сервера, — и локальная
+    // копия работала не так, как продакшн: часть кода искала `DATA_SECRET` и не
+    // находила. Одно имя на обе среды и есть смысл этой выдачи.
+    //
+    // Запасное имя пишется рядом ради проектов, склонированных раньше: их код
+    // мог остаться со старым чтением, и отобрать у него ключ значило бы сломать
+    // машину разработчика правкой на сервере.
+    `DATA_SECRET=${dataSecret}`,
     `DATA_API_KEY=${dataSecret}`,
     ``,
   ]
