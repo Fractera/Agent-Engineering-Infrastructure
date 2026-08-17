@@ -246,58 +246,24 @@ export function writeDoc(key: DocKey, text: string): void {
   fs.writeFileSync(full, text, "utf-8");
 }
 
-/** Шаги разработки — не файл, а ПАПКА: их материализует агент по одному на шаг. */
-export const STEPS_DIR = "development-docs/DEVELOPMENT-STEPS";
-
-export type StepFile = { name: string; bytes: number; modified: string | null };
-
-export function listSteps(): { exists: boolean; dir: string; files: StepFile[] } {
-  const dir = path.join(APP_DIR, STEPS_DIR);
-  try {
-    const names = fs.readdirSync(dir, { withFileTypes: true });
-    const files: StepFile[] = [];
-    for (const e of names) {
-      if (e.isDirectory()) {
-        // Вложенные папки конвейера (NEW-STEPS / COMPLETED-STEPS) — показываем их
-        // содержимое с префиксом, чтобы владелец видел стадию, а не только имя.
-        for (const inner of fs.readdirSync(path.join(dir, e.name))) {
-          const st = safeStat(path.join(dir, e.name, inner));
-          files.push({ name: `${e.name}/${inner}`, bytes: st.size, modified: st.modified });
-        }
-      } else if (e.name.endsWith(".md")) {
-        const st = safeStat(path.join(dir, e.name));
-        files.push({ name: e.name, bytes: st.size, modified: st.modified });
-      }
-    }
-    files.sort((a, b) => a.name.localeCompare(b.name));
-    return { exists: true, dir: STEPS_DIR, files };
-  } catch {
-    return { exists: false, dir: STEPS_DIR, files: [] };
-  }
-}
-
 /**
- * Содержимое ОДНОГО шага.
+ * 🪦 ШАГИ РАЗРАБОТКИ БОЛЬШЕ НЕ ФАЙЛЫ (владелец 2026-08-17).
  *
- * Имя проверяется по фактическому списку папки, а не разбором строки: любой
- * самодельный фильтр `..` рано или поздно обходят, а сверка со списком не
- * оставляет такой возможности вовсе — чего в папке нет, того не прочитать.
+ * Здесь стояли `STEPS_DIR`, `listSteps()` и `readStep()` — чтение папки
+ * `development-docs/DEVELOPMENT-STEPS/{NEW,COMPLETED}-STEPS/`. Конвейер из двух
+ * папок ломался на трёх вещах сразу: «покажи незакрытые шаги этого продукта»
+ * требовало прочитать КАЖДЫЙ файл; статус хранился и в имени папки, и внутри
+ * файла; а закрытие шага было переносом между папками, то есть двумя операциями
+ * с диском, из которых вторая могла не случиться.
+ *
+ * Теперь шаг — строка таблицы `development_steps`, а чтение живёт в
+ * `lib/dev-steps.ts`. Пишет туда агент через MCP `development-steps` шаблона
+ * слота: он работает в локальном клоне владельца и панель физически не видит.
+ *
+ * Идентификатор документа `doc-steps` СОХРАНЁН: выключатель корпуса инструкций
+ * помнит его по этому ключу, и переименование стёрло бы выбор владельца.
  */
-export function readStep(name: string): { name: string; exists: boolean; text: string } {
-  const known = listSteps().files.some((f) => f.name === name);
-  if (!known) return { name, exists: false, text: "" };
-  try {
-    return { name, exists: true, text: fs.readFileSync(path.join(APP_DIR, STEPS_DIR, name), "utf-8") };
-  } catch {
-    return { name, exists: false, text: "" };
-  }
-}
+export const STEPS_SOURCE = "development_steps";
 
-function safeStat(p: string): { size: number; modified: string | null } {
-  try {
-    const s = fs.statSync(p);
-    return { size: s.size, modified: s.mtime.toISOString() };
-  } catch {
-    return { size: 0, modified: null };
-  }
-}
+// 🪦 `safeStat()` ушёл вместе с ними: он существовал только ради размера и даты
+// файла шага. У строки таблицы размера нет, а дата приходит колонкой.

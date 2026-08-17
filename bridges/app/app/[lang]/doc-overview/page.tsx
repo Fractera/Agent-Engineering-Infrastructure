@@ -17,7 +17,8 @@ import { ChevronRight } from "lucide-react";
 import { getAdminStrings } from "@/lib/i18n/admin-strings";
 import { PageShell } from "../_components/page-shell";
 import { DocKindBadge } from "../_components/doc-kind-badge";
-import { DOC_FILES, DOC_KIND, readDoc, listSteps, isDocKey } from "@/lib/product-docs";
+import { DOC_FILES, DOC_KIND, readDoc, isDocKey } from "@/lib/product-docs";
+import { devStepsSummary } from "@/lib/dev-steps";
 import { readInstructionSet, TOGGLEABLE, ALWAYS_ON, isInDevelopment } from "@/lib/instruction-set";
 import { DocCommands } from "../_components/doc-commands";
 import { InstructionSwitch } from "../_components/instruction-switch.client";
@@ -79,12 +80,15 @@ export default async function DocOverviewPage({ params }: { params: Promise<{ la
         kind: DOC_KIND[slug] ?? "static",
       };
     }
+    // Шаги переехали из папки в таблицу (владелец 2026-08-17). «Заведён» для них
+    // значит «в базе есть хотя бы один шаг»; путь к папке здесь больше не
+    // называется, потому что папки нет — её место занимает имя таблицы.
     if (slug === "doc-steps") {
-      const steps = listSteps();
+      const steps = devStepsSummary();
       return {
         slug,
-        file: `${steps.dir}/`,
-        exists: steps.exists && steps.files.length > 0,
+        file: "development_steps",
+        exists: steps.total > 0,
         kind: DOC_KIND[slug] ?? "static",
       };
     }

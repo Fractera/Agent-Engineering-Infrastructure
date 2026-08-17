@@ -845,6 +845,23 @@ export type AdminStrings = {
     kindEvolvingHint: string; kindStaticHint: string;
     useCasesRequired: string;
     stepsEmpty: string; stepsCount: string;
+    /**
+     * Шаги разработки — записи в базе, а не файлы (владелец 2026-08-17).
+     *
+     * 🔒 ДВА ОТКАЗА НАЗЫВАЮТСЯ РАЗНЫМИ ФРАЗАМИ. `stepsNoDb` — базы нет вовсе,
+     * приложение ни разу не собиралось на этом сервере; `stepsNoTable` —
+     * собиралось до появления шагов. Общее «пусто» на оба случая отправило бы
+     * владельца искать поломку там, где всё в порядке.
+     *
+     * Подписи состояний идут по машинным значениям таблицы; список тот же, что
+     * объявляет MCP, и он один на обе стороны.
+     */
+    stepsIntro: string; stepsWriter: string;
+    stepsNoDb: string; stepsNoTable: string;
+    stepNew: string; stepInProgress: string; stepBlocked: string;
+    stepDone: string; stepCancelled: string;
+    stepCases: string; stepNoCases: string;
+    stepPlan: string; stepNoPlan: string; stepResult: string;
   };
   parallelRouting: {
     intro: string; unavailable: string;

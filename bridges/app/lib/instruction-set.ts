@@ -19,7 +19,7 @@
 
 import fs from "fs";
 import path from "path";
-import { DOC_FILES, STEPS_DIR, type DocKey } from "@/lib/product-docs";
+import { DOC_FILES, STEPS_SOURCE, type DocKey } from "@/lib/product-docs";
 import { USE_CASES_DIR } from "@/lib/use-cases-store";
 
 const APP_DIR = process.env.APP_DIR ?? "/opt/fractera/app";
@@ -42,16 +42,20 @@ const LEGACY_HEADING = /\n*#{2,4} [^\n]*CONTEXT-STATE\.md[^\n]*\n/;
 export const ALWAYS_ON: DocKey = "doc-instruction";
 
 /**
- * Два документа группы — ПАПКИ, а не файлы: шаги пишет агент по одному на работу,
- * образцы складывает владелец. Выключателя они заслуживают наравне с остальными:
- * история проекта и библиотека прошлых работ — самое объёмное, что можно не
- * читать ради мелкой задачи.
+ * Не всё в корпусе — файл. Кейсы лежат ПАПКОЙ, шаги стали ТАБЛИЦЕЙ, а
+ * выключателя они заслуживают наравне с остальными: история проекта и его
+ * сценарии — самое объёмное, что можно не читать ради мелкой задачи.
+ *
+ * 🪦 `doc-steps` БЫЛ ПАПКОЙ до 2026-08-17 (`development-docs/DEVELOPMENT-STEPS/`).
+ * Теперь это MCP-дверь к таблице `development_steps`, и в инструкцию слота едет
+ * имя двери, а не путь: агент, которому назвали несуществующую папку, честно
+ * доложит «шагов нет» — самая дорогая форма неправды из возможных.
  */
 export const FOLDER_DOCS: Record<string, string> = {
   // Кейсы — тоже папка (решение владельца 2026-08-10): в `CASES/` сами кейсы,
   // в `RAW/` сырьё Quiz, которое агент в обычной работе не читает.
   "doc-use-cases": `${USE_CASES_DIR}/`,
-  "doc-steps": `${STEPS_DIR}/`,
+  "doc-steps": `MCP development-steps → ${STEPS_SOURCE}`,
 };
 
 /** Что показывать в списках инструкции: файл или папку. */
