@@ -881,7 +881,8 @@
         "doc-architecture": "How this particular app is put together and which layer owns what. It grows with the project, so a later session can pick up a structure instead of re-deriving it from the code.",
         "doc-glossary": "The terms of this project, so one word keeps one meaning. Cheap to maintain and it removes a whole class of misunderstandings that otherwise cost a session each.",
         "doc-lessons": "Your preferences and the habits earned from earlier mistakes. A session ends and takes its context with it; this is the part that survives — say “remember this” and it goes here.",
-        "doc-steps": "One file per piece of work, written by whoever did it. It is the project's history in the form the next session can actually use: what was tried, what was decided, what is already solved.",
+        "doc-steps": "One database row per piece of work, written by whoever did it. The project history in a form the next session can use: what was tried, what was decided, what is already closed — answered by one query instead of reading every file.",
+        "doc-case-to-step": "How confirmed use cases turn into a queue of development steps: who starts it, how a step is named, and who may confirm what. A readable duplicate — the procedure itself lives in a skill the agent loads on demand, not in every session.",
         "doc-antipatterns": "Approaches that cost time here and must not be tried again. The value is in the second half of each entry — not what failed, but why, so a similar idea can be recognised before it is built.",
         "doc-design": "How the pages should look. You describe it once; the agent builds to that description instead of inventing a look per page and leaving you to correct it afterwards.",
         "doc-parallel-routing": "How a page assembled from independent areas works in this project, and what changes when it is turned on. Read before touching layout, not after.",
@@ -1322,7 +1323,7 @@
       },
       "doc-steps": {
         "title": "Development steps",
-        "hint": "The step files the agent materializes, one per piece of work."
+        "hint": "The queue of work in the database: what is open, what is closed, and which cases it serves."
       },
       "doc-antipatterns": {
         "title": "Anti-patterns",
@@ -3914,7 +3915,8 @@
         "doc-architecture": "Как устроено именно это приложение и какой слой чем владеет. Растёт вместе с проектом, поэтому следующая сессия получает готовую структуру, а не выводит её заново из кода.",
         "doc-glossary": "Термины проекта, чтобы одно слово сохраняло одно значение. Стоит дёшево и снимает целый класс недопониманий, каждое из которых иначе обходится в сессию.",
         "doc-lessons": "Ваши предпочтения и привычки, добытые прошлыми ошибками. Сессия заканчивается и уносит контекст с собой; это та часть, которая остаётся — скажите «запомни», и запись появится здесь.",
-        "doc-steps": "По файлу на каждую работу, написанному тем, кто её выполнял. Это история проекта в том виде, которым следующая сессия может пользоваться: что пробовали, что решили, что уже закрыто.",
+        "doc-steps": "Строка в базе на каждую работу, написанная тем, кто её выполнял. Это история проекта в том виде, которым следующая сессия может пользоваться: что пробовали, что решили, что уже закрыто — и всё это одним запросом, а не чтением каждого файла.",
+        "doc-case-to-step": "Как подтверждённые кейсы превращаются в очередь шагов: кто её запускает, как называется шаг и кто что вправе подтверждать. Читаемый дубликат — сама процедура живёт навыком, который агент грузит по поводу, а не в каждой сессии.",
         "doc-antipatterns": "Подходы, которые здесь стоили времени и повторять их нельзя. Ценность во второй половине каждой записи — не что не получилось, а почему, чтобы похожую идею можно было узнать до того, как её построят.",
         "doc-design": "Как должны выглядеть страницы. Вы описываете это один раз, и агент строит по описанию, вместо того чтобы придумывать вид каждой страницы заново и оставлять вам правку постфактум.",
         "doc-parallel-routing": "Как в этом проекте работает страница, собранная из независимых областей, и что меняется при её включении. Читается до работы с раскладкой, а не после.",
@@ -4355,7 +4357,7 @@
       },
       "doc-steps": {
         "title": "Шаги разработки",
-        "hint": "Файлы шагов, которые заводит агент — по одному на работу."
+        "hint": "Очередь работ в базе: что открыто, что закрыто и ради каких кейсов."
       },
       "doc-antipatterns": {
         "title": "Антипаттерны",
