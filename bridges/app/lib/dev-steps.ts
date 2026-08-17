@@ -113,6 +113,106 @@ export function readDevStep(number: number): DevStep | null {
   }
 }
 
+/**
+ * Завести шаг декомпозиции — единственная запись, которую делает ПАНЕЛЬ
+ * (владелец 2026-08-17).
+ *
+ * 🔒 ПОЧЕМУ ПАНЕЛЬ, А НЕ ТОЛЬКО АГЕНТ. Момент, когда кейсы становятся работой, —
+ * это момент, когда владелец подтвердил последний из них. Он в панели, и очередь
+ * обязана появиться здесь же: иначе она не существует, пока кто-то не запустит
+ * агента, а владелец открывает раздел шагов и видит пустоту сразу после того,
+ * как закончил самую важную часть своей работы.
+ *
+ * Агент делает то же самое на входе в сессию (`steps_decompose_start`), и это не
+ * дублирование, а самолечение: два независимых пути к одному состоянию, оба
+ * идемпотентные.
+ *
+ * 🔒 ИДЕМПОТЕНТНОСТЬ ДЕРЖИТ КОЛОНКА `kind`, А НЕ СОВПАДЕНИЕ ЗАГОЛОВКА. Строка,
+ * по которой сверяются, живёт ровно до первой правки формулировки — и тогда
+ * второй шаг декомпозиции появляется молча.
+ *
+ * Пишем прямо в SQLite: панель уже так делает в браузере таблиц, файл общий, и
+ * ходить за одной строкой через HTTP к службе, стоящей на той же машине, незачем.
+ */
+export function ensureDecompositionStep(
+  productId: string, confirmedCaseIds: string[],
+): { created: boolean; number: number } | null {
+  if (!productId || !confirmedCaseIds.length) return null;
+  let db: Database.Database;
+  try {
+    db = new Database(APP_DB);
+  } catch {
+    return null;
+  }
+  try {
+    db.exec(SCHEMA);
+    // Колонку добавляем вслепую: `CREATE TABLE IF NOT EXISTS` не трогает
+    // существующую таблицу, а сервер мог завести шаги до появления `kind`.
+    try {
+      db.exec("ALTER TABLE development_steps ADD COLUMN kind TEXT NOT NULL DEFAULT 'work'");
+    } catch { /* колонка уже есть — этого мы и хотели */ }
+
+    const existing = db
+      .prepare("SELECT number FROM development_steps WHERE product_id = ? AND kind = 'decomposition' LIMIT 1")
+      .get(productId) as { number: number } | undefined;
+    if (existing) return { created: false, number: existing.number };
+
+    const max = db.prepare("SELECT MAX(number) AS m FROM development_steps").get() as { m: number | null };
+    const number = (max?.m ?? 0) + 1;
+    db.prepare(
+      `INSERT INTO development_steps (number, product_id, title, status, importance, kind, cases, plan)
+       VALUES (?, ?, ?, 'new', 'critical', 'decomposition', ?, ?)`,
+    ).run(number, productId, DECOMPOSITION_TITLE, JSON.stringify(confirmedCaseIds), DECOMPOSITION_PLAN);
+    return { created: true, number };
+  } catch {
+    return null;
+  } finally {
+    db.close();
+  }
+}
+
+/**
+ * 🔒 ЗАГОЛОВОК И ЗАДАНИЕ ПОВТОРЕНЫ ИЗ MCP ДОСЛОВНО (`scripts/mcp/
+ * fractera-project.mjs`). Два пути к одному состоянию обязаны приводить к
+ * ОДИНАКОВОЙ записи, иначе владелец увидит разный текст в зависимости от того,
+ * кто успел первым, и решит, что шагов два разных вида.
+ *
+ * Английский — машинный слой (правило шага 509): это задание читает агент.
+ */
+const DECOMPOSITION_TITLE =
+  "decompose confirmed use cases into an ordered development step queue";
+
+const DECOMPOSITION_PLAN =
+  "Read every confirmed use case of this product and turn it into an ordered queue of development "
+  + "steps through steps_create.\n\n"
+  + "The FIRST step of that queue is always the same and is not negotiable: the minimal working "
+  + "skeleton — the whole architecture present in the filesystem, the API routes in place, and "
+  + "navigation walking end to end on stubs. Nothing real behind it yet. Everything after it fills "
+  + "the stubs in, one case at a time.\n\n"
+  + "Every step names the cases it serves and carries a title of 6-12 words. When the queue is "
+  + "written, close this step with steps_close.";
+
+/**
+ * Схема — копия объявления гостевого приложения (`lib/db/index.ts`). Панель
+ * создаёт таблицу, если её ещё нет: она может понадобиться раньше, чем
+ * приложение соберут в первый раз.
+ */
+const SCHEMA = `
+  CREATE TABLE IF NOT EXISTS development_steps (
+    number      INTEGER PRIMARY KEY,
+    product_id  TEXT NOT NULL DEFAULT 'platform',
+    title       TEXT NOT NULL,
+    status      TEXT NOT NULL DEFAULT 'new',
+    importance  TEXT NOT NULL DEFAULT 'mandatory',
+    kind        TEXT NOT NULL DEFAULT 'work',
+    cases       TEXT,
+    plan        TEXT,
+    result      TEXT,
+    created_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')),
+    updated_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now'))
+  );
+`;
+
 /** Сколько шагов и сколько из них закрыто — для сводки на странице документов. */
 export function devStepsSummary(): { total: number; open: number } {
   const state = listDevSteps();

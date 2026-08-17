@@ -11,8 +11,9 @@ import { slotLanguages } from "@/lib/slot-languages";
 import {
   addProduct, updateProduct, adoptLegacyProjectType, defaultSurface,
   activeProduct, listProducts, findProduct, giveRootTo, removeProduct,
-  DEV_STATUSES, isDevStatus, normalizeSteps, stepsOf,
+  DEV_STATUSES, isDevStatus, normalizeSteps, stepsOf, devStatusOf,
 } from "@/lib/products-config";
+import { ensureDecompositionStep } from "@/lib/dev-steps";
 
 // Кейсы: чтение папки и действия над ней.
 //
@@ -48,6 +49,37 @@ export async function GET(req: NextRequest) {
     // нажимают вслепую.
     resetPreview: resetPreview(pid),
   });
+}
+
+/**
+ * Подтверждён кейс — работа началась (владелец 2026-08-17).
+ *
+ * 🔒 ОЧЕРЕДЬ РОЖДАЕТСЯ ЗДЕСЬ, В МОМЕНТ ПОДТВЕРЖДЕНИЯ, А НЕ КОГДА-НИБУДЬ ПОТОМ.
+ * Именно подтверждение превращает описание в заказ; если бы шаг заводил только
+ * агент, очередь не существовала бы, пока кто-то его не запустит, — и владелец,
+ * закончив самую трудную часть своей работы, открывал бы раздел шагов и видел
+ * пустоту. Агент делает то же самое на входе в сессию, и это не дублирование, а
+ * два независимых пути к одному состоянию, оба идемпотентные.
+ *
+ * 🔒 ТОЛЬКО ВПЕРЁД И ТОЛЬКО ИЗ «НЕ НАЧАТ». Продукт, дошедший до приёмки,
+ * подтверждает по ходу дела и новые кейсы; откатывать его в «декомпозицию» при
+ * каждом таком подтверждении значило бы стирать пройденный путь нажатием, смысл
+ * которого совсем в другом.
+ *
+ * Ничего не делает, пока не подтверждён ни один кейс: разбирать нечего.
+ */
+function openDevelopment(pid: string): { development?: { step: number; created: boolean } } {
+  const confirmed = listCases(pid).cases.filter((c) => c.status === "confirmed").map((c) => c.id);
+  if (!confirmed.length) return {};
+
+  const step = ensureDecompositionStep(pid, confirmed);
+  if (!step) return {};
+
+  const product = findProduct(pid);
+  if (product && devStatusOf(product) === "not-started") {
+    updateProduct(pid, { devStatus: "decomposition" });
+  }
+  return { development: { step: step.number, created: step.created } };
 }
 
 export async function POST(req: NextRequest) {
@@ -351,7 +383,7 @@ export async function POST(req: NextRequest) {
     case "confirm": {
       if (!body.id) return NextResponse.json({ error: "id_required" }, { status: 400 });
       const ok = setStatus(pid, body.id, "confirmed");
-      return NextResponse.json({ ok, gate: useCasesGate(pid) });
+      return NextResponse.json({ ok, gate: useCasesGate(pid), ...openDevelopment(pid) });
     }
     case "unconfirm": {
       if (!body.id) return NextResponse.json({ error: "id_required" }, { status: 400 });
@@ -360,7 +392,7 @@ export async function POST(req: NextRequest) {
     }
     case "confirmAll": {
       const n = confirmAll(pid);
-      return NextResponse.json({ ok: true, confirmed: n, gate: useCasesGate(pid) });
+      return NextResponse.json({ ok: true, confirmed: n, gate: useCasesGate(pid), ...openDevelopment(pid) });
     }
     case "delete": {
       if (!body.id) return NextResponse.json({ error: "id_required" }, { status: 400 });
