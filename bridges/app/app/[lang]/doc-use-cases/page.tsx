@@ -375,6 +375,17 @@ export default async function UseCasesPage(
               <CasesBoard
                 cases={cases}
                 lang={lang}
+                // Имя продукта уезжает в островок пропсом: им владелец назовёт
+                // работу вслух, когда позовёт агента, — а словарь панели
+                // серверный и в браузер не попадает.
+                product={product?.title ?? ""}
+                nextSteps={{
+                  title: u.nextTitle, stepCreated: u.nextStepCreated,
+                  whereTitle: u.nextWhereTitle, steps: u.nextSteps,
+                  sayTitle: u.nextSayTitle, sayProduct: u.nextSayProduct, sayStep: u.nextSayStep,
+                  copied: u.nextCopied, toGithub: u.nextToGithub, toEnv: u.nextToEnv,
+                  close: u.close,
+                }}
                 labels={{
                   draft: u.draft, confirmed: u.confirmed,
                   confirm: u.confirm, unconfirm: u.unconfirm,

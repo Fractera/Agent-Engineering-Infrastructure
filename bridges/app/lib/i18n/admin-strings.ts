@@ -624,6 +624,21 @@ export type AdminStrings = {
     // `{n}` в `setupMoreHint` — сколько вопросов ещё есть; в `setupFewer` —
     // размер короткого набора.
     setupMore: string; setupMoreHint: string; setupFewer: string;
+    /**
+     * Окно «что дальше» — открывается, когда кейсы стали работой (2026-08-17).
+     *
+     * 🔒 ЗАЧЕМ. Человек подтверждал последний кейс и оставался у зелёного
+     * экрана, где делать нечего: панель не говорила ни что родился шаг, ни что
+     * работа переезжает на его машину. Он заканчивал самую трудную часть и не
+     * знал, что она закончена.
+     *
+     * `nextSteps` — пять пунктов пути; `nextSayProduct` содержит `{product}`,
+     * `nextSayStep` и `nextStepCreated` — `{n}`.
+     */
+    nextTitle: string; nextStepCreated: string;
+    nextWhereTitle: string; nextSteps: string[];
+    nextSayTitle: string; nextSayProduct: string; nextSayStep: string;
+    nextCopied: string; nextToGithub: string; nextToEnv: string;
     // Окно «как это устроено» — четыре этапа целиком (владелец 2026-08-14).
     //
     // ЗАЧЕМ ОКНО, А НЕ ТЕКСТ НА СТРАНИЦЕ. Человек попадает сюда, чтобы отвечать

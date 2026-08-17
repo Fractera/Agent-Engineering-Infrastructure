@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import VoiceInput from "@/_tools/voice-input/client/voice-input.client";
 import { explainQuizError } from "@/lib/quiz-brain.shared";
+import { NextStepsDialog, type NextStepsLabels } from "./next-steps-dialog.client";
 
 export type UseCaseRow = {
   id: string;
@@ -43,11 +44,28 @@ export type BoardLabels = {
 };
 
 export function CasesBoard(
-  { cases, lang, labels }: { cases: UseCaseRow[]; lang: string; labels: BoardLabels },
+  { cases, lang, labels, product, nextSteps }:
+  {
+    cases: UseCaseRow[]; lang: string; labels: BoardLabels;
+    /** Имя продукта — им владелец назовёт работу вслух, когда позовёт агента. */
+    product: string;
+    nextSteps: NextStepsLabels;
+  },
 ) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
+  // Номер шага, родившегося ЭТИМ нажатием. `null` — окно закрыто.
+  const [startedStep, setStartedStep] = useState<number | null>(null);
 
+  /**
+   * 🔒 ВОЗВРАЩАЕТ ТЕЛО ОТВЕТА, А НЕ «получилось / не получилось».
+   *
+   * Раньше здесь было `true | false`, и этого хватало, пока подтверждение
+   * означало только смену цвета. Теперь тот же вызов заводит шаг разработки и
+   * сообщает его номер в `development` — а номер надо показать человеку. Ответ,
+   * выброшенный сразу после проверки, приходится добывать вторым запросом,
+   * который однажды вернёт уже другое состояние.
+   */
   async function act(op: string, payload: Record<string, unknown> = {}, key = op) {
     setBusy(key);
     try {
@@ -60,13 +78,23 @@ export function CasesBoard(
       const d = await r.json().catch(() => ({}));
       if (!r.ok || d.ok === false) throw new Error(String(d?.error ?? labels.failed));
       router.refresh();
-      return true;
+      return d as { development?: { step: number; created: boolean } };
     } catch (e) {
       toast.error(e instanceof Error ? e.message : labels.failed);
-      return false;
+      return null;
     } finally {
       setBusy(null);
     }
+  }
+
+  /**
+   * Окно «что дальше» открывается ровно тогда, когда шаг РОДИЛСЯ этим нажатием
+   * (`created === true`). При каждом следующем подтверждении шаг уже есть, и
+   * окно молчит: инструкция, всплывающая на каждое действие, перестаёт читаться
+   * с третьего раза.
+   */
+  function afterConfirm(d: { development?: { step: number; created: boolean } } | null) {
+    if (d?.development?.created) setStartedStep(d.development.step);
   }
 
   const pending = cases.filter((c) => c.status !== "confirmed").length;
@@ -79,7 +107,10 @@ export function CasesBoard(
           <Button
             size="sm"
             className="text-[11px]"
-            onClick={async () => { if (await act("confirmAll")) toast.success(labels.confirmedAll); }}
+            onClick={async () => {
+              const d = await act("confirmAll");
+              if (d) { toast.success(labels.confirmedAll); afterConfirm(d); }
+            }}
             disabled={busy !== null}
           >
             {busy === "confirmAll" ? <Loader2 size={11} className="animate-spin" /> : <CheckCheck size={11} />}
@@ -89,18 +120,34 @@ export function CasesBoard(
       )}
 
       {cases.map((c) => (
-        <CaseCard key={c.id} row={c} lang={lang} labels={labels} act={act} busy={busy} />
+        <CaseCard key={c.id} row={c} lang={lang} labels={labels} act={act} busy={busy} afterConfirm={afterConfirm} />
       ))}
+
+      {/* Окно живёт ЗДЕСЬ, а не в карточке: карточек много, окно одно, и второе
+          модальное поверх первого этот раздел уже ломало (см. type-dialog). */}
+      {startedStep !== null && (
+        <NextStepsDialog
+          open
+          onOpenChange={(v) => { if (!v) setStartedStep(null); }}
+          step={startedStep}
+          product={product}
+          lang={lang}
+          labels={nextSteps}
+        />
+      )}
     </div>
   );
 }
 
 function CaseCard(
-  { row, lang, labels, act, busy }:
+  { row, lang, labels, act, busy, afterConfirm }:
   {
     row: UseCaseRow; lang: string; labels: BoardLabels;
-    act: (op: string, payload?: Record<string, unknown>, key?: string) => Promise<boolean>;
+    act: (op: string, payload?: Record<string, unknown>, key?: string)
+      => Promise<{ development?: { step: number; created: boolean } } | null>;
     busy: string | null;
+    /** Показать окно «что дальше», если подтверждение завело шаг. */
+    afterConfirm: (d: { development?: { step: number; created: boolean } } | null) => void;
   },
 ) {
   const router = useRouter();
@@ -234,7 +281,10 @@ function CaseCard(
               size="sm"
               variant={confirmed ? "outline" : "default"}
               className="text-[11px]"
-              onClick={() => act(confirmed ? "unconfirm" : "confirm", { id: row.id }, row.id)}
+              onClick={async () => {
+                const d = await act(confirmed ? "unconfirm" : "confirm", { id: row.id }, row.id);
+                if (!confirmed) afterConfirm(d);
+              }}
               disabled={busy === row.id}
             >
               {busy === row.id ? <Loader2 size={11} className="animate-spin" /> : <Check size={11} />}
