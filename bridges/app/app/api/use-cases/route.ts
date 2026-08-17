@@ -75,9 +75,26 @@ function openDevelopment(pid: string): { development?: { step: number; created: 
   const step = ensureDecompositionStep(pid, confirmed);
   if (!step) return {};
 
+  // 🔒 НОМЕР ШАГА ДОПИСЫВАЕТСЯ В ОГЛАВЛЕНИЕ ПРОДУКТА — ЗДЕСЬ ТОЖЕ, А НЕ ТОЛЬКО В
+  // MCP (найдено сквозным прогоном 2026-08-17).
+  //
+  // MCP делает это своим `indexStep()`, панель не делала: шаг рождался, а поле
+  // `steps` в `PRODUCTS-CONFIG` оставалось пустым. Оглавление, которое заполняет
+  // ОДИН из двух писателей, хуже отсутствующего: агент спрашивает «какие шаги у
+  // этого продукта», получает пустоту и заключает, что работы не было.
+  //
+  // Дефект того же класса, что и всё в этом шаге: два независимых пути к одному
+  // состоянию обязаны приводить к ОДИНАКОВОЙ записи, иначе состояние зависит от
+  // того, кто успел первым.
   const product = findProduct(pid);
-  if (product && devStatusOf(product) === "not-started") {
-    updateProduct(pid, { devStatus: "decomposition" });
+  if (product) {
+    const patch: Parameters<typeof updateProduct>[1] = {
+      steps: [...stepsOf(product), step.number],
+    };
+    // Этап двигается только из «не начат»: продукт, дошедший до приёмки,
+    // подтверждает по ходу дела и новые кейсы, и откат стирал бы пройденный путь.
+    if (devStatusOf(product) === "not-started") patch.devStatus = "decomposition";
+    updateProduct(pid, patch);
   }
   return { development: { step: step.number, created: step.created } };
 }
