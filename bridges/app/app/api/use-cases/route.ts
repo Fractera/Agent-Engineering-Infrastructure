@@ -4,7 +4,12 @@ import {
   listCases, useCasesGate, appendCases, writeCase, setStatus, confirmAll, deleteCase,
   migrateLegacy, appendRaw, writeSeed, readSeed, appendTurns, readTurns,
   readQuestions, writeQuestions, resetUseCases, resetPreview, writePagesPlan, deleteProductDocs,
+  writeAnswers,
 } from "@/lib/use-cases-store";
+import {
+  mutate, setPhase, PHASES, STEP_STATUSES,
+  type ProductPhase, type StepStatus,
+} from "@/lib/product-store";
 import { describeProduct } from "@/lib/quiz-brain";
 import { isProjectTypeId } from "@/lib/project-types";
 import { slotLanguages } from "@/lib/slot-languages";
@@ -99,6 +104,11 @@ function openDevelopment(pid: string): { development?: { step: number; created: 
   return { development: { step: step.number, created: step.created } };
 }
 
+const isPhase = (v: unknown): v is ProductPhase =>
+  typeof v === "string" && (PHASES as readonly string[]).includes(v);
+const isStepStatus = (v: unknown): v is StepStatus =>
+  typeof v === "string" && (STEP_STATUSES as readonly string[]).includes(v);
+
 export async function POST(req: NextRequest) {
   if (!(await requireAuth(req.headers.get("cookie") ?? ""))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -144,6 +154,17 @@ export async function POST(req: NextRequest) {
     steps?: number[];
     addSteps?: number[];
     dropSteps?: number[];
+    /** Ответы по вводным вопросам — тем же порядком, что вопросы. */
+    answers?: string[];
+    /** Фаза жизни продукта: intake | decomposition | development | analysis. */
+    phase?: string;
+    /** Показан ли продукт посетителю. */
+    published?: boolean;
+    /** Номер шага и его новый статус. */
+    number?: number;
+    status?: string;
+    /** План страниц продукта: намерение, не факт. */
+    pages?: { path?: string; purpose?: string }[];
   } | null;
   if (!body?.op) return NextResponse.json({ error: "op_required" }, { status: 400 });
 
@@ -151,12 +172,101 @@ export async function POST(req: NextRequest) {
   // им его ещё нет; всем остальным он обязателен.
   const product = activeProduct(body.productId);
   const pid = product?.id ?? "";
-  const NEEDS_PRODUCT = ["seed", "questions", "reset", "append", "edit", "confirm", "unconfirm", "confirm-all", "delete", "migrate", "dev-progress"];
+  const NEEDS_PRODUCT = ["seed", "questions", "reset", "append", "edit", "confirm", "unconfirm", "confirm-all", "delete", "migrate", "dev-progress", "answers", "phase", "publish", "step-status", "pages-plan", "add-case"];
   if (NEEDS_PRODUCT.includes(body.op) && !pid) {
     return NextResponse.json({ error: "no_product" }, { status: 400 });
   }
 
   switch (body.op) {
+    // Кейс, дописанный ВРУЧНУЮ (владелец 2026-08-18).
+    //
+    // 🔒 ЗАЧЕМ ОТДЕЛЬНАЯ ДВЕРЬ, ЕСЛИ ЕСТЬ `append`. Та принимает пачку от модели
+    // и живёт внутри Quiz. Здесь человек дописывает один кейс поздно — когда
+    // вопросы отвечены, Quiz пройден и обе двери закрыты. Разные намерения с
+    // разными правилами не имеют права входить одной дверью: у модели пачка без
+    // проверки полей, у человека — один кейс, и пустой заголовок надо отвергнуть,
+    // а не записать «Без названия».
+    //
+    // 🔒 РОЖДЁННЫЙ КЕЙС — ЧЕРНОВИК, как и всякий другой. Дописал его человек или
+    // модель, подтверждает всё равно владелец: иначе гейт превращается в
+    // украшение.
+    case "add-case": {
+      const title = String(body.title ?? "").trim();
+      const summary = String(body.summary ?? "").trim();
+      if (!title) return NextResponse.json({ error: "title_required" }, { status: 400 });
+      if (!summary) return NextResponse.json({ error: "summary_required" }, { status: 400 });
+      const [id] = appendCases(pid, [{ title, summary }]);
+      return NextResponse.json({ ok: true, id, gate: useCasesGate(pid) });
+    }
+
+    // ── операции страницы продукта (2026-08-18) ──────────────────────────────
+    //
+    // Все пишут в досье и все отвергают неизвестное значение вместо приведения к
+    // ближайшему: молча принятая опечатка ложится в файл и всплывает пустым
+    // ярлыком в карточке — узнаёт об этом владелец, а не тот, кто опечатался.
+
+    // Ответы по вводным вопросам. Порядок значим: ответ живёт под своим вопросом.
+    case "answers": {
+      const list = (body.answers ?? []).map((a) => String(a));
+      writeAnswers(pid, list);
+      return NextResponse.json({ ok: true, answers: list });
+    }
+
+    // Фаза продукта. Двигает её ВЛАДЕЛЕЦ — так и записывается в историю: переход,
+    // сделанный человеком, и переход, посчитанный системой, отвечают на разные
+    // вопросы при разборе «почему мы здесь».
+    case "phase": {
+      if (!isPhase(body.phase)) {
+        return NextResponse.json({ error: "unknown_phase", allowed: PHASES }, { status: 400 });
+      }
+      const next = setPhase(pid, body.phase, "owner");
+      if (!next) return NextResponse.json({ error: "not_found" }, { status: 404 });
+      return NextResponse.json({ ok: true, phase: next.phase, stage: next.stage });
+    }
+
+    // Публикация. Отдельно от фазы: продукт бывает завершён и никому не показан.
+    case "publish": {
+      if (typeof body.published !== "boolean") {
+        return NextResponse.json({ error: "published_required" }, { status: 400 });
+      }
+      const next = mutate(pid, (d) => { d.published = body.published === true; });
+      if (!next) return NextResponse.json({ error: "not_found" }, { status: 404 });
+      return NextResponse.json({ ok: true, published: next.published });
+    }
+
+    // Статус одного шага. Номер обязателен: «поменять статус шага» без номера —
+    // это предложение угадать, какого.
+    case "step-status": {
+      if (typeof body.number !== "number") {
+        return NextResponse.json({ error: "number_required" }, { status: 400 });
+      }
+      if (!isStepStatus(body.status)) {
+        return NextResponse.json({ error: "unknown_status", allowed: STEP_STATUSES }, { status: 400 });
+      }
+      let found = false;
+      const next = mutate(pid, (d) => {
+        const step = d.steps.find((x) => x.number === body.number);
+        if (!step) return;
+        found = true;
+        step.status = body.status as (typeof STEP_STATUSES)[number];
+        step.updatedAt = new Date().toISOString();
+      });
+      if (!next) return NextResponse.json({ error: "not_found" }, { status: 404 });
+      if (!found) return NextResponse.json({ error: "step_not_found" }, { status: 404 });
+      return NextResponse.json({ ok: true, phase: next.phase, stage: next.stage });
+    }
+
+    // План страниц: намерение, а не факт. Построенное считается обходом папок и
+    // не хранится никогда — записанный список файлов расходится с диском в первую
+    // неделю.
+    case "pages-plan": {
+      const pages = (body.pages ?? [])
+        .map((x) => ({ path: String(x?.path ?? "").trim(), purpose: String(x?.purpose ?? "").trim() }))
+        .filter((x) => x.path);
+      writePagesPlan(pid, pages);
+      return NextResponse.json({ ok: true, pages });
+    }
+
     // Ответы на вводные вопросы. Ложатся и затравкой, и в стенограмму: сырьё
     // пишется ВСЕГДА, иначе первые семь ответов — единственное, что исчезает.
     case "seed": {

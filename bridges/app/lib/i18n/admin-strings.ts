@@ -96,6 +96,28 @@ export type AdminStrings = {
   // page needs beyond that lives in its own section, so the shape of `pages`
   // never has to bend for one surface (step 501, Ф2).
   // Режим разработки — как ведётся работа над проектом (2026-08-18).
+  // Страница продукта: фазы, стадии, секции, действия (2026-08-18).
+  productPage: {
+    phases: Record<"intake" | "decomposition" | "development" | "analysis", { label: string; hint: string }>;
+    stages: Record<"waiting" | "in-progress" | "review" | "testing" | "extra-cycle" | "done", string>;
+    publishedYes: string; publishedNo: string; publish: string; unpublish: string;
+    toAnalysis: string; phaseMoved: string; phaseFailed: string;
+    sectionIntake: string; sectionIntakeHint: string; intakeQuestion: string; intakeAnswer: string;
+    intakeNoAnswer: string; intakeClosed: string; intakeEdit: string; intakeEmpty: string;
+    sectionQuiz: string; sectionQuizHint: string; quizTurns: string; quizEmpty: string; quizClosed: string;
+    sectionCases: string; sectionCasesHint: string; casesEmpty: string;
+    addCase: string; addCaseTitle: string; addCaseHint: string; addCaseName: string;
+    addCaseSummary: string; addCaseSave: string; addCaseCancel: string; addCaseSaved: string;
+    sectionSteps: string; sectionStepsHint: string; stepsEmpty: string;
+    stepNumber: string; stepTitle: string; stepStatus: string; stepImportance: string; stepCases: string;
+    stepPlan: string; stepResult: string; stepSaved: string;
+    stepStatuses: Record<"new" | "in-progress" | "blocked" | "done" | "cancelled", string>;
+    sectionPages: string; sectionPagesHint: string; pagesEmpty: string;
+    pageBuilt: string; pagePlanned: string; pageExtra: string; pagePurpose: string; pageSteps: string;
+    sectionRoots: string; sectionRootsHint: string;
+    rootDossier: string; rootQuiz: string; rootPages: string; rootLogic: string; rootTables: string;
+    saving: string; failed: string;
+  };
   developmentMode: {
     lead: string; unavailable: string;
     save: string; saving: string; savedNotice: string; failed: string;

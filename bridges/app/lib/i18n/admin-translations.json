@@ -3096,6 +3096,100 @@
       "helpWhere": "In PLATFORM-CONFIG on the server, beside the feature switches. The agent reads it at the start of a session, so it survives the end of a conversation — which is why this is a setting and not a phrase said in chat.",
       "helpCostTitle": "What it costs.",
       "helpCost": "Use cases cost more than steps, and steps more than classic — in tokens and in your time. That is the trade-off, and it is yours to make: the choice is not tied to which model happens to be running."
+    },
+    "productPage": {
+      "phases": {
+        "intake": {
+          "label": "Intake",
+          "hint": "Questions, answers, Quiz, and the owner confirming the cases."
+        },
+        "decomposition": {
+          "label": "Decomposition",
+          "hint": "Confirmed cases become an ordered queue of development steps."
+        },
+        "development": {
+          "label": "Development",
+          "hint": "The steps are worked one after another."
+        },
+        "analysis": {
+          "label": "Analysis",
+          "hint": "The result is studied; from it come new steps or a new decomposition."
+        }
+      },
+      "stages": {
+        "waiting": "waiting to start",
+        "in-progress": "in progress",
+        "review": "review",
+        "testing": "testing",
+        "extra-cycle": "extra cycle",
+        "done": "done"
+      },
+      "publishedYes": "Visitors see it",
+      "publishedNo": "Hidden from visitors",
+      "publish": "Publish",
+      "unpublish": "Hide",
+      "toAnalysis": "Move to analysis",
+      "phaseMoved": "Phase changed",
+      "phaseFailed": "Could not change the phase",
+      "sectionIntake": "Intake questions and answers",
+      "sectionIntakeHint": "What was asked and what you answered. The Quiz works from these answers, and everything after them stands on this.",
+      "intakeQuestion": "Question",
+      "intakeAnswer": "Answer",
+      "intakeNoAnswer": "not answered",
+      "intakeClosed": "The intake is finished and does not reopen. To describe the product from scratch use Start over — it archives everything first.",
+      "intakeEdit": "Edit answers",
+      "intakeEmpty": "No questions yet. They appear once the product structure is chosen.",
+      "sectionQuiz": "Quiz conversation",
+      "sectionQuizHint": "The whole dialogue with the model, kept as raw material. The cases are what came out of it.",
+      "quizTurns": "turns",
+      "quizEmpty": "The conversation has not started.",
+      "quizClosed": "The Quiz has run and does not open again. New cases are added by hand below.",
+      "sectionCases": "Use cases",
+      "sectionCasesHint": "Green means the owner approved THIS text. Any edit turns a case back into a draft.",
+      "casesEmpty": "Nothing described yet.",
+      "addCase": "Add a case by hand",
+      "addCaseTitle": "New use case",
+      "addCaseHint": "One scenario in your own words: who uses the product, what brought them, what must be true when they are done.",
+      "addCaseName": "Title",
+      "addCaseSummary": "Scenario",
+      "addCaseSave": "Add",
+      "addCaseCancel": "Cancel",
+      "addCaseSaved": "Case added as a draft",
+      "sectionSteps": "Development steps",
+      "sectionStepsHint": "The queue. A step names the case it serves; work that serves no case is work nobody ordered.",
+      "stepsEmpty": "The queue is empty. It appears when confirmed cases are decomposed.",
+      "stepNumber": "No",
+      "stepTitle": "Step",
+      "stepStatus": "Status",
+      "stepImportance": "Importance",
+      "stepCases": "Cases",
+      "stepPlan": "Plan",
+      "stepResult": "Result",
+      "stepSaved": "Status saved",
+      "stepStatuses": {
+        "new": "new",
+        "in-progress": "in progress",
+        "blocked": "blocked",
+        "done": "done",
+        "cancelled": "cancelled"
+      },
+      "sectionPages": "Pages of this product",
+      "sectionPagesHint": "Only this product's pages, relative to its own root. Planned pages come from the dossier; built ones are counted by walking the folders, because a stored list of files disagrees with the disk within a week.",
+      "pagesEmpty": "No pages planned and none built yet.",
+      "pageBuilt": "built",
+      "pagePlanned": "planned",
+      "pageExtra": "built but not in the plan",
+      "pagePurpose": "What works here",
+      "pageSteps": "Named by steps",
+      "sectionRoots": "Files and roots",
+      "sectionRootsHint": "Where this product lives. Derived from its record, never invented.",
+      "rootDossier": "Dossier",
+      "rootQuiz": "Quiz transcript",
+      "rootPages": "Pages",
+      "rootLogic": "Logic",
+      "rootTables": "Tables",
+      "saving": "Saving…",
+      "failed": "Did not work out"
     }
   },
   "ru": {
@@ -6195,6 +6289,100 @@
       "helpWhere": "В PLATFORM-CONFIG на сервере, рядом с выключателями возможностей. Агент читает его на старте сессии — поэтому выбор переживает конец разговора, и поэтому это настройка, а не фраза в чате.",
       "helpCostTitle": "Чего это стоит.",
       "helpCost": "Кейсы дороже шагов, шаги дороже классического — и в токенах, и в вашем времени. Это и есть выбор, и он ваш: к тому, какая модель сейчас работает, он не привязан."
+    },
+    "productPage": {
+      "phases": {
+        "intake": {
+          "label": "Предварительная",
+          "hint": "Вопросы, ответы, Quiz и подтверждение кейсов владельцем."
+        },
+        "decomposition": {
+          "label": "Декомпозиция",
+          "hint": "Подтверждённые кейсы превращаются в очередь шагов разработки."
+        },
+        "development": {
+          "label": "Разработка",
+          "hint": "Шаги выполняются один за другим."
+        },
+        "analysis": {
+          "label": "Анализ результата",
+          "hint": "Результат изучается; из него рождаются новые шаги или новый разбор."
+        }
+      },
+      "stages": {
+        "waiting": "ожидает запуска",
+        "in-progress": "в процессе",
+        "review": "ревью",
+        "testing": "тестирование",
+        "extra-cycle": "дополнительный цикл",
+        "done": "завершено"
+      },
+      "publishedYes": "Посетители видят",
+      "publishedNo": "Скрыт от посетителей",
+      "publish": "Опубликовать",
+      "unpublish": "Скрыть",
+      "toAnalysis": "Перевести в анализ",
+      "phaseMoved": "Фаза изменена",
+      "phaseFailed": "Не удалось сменить фазу",
+      "sectionIntake": "Вопросы и ответы",
+      "sectionIntakeHint": "О чём спрашивали и что вы ответили. Из этих ответов работает Quiz, и на них стоит всё, что было дальше.",
+      "intakeQuestion": "Вопрос",
+      "intakeAnswer": "Ответ",
+      "intakeNoAnswer": "без ответа",
+      "intakeClosed": "Опрос пройден и второй раз не открывается. Чтобы описать продукт заново, есть «Начать сначала» — она сперва складывает всё в архив.",
+      "intakeEdit": "Править ответы",
+      "intakeEmpty": "Вопросов пока нет: они появляются после выбора структуры продукта.",
+      "sectionQuiz": "Разговор Quiz",
+      "sectionQuizHint": "Весь диалог с моделью, оставленный как сырьё. Результат разговора — кейсы ниже.",
+      "quizTurns": "реплик",
+      "quizEmpty": "Разговор не начинался.",
+      "quizClosed": "Quiz пройден и заново не открывается. Новые кейсы дописываются руками — кнопкой ниже.",
+      "sectionCases": "Пользовательские кейсы",
+      "sectionCasesHint": "Зелёный означает, что владелец согласился С ЭТИМ текстом. Любая правка возвращает кейс в черновики.",
+      "casesEmpty": "Ещё ничего не описано.",
+      "addCase": "Дописать кейс руками",
+      "addCaseTitle": "Новый пользовательский кейс",
+      "addCaseHint": "Один сценарий вашими словами: кто пользуется продуктом, что его привело, что должно быть верно, когда он закончил.",
+      "addCaseName": "Заголовок",
+      "addCaseSummary": "Сценарий",
+      "addCaseSave": "Добавить",
+      "addCaseCancel": "Отмена",
+      "addCaseSaved": "Кейс добавлен черновиком",
+      "sectionSteps": "Шаги разработки",
+      "sectionStepsHint": "Очередь. Шаг называет кейс, которому служит; работа без кейса — работа, которую никто не заказывал.",
+      "stepsEmpty": "Очередь пуста. Она появляется, когда подтверждённые кейсы разбирают на шаги.",
+      "stepNumber": "№",
+      "stepTitle": "Шаг",
+      "stepStatus": "Статус",
+      "stepImportance": "Важность",
+      "stepCases": "Кейсы",
+      "stepPlan": "План",
+      "stepResult": "Результат",
+      "stepSaved": "Статус сохранён",
+      "stepStatuses": {
+        "new": "новый",
+        "in-progress": "в работе",
+        "blocked": "заблокирован",
+        "done": "закрыт",
+        "cancelled": "отменён"
+      },
+      "sectionPages": "Страницы этого продукта",
+      "sectionPagesHint": "Только его страницы, относительно его собственного корня. Запланированные берутся из досье, построенные считаются обходом папок: записанный список файлов расходится с диском в первую неделю.",
+      "pagesEmpty": "Ни одной страницы не запланировано и ни одной не построено.",
+      "pageBuilt": "построена",
+      "pagePlanned": "запланирована",
+      "pageExtra": "построена, в плане не значится",
+      "pagePurpose": "Что здесь работает",
+      "pageSteps": "Названа шагами",
+      "sectionRoots": "Файлы и корни",
+      "sectionRootsHint": "Где живёт этот продукт. Выводится из его записи, никогда не выдумывается.",
+      "rootDossier": "Досье",
+      "rootQuiz": "Лента Quiz",
+      "rootPages": "Страницы",
+      "rootLogic": "Логика",
+      "rootTables": "Таблицы",
+      "saving": "Сохраняю…",
+      "failed": "Не получилось"
     }
   }
 }
