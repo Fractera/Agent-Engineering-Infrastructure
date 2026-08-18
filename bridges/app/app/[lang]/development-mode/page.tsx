@@ -20,7 +20,7 @@ import { PageShell } from "../_components/page-shell";
 import { HelpDetails } from "../_components/help-details";
 import { readFeatures } from "@/lib/platform-features";
 import { ModePicker } from "./_components/mode-picker.client";
-import { developmentModeOf, type DevelopmentMode } from "@/lib/development-mode";
+import { developmentModeOf, developmentModeChosen, type DevelopmentMode } from "@/lib/development-mode";
 
 export const dynamic = "force-dynamic";
 
@@ -48,6 +48,7 @@ export default async function DevelopmentModePage({ params }: { params: Promise<
           <p className="mb-3 text-[11px] leading-relaxed text-muted-foreground">{m.lead}</p>
 
           <ModePicker
+            chosen={developmentModeChosen(config)}
             config={config}
             initial={initial}
             labels={{

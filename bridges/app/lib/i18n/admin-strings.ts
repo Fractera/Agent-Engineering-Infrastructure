@@ -68,7 +68,7 @@ export type AdminStrings = {
      * OpenAI» против «Нет ключа OpenAI — граф знаний останется выключенным».
      */
     warnCta: {
-      languages: string; github: string; products: string; openai: string; domain: string;
+      languages: string; github: string; mode: string; products: string; openai: string; domain: string;
       "context-state": string; "dev-browser": string;
       "dev-claude-code": string; "dev-editor": string;
     };
@@ -523,7 +523,7 @@ export type AdminStrings = {
   warnings: {
     title: string;
     items: {
-      languages: string; github: string; products: string; openai: string; domain: string;
+      languages: string; github: string; mode: string; products: string; openai: string; domain: string;
       "context-state": string; "dev-browser": string;
       "dev-claude-code": string; "dev-editor": string;
     };

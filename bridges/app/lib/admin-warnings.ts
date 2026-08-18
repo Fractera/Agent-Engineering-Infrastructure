@@ -22,7 +22,7 @@ import { contextStateHandoff } from "@/lib/product-docs";
 import { isSecureMode } from "@/lib/secure-mode";
 import { listProducts } from "@/lib/products-config";
 import { readFeatures } from "@/lib/platform-features";
-import { productsDesignOpen } from "@/lib/development-mode";
+import { productsDesignOpen, developmentModeChosen } from "@/lib/development-mode";
 import { readInstructionSet } from "@/lib/instruction-set";
 import { markKey } from "@/lib/dev-tools-marks";
 import type { AdminPageSlug } from "@/lib/admin-nav";
@@ -35,7 +35,7 @@ export type WarningLevel = "blocking" | "advised";
 
 export type AdminWarning = {
   id:
-    | "languages" | "github" | "products" | "openai" | "domain" | "context-state"
+    | "languages" | "github" | "mode" | "products" | "openai" | "domain" | "context-state"
     // Инструменты разработки — по одному на каждый, в порядке владельца
     // (2026-08-14): сначала то, без чего обойтись можно, последним — то, без
     // чего нельзя.
@@ -147,7 +147,29 @@ export function collectWarnings(): AdminWarning[] {
   // проектируют продуктов — им не о чем предупреждать, и группа «Продукты» у них
   // спрятана (`hiddenSlugs()`). Тревога, ведущая в спрятанный раздел, читалась
   // бы как поломка панели.
-  const casesMode = productsDesignOpen(readFeatures().config);
+  const features = readFeatures().config;
+
+  // 🔒 РЕЖИМ РАЗРАБОТКИ — ОРАНЖЕВЫЙ, И ОН ЖЕ РЕШАЕТ, ЧТО ПОТРЕБУЮТ ОСТАЛЬНЫЕ
+  // (владелец 2026-08-19).
+  //
+  // Вчерашний шаг заменил гейт кейсов страницей выбора режима, но записи в этом
+  // своде не завёл: на свежем сервере пункт «Режим разработки» не был подсвечен
+  // ничем, и человек проходил мимо вопроса, от которого зависит весь его порядок
+  // работы. Молчание конфига действует как `classic` — то есть выбор как бы
+  // сделан за него и молча.
+  //
+  // Оранжевый, а не красный: `classic` работает и ничего не требует, начинать
+  // можно. Но начинать, не зная, что режимов три, — не то же самое, что выбрать
+  // классический.
+  //
+  // Гаснет ОТМЕТКОЙ О ПОСТУПКЕ (`developmentModeChosen`), а не значением: по
+  // значению «не выбрано» неотличимо от «выбран классический». Оставить текущий
+  // режим — такой же выбор, и страница его записывает.
+  if (!developmentModeChosen(features)) {
+    out.push({ id: "mode", level: "advised", slug: "development-mode" });
+  }
+
+  const casesMode = productsDesignOpen(features);
 
   // 🔒 ГЕЙТ СЧИТАЕТСЯ ПО ВСЕМ ПРОДУКТАМ, НО НЕ МЕШАЕТ РАБОТЕ ПО ГОТОВОМУ
   // (партия 5). Тревога горит, пока НЕ ОПИСАН НИ ОДИН продукт: начатый второй

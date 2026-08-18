@@ -41,9 +41,15 @@ export type ModeLabels = {
 };
 
 export function ModePicker(
-  { config, initial, labels }: {
+  { config, initial, chosen: alreadyChosen, labels }: {
     config: Record<string, unknown>;
     initial: DevelopmentMode;
+    /**
+     * Записан ли выбор в конфиге. НЕ то же самое, что «какой режим действует»:
+     * молчание конфига действует как `classic`, поэтому на свежем сервере
+     * `initial` уже равен тому, что человек видит выбранным.
+     */
+    chosen: boolean;
     labels: ModeLabels;
   },
 ) {
@@ -51,7 +57,13 @@ export function ModePicker(
   const [mode, setMode] = useState<DevelopmentMode>(initial);
   const [saving, setSaving] = useState(false);
 
-  const dirty = mode !== initial;
+  // 🔒 «ОСТАВИТЬ ТЕКУЩИЙ» — ТОЖЕ ВЫБОР (владелец 2026-08-19). Здесь стояло
+  // `mode !== initial`, и на свежем сервере это запирало дверь: человек, которого
+  // предупреждение позвало выбрать режим и который согласен с классическим,
+  // получал отказ «нечего сохранять», запись в конфиг не появлялась, и
+  // предупреждение горело вечно. Пока выбор не записан, сохранять можно всегда —
+  // ровно затем, чтобы его записать.
+  const dirty = mode !== initial || !alreadyChosen;
 
   async function save() {
     if (!dirty) { toast.error(labels.nothingToSave); return; }

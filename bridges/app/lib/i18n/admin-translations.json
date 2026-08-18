@@ -784,6 +784,7 @@
       "items": {
         "languages": "The language set is not confirmed — it decides the shape of every address",
         "github": "GitHub is not connected — the project has nowhere to live",
+        "mode": "The development mode has not been chosen — classic is running by default, and it decides what the whole project asks of you",
         "products": "No product is described yet — development has nothing to build towards",
         "openai": "No OpenAI key — the knowledge graph and embeddings stay off",
         "domain": "No custom domain — HTTPS-only features stay unavailable",
@@ -1155,6 +1156,7 @@
       "warnCta": {
         "languages": "Choose the languages of the project",
         "github": "GitHub connection required",
+        "mode": "Choose how development is run",
         "products": "Describe your first product",
         "openai": "Connect an OpenAI key",
         "domain": "Connect your own domain",
@@ -3987,6 +3989,7 @@
       "items": {
         "languages": "Набор языков не подтверждён — от него зависит вид всех адресов",
         "github": "GitHub не подключён — проекту негде жить",
+        "mode": "Режим разработки не выбран — по умолчанию работает классический, а от режима зависит весь порядок работы",
         "products": "Не описан ни один продукт — разработке не к чему стремиться",
         "openai": "Нет ключа OpenAI — граф знаний и векторы останутся выключенными",
         "domain": "Нет своего домена — возможности, требующие HTTPS, недоступны",
@@ -4358,6 +4361,7 @@
       "warnCta": {
         "languages": "Выберите языки проекта",
         "github": "Требуется соединить с GitHub",
+        "mode": "Выберите, как ведётся разработка",
         "products": "Опишите первый продукт",
         "openai": "Подключите ключ OpenAI",
         "domain": "Подключите свой домен",
