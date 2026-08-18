@@ -18,7 +18,8 @@ import { getAdminStrings } from "@/lib/i18n/admin-strings";
 import { PageShell } from "../_components/page-shell";
 import { HelpDetails } from "../_components/help-details";
 import { readFeatures } from "@/lib/platform-features";
-import { ModePicker, MODES, type DevelopmentMode } from "./_components/mode-picker.client";
+import { ModePicker } from "./_components/mode-picker.client";
+import { developmentModeOf, type DevelopmentMode } from "@/lib/development-mode";
 
 export const dynamic = "force-dynamic";
 
@@ -31,12 +32,9 @@ export default async function DevelopmentModePage({ params }: { params: Promise<
   // Тот же читатель, что у возможностей: он уже отдаёт весь конфиг целиком, а
   // писать надо целиком — иначе соседние ключи стёрлись бы.
   const { ok, config } = readFeatures();
-  const saved = config.developmentMode;
-  // Не выбрано — работаем по кейсам: это самый полный порядок, и умолчание
-  // должно быть тем, ради чего платформа существует, а не самым простым.
-  const initial: DevelopmentMode = MODES.includes(saved as DevelopmentMode)
-    ? (saved as DevelopmentMode)
-    : "cases";
+  // Умолчание и проверка значения — в общем модуле: страница и островок обязаны
+  // понимать режим одинаково.
+  const initial: DevelopmentMode = developmentModeOf(config);
 
   return (
     <PageShell lang={lang} slug="development-mode" s={s} title={page.title} hint={page.hint}>

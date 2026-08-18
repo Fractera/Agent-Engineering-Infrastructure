@@ -16,8 +16,11 @@ import { Loader2, Save, Check } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
-export const MODES = ["classic", "steps", "cases"] as const;
-export type DevelopmentMode = (typeof MODES)[number];
+// 🔒 СПИСОК РЕЖИМОВ ЖИВЁТ В НЕЙТРАЛЬНОМ ФАЙЛЕ. Он нужен и серверной странице;
+// экспортированный отсюда, на сервере он превращался в клиентскую ссылку и ронял
+// страницу в белый экран (владелец, 2026-08-18).
+import { MODES, type DevelopmentMode } from "@/lib/development-mode";
+export type { DevelopmentMode };
 
 export type ModeLabels = {
   save: string; saving: string; saved: string; failed: string; nothingToSave: string;
