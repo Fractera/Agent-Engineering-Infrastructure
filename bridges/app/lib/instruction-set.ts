@@ -19,7 +19,7 @@
 
 import fs from "fs";
 import path from "path";
-import { DOC_FILES, STEPS_SOURCE, type DocKey } from "@/lib/product-docs";
+import { DOC_FILES, STEPS_SOURCE, isGenerated, type DocKey } from "@/lib/product-docs";
 import { USE_CASES_DIR } from "@/lib/use-cases-store";
 
 const APP_DIR = process.env.APP_DIR ?? "/opt/fractera/app";
@@ -630,6 +630,30 @@ export function readTemplate(key: string): string {
 export function ensureDoc(key: string): { ok: boolean; created: boolean; reason?: string } {
   const file = DOC_FILES[key as DocKey];
   if (!file) return { ok: true, created: false };
+
+  // 🔒 У СОБИРАЕМОГО ДОКУМЕНТА ШАБЛОНА НЕТ — И ЕГО НЕЛЬЗЯ ОСТАВЛЯТЬ НЕСУЩЕСТВУЮЩИМ
+  // (2026-08-18). `PLATFORM-TOOLS.md` пересобирается при установке инструмента.
+  // Пока не установлен ни один, файл не появлялся ВООБЩЕ — а инструкция слота
+  // называла его включённым и велела читать в начале каждой сессии. Агент честно
+  // докладывал «документа нет», то есть о платформенных складах, графе знаний,
+  // карте и каналах не узнавал никогда и строил второе рядом с существующим.
+  // Пустой список инструментов — правда; отсутствующий файл — ложь о наборе.
+  if (isGenerated(key as DocKey)) {
+    const target = path.join(APP_DIR, file);
+    if (fs.existsSync(target)) return { ok: true, created: false };
+    try {
+      // Ленивый импорт по той же причине, что и в `tools-install`: генератор
+      // тянет реестр инструментов, а зовётся он редко.
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { writePlatformToolsDoc } = require("@/lib/tools-install") as {
+        writePlatformToolsDoc: () => boolean;
+      };
+      return { ok: true, created: writePlatformToolsDoc() };
+    } catch (e) {
+      return { ok: false, created: false, reason: String(e) };
+    }
+  }
+
   const template = readTemplate(key);
   if (!template) return { ok: true, created: false };
   const target = path.join(APP_DIR, file);
