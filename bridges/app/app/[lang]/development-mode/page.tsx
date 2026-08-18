@@ -15,6 +15,7 @@
 // Динамическая: значение живое, его меняет островок ниже.
 
 import { getAdminStrings } from "@/lib/i18n/admin-strings";
+import { adminHref } from "@/lib/admin-nav";
 import { PageShell } from "../_components/page-shell";
 import { HelpDetails } from "../_components/help-details";
 import { readFeatures } from "@/lib/platform-features";
@@ -52,10 +53,28 @@ export default async function DevelopmentModePage({ params }: { params: Promise<
             labels={{
               save: m.save, saving: m.saving, saved: m.savedNotice, failed: m.failed,
               nothingToSave: m.nothingToSave, current: m.current,
+              // Бейджи собираются ЗДЕСЬ, а не в островке: их состав — редакторское
+              // решение, и место ему рядом со словами. У классического режима их
+              // нет вовсе — он ничего не требует ни от модели, ни от документов.
               items: {
-                classic: { label: m.classicLabel, description: m.classicBody, when: m.classicWhen },
-                steps: { label: m.stepsLabel, description: m.stepsBody, when: m.stepsWhen },
-                cases: { label: m.casesLabel, description: m.casesBody, when: m.casesWhen },
+                classic: { label: m.classicLabel, description: m.classicBody, when: m.classicWhen, badges: [] },
+                steps: {
+                  label: m.stepsLabel, description: m.stepsBody, when: m.stepsWhen,
+                  badges: [m.stepsBadgeModel],
+                },
+                cases: {
+                  label: m.casesLabel, description: m.casesBody, when: m.casesWhen,
+                  badges: [m.casesBadgeModel, m.casesBadgeWorkflows],
+                },
+              },
+              // Адреса строит сервер: язык знает он, и `adminHref` — та же
+              // функция, которой пользуются меню и хлебные крошки.
+              cases: {
+                productsHref: adminHref(lang, "products"),
+                productsLabel: m.casesToProducts,
+                workflowsHref: adminHref(lang, "doc-dynamic-workflows"),
+                workflowsLabel: m.casesToWorkflows,
+                openHint: m.casesOpenHint,
               },
             }}
           />

@@ -17,6 +17,7 @@ import type { AdminPageSlug } from "@/lib/admin-nav";
 import {
   FEATURE_ORDER, FEATURE_DEFAULTS, FEATURE_SECTION, type FeatureKey,
 } from "@/lib/platform-features.shared";
+import { productsDesignOpen } from "@/lib/development-mode";
 
 const CONFIG_PATH =
   process.env.PLATFORM_CONFIG_PATH ??
@@ -58,14 +59,22 @@ export function readFeatures(): FeaturesState {
  * Читает шапка на каждой странице. Отказ чтения трактуется как «всё включено» —
  * спрятать раздел из-за сбоя хуже, чем показать лишний: во втором случае человек
  * видит настройку, в первом ищет пропавшую.
+ *
+ * 🔒 РЕЖИМ РАЗРАБОТКИ ПРЯЧЕТ РАЗДЕЛЫ ЗДЕСЬ ЖЕ, А НЕ ВТОРЫМ СПОСОБОМ (владелец
+ * 2026-08-18). «Продукты» — поверхность режима `cases`: в классическом режиме и
+ * в режиме шагов продуктов не проектируют, и группа в меню означала бы
+ * приглашение к работе, которую владелец не выбирал. Механизм для этого уже был,
+ * и второй список скрытого развёл бы меню с главной страницей — там фильтр тот
+ * же самый.
  */
 export function hiddenSlugs(): Set<AdminPageSlug> {
   const hidden = new Set<AdminPageSlug>();
   try {
-    const { features } = readFeatures();
+    const { features, config } = readFeatures();
     for (const [key, slug] of Object.entries(FEATURE_SECTION) as [FeatureKey, AdminPageSlug][]) {
       if (!features[key]) hidden.add(slug);
     }
+    if (!productsDesignOpen(config)) hidden.add("products");
   } catch {
     /* ничего не прячем */
   }

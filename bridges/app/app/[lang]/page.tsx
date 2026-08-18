@@ -5,6 +5,7 @@ import { ArrowRight } from "lucide-react";
 import { getAdminStrings } from "@/lib/i18n/admin-strings";
 import { NAV_GROUPS, NAV_BY_GROUP, GROUP_INDEX, adminHref, type AdminPageSlug } from "@/lib/admin-nav";
 import { collectWarnings, warningsBySlug } from "@/lib/admin-warnings";
+import { hiddenSlugs } from "@/lib/platform-features";
 import { PageShell } from "./_components/page-shell";
 
 // 🔒 ДИНАМИЧЕСКАЯ НЕ РАДИ САМОЙ СТРАНИЦЫ, А РАДИ ШАПКИ (2026-08-11).
@@ -39,6 +40,20 @@ export default async function AdminHomePage({ params }: { params: Promise<{ lang
   // здесь второй порядок нельзя: карточка и подвал разошлись бы в том, что
   // считать следующим шагом, а человек читает их одновременно.
   const next = warnings[0] ?? null;
+
+  // 🔒 ДЕРЕВО ПРЯЧЕТ РОВНО ТО ЖЕ, ЧТО МЕНЮ (владелец 2026-08-18). Фильтр
+  // выключенных разделов стоял только в шапке, и главная показывала то, чего в
+  // меню уже не было: выключил баннер — пункт исчез слева и остался в центре
+  // экрана. С режимом разработки цена ошибки выросла — «Продукты» обязаны
+  // пропадать обоими списками сразу, иначе классический режим приводил бы в
+  // раздел, которого он не открывает.
+  //
+  // Механизм ТОТ ЖЕ (`hiddenSlugs()`), а не второй такой же: два списка
+  // скрытого разошлись бы при первом же добавлении выключателя.
+  const hidden = hiddenSlugs();
+  // Пустая категория не рисуется: заголовок без единой страницы читается как
+  // поломка. Правило общее, не про одну группу.
+  const groups = NAV_GROUPS.filter((g) => NAV_BY_GROUP[g].some((slug) => !hidden.has(slug)));
 
   // Цвет тревоги. Один и тот же набор классов на карту группы и на её дочерние —
   // иначе одно требование выглядело бы в дереве двумя разными оттенками.
@@ -152,9 +167,9 @@ export default async function AdminHomePage({ params }: { params: Promise<{ lang
           на списке из трёх пунктов сдвиг ещё читается сам, на списке из
           шестнадцати — уже нет. */}
       <div className="columns-1 gap-6 sm:columns-2 lg:columns-3 xl:columns-4">
-        {NAV_GROUPS.map((group) => {
+        {groups.map((group) => {
           const index = GROUP_INDEX[group];
-          const children = NAV_BY_GROUP[group].filter((slug) => slug !== index);
+          const children = NAV_BY_GROUP[group].filter((slug) => slug !== index && !hidden.has(slug));
           // Заголовок категории НЕ красится: это имя раздела, а не страница, и
           // настроить в нём нечего. Тот же довод, по которому в меню метка стоит
           // у страницы, а не у категории.

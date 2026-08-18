@@ -784,7 +784,7 @@
       "items": {
         "languages": "The language set is not confirmed — it decides the shape of every address",
         "github": "GitHub is not connected — the project has nowhere to live",
-        "use-cases": "User cases are not described — development has nothing to build towards",
+        "products": "No product is described yet — development has nothing to build towards",
         "openai": "No OpenAI key — the knowledge graph and embeddings stay off",
         "domain": "No custom domain — HTTPS-only features stay unavailable",
         "context-state": "An unfinished session is recorded — read it before building, or clear it",
@@ -1155,7 +1155,7 @@
       "warnCta": {
         "languages": "Choose the languages of the project",
         "github": "GitHub connection required",
-        "use-cases": "Describe your user cases",
+        "products": "Describe your first product",
         "openai": "Connect an OpenAI key",
         "domain": "Connect your own domain",
         "context-state": "Read the unfinished session",
@@ -3089,13 +3089,19 @@
       "casesLabel": "Use cases",
       "casesBody": "The fullest order: the owner confirms use cases, they become products, products become a queue of steps. Nothing is built on a guess, and every step names the case it serves.",
       "casesWhen": "Take it when a product is being built, not patched.",
+      "stepsBadgeModel": "recommended for Opus 5",
+      "casesBadgeModel": "minimum requirement: Fable 5+",
+      "casesBadgeWorkflows": "recommended: dynamic workflows",
+      "casesToProducts": "Go to product setup",
+      "casesToWorkflows": "Dynamic workflows",
+      "casesOpenHint": "Save this mode and the Products group appears in the menu.",
       "lawTitle": "What the mode never changes.",
       "law": "Static public pages, size limits, translations instead of inline text, settings read from config — these hold in every mode. A law that a mode could switch off would not be a law.",
       "helpLabel": "How this works",
       "helpWhereTitle": "Where the choice lives.",
       "helpWhere": "In PLATFORM-CONFIG on the server, beside the feature switches. The agent reads it at the start of a session, so it survives the end of a conversation — which is why this is a setting and not a phrase said in chat.",
       "helpCostTitle": "What it costs.",
-      "helpCost": "Use cases cost more than steps, and steps more than classic — in tokens and in your time. That is the trade-off, and it is yours to make: the choice is not tied to which model happens to be running."
+      "helpCost": "Use cases cost more than steps, and steps more than classic — in tokens and in your time. That is the trade-off, and it is yours to make. The model is a requirement, not a ban: the badges on the cards name the model each mode was built for, and nothing here stops you from choosing otherwise."
     },
     "productPage": {
       "phases": {
@@ -3981,7 +3987,7 @@
       "items": {
         "languages": "Набор языков не подтверждён — от него зависит вид всех адресов",
         "github": "GitHub не подключён — проекту негде жить",
-        "use-cases": "Пользовательские кейсы не описаны — разработке не к чему стремиться",
+        "products": "Не описан ни один продукт — разработке не к чему стремиться",
         "openai": "Нет ключа OpenAI — граф знаний и векторы останутся выключенными",
         "domain": "Нет своего домена — возможности, требующие HTTPS, недоступны",
         "context-state": "Записана незавершённая сессия — прочитайте её перед работой или очистите",
@@ -4352,7 +4358,7 @@
       "warnCta": {
         "languages": "Выберите языки проекта",
         "github": "Требуется соединить с GitHub",
-        "use-cases": "Опишите пользовательские кейсы",
+        "products": "Опишите первый продукт",
         "openai": "Подключите ключ OpenAI",
         "domain": "Подключите свой домен",
         "context-state": "Прочитайте незавершённую сессию",
@@ -6286,13 +6292,19 @@
       "casesLabel": "Пользовательские кейсы",
       "casesBody": "Самый полный порядок: владелец подтверждает кейсы, из них рождаются продукты, из продуктов — очередь шагов. Ничего не строится на догадке, и каждый шаг называет кейс, которому служит.",
       "casesWhen": "Берите, когда продукт строят, а не латают.",
+      "stepsBadgeModel": "рекомендуется для модели Opus 5",
+      "casesBadgeModel": "минимальные требования Fable 5+",
+      "casesBadgeWorkflows": "рекомендуется: динамические рабочие процессы",
+      "casesToProducts": "Перейти к настройке продуктов",
+      "casesToWorkflows": "Динамические рабочие процессы",
+      "casesOpenHint": "Сохраните этот режим — и группа «Продукты» появится в меню.",
       "lawTitle": "Чего режим не меняет никогда.",
       "law": "Статика публичных страниц, лимиты размера, переводы вместо вписанного текста, настройки из конфигов — действуют в любом режиме. Закон, который режим мог бы выключить, законом не был бы.",
       "helpLabel": "Как это устроено",
       "helpWhereTitle": "Где живёт выбор.",
       "helpWhere": "В PLATFORM-CONFIG на сервере, рядом с выключателями возможностей. Агент читает его на старте сессии — поэтому выбор переживает конец разговора, и поэтому это настройка, а не фраза в чате.",
       "helpCostTitle": "Чего это стоит.",
-      "helpCost": "Кейсы дороже шагов, шаги дороже классического — и в токенах, и в вашем времени. Это и есть выбор, и он ваш: к тому, какая модель сейчас работает, он не привязан."
+      "helpCost": "Кейсы дороже шагов, шаги дороже классического — и в токенах, и в вашем времени. Это и есть выбор, и он ваш. К модели он привязан требованием, а не запретом: бейджи на карточках называют, на какой модели режим работает как задумано, а выбрать иначе панель не мешает."
     },
     "productPage": {
       "phases": {

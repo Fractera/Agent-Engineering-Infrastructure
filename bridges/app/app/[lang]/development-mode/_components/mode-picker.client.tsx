@@ -11,8 +11,9 @@
 // стереть остальное. Тот же приём, что у редактора возможностей.
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Loader2, Save, Check } from "lucide-react";
+import { Loader2, Save, Check, Boxes, Workflow } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
@@ -25,7 +26,18 @@ export type { DevelopmentMode };
 export type ModeLabels = {
   save: string; saving: string; saved: string; failed: string; nothingToSave: string;
   current: string;
-  items: Record<DevelopmentMode, { label: string; description: string; when: string }>;
+  /**
+   * Бейджи режима — требование к модели, а не похвала режиму. Пусто у
+   * классического: ему нечего требовать, и пустой ряд бейджей на карточке
+   * выглядел бы недоделкой.
+   */
+  items: Record<DevelopmentMode, { label: string; description: string; when: string; badges: string[] }>;
+  /** Двери режима кейсов: адреса приходят с сервера — язык знает он. */
+  cases: {
+    productsHref: string; productsLabel: string;
+    workflowsHref: string; workflowsLabel: string;
+    openHint: string;
+  };
 };
 
 export function ModePicker(
@@ -69,39 +81,96 @@ export function ModePicker(
       {MODES.map((id) => {
         const item = labels.items[id];
         const chosen = mode === id;
+        // 🔒 КАРТОЧКА — LABEL С РАДИО, А НЕ КНОПКА (2026-08-18). В карточке
+        // кейсов появились ССЫЛКИ, а ссылка внутри <button> — недопустимая
+        // разметка: браузер съедает нажатие, и «Перейти к настройке продуктов»
+        // молча выбирала бы режим вместо перехода. Радио внутри label даёт то же
+        // поведение выбора и переживает выключенный JavaScript.
         return (
-          <button
+          <div
             key={id}
-            type="button"
-            onClick={() => setMode(id)}
-            className={`flex w-full items-start gap-2.5 rounded-lg border p-3 text-left transition-colors ${
+            className={`rounded-lg border p-3 transition-colors ${
               chosen ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
             }`}
           >
-            <span
-              className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ${
-                chosen ? "border-primary bg-primary text-primary-foreground" : "border-border"
-              }`}
-            >
-              {chosen && <Check size={10} />}
-            </span>
-            <span className="min-w-0">
-              <span className="flex flex-wrap items-center gap-2 text-[12px] font-medium text-foreground">
-                {item.label}
-                {id === initial && (
-                  <span className="rounded-full border border-border px-1.5 py-0.5 text-[9px] uppercase tracking-wide text-muted-foreground">
-                    {labels.current}
+            <label className="flex w-full cursor-pointer items-start gap-2.5 text-left">
+              <input
+                type="radio"
+                name="development-mode"
+                className="sr-only"
+                checked={chosen}
+                onChange={() => setMode(id)}
+              />
+              <span
+                className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ${
+                  chosen ? "border-primary bg-primary text-primary-foreground" : "border-border"
+                }`}
+              >
+                {chosen && <Check size={10} />}
+              </span>
+              <span className="min-w-0">
+                <span className="flex flex-wrap items-center gap-2 text-[12px] font-medium text-foreground">
+                  {item.label}
+                  {id === initial && (
+                    <span className="rounded-full border border-border px-1.5 py-0.5 text-[9px] uppercase tracking-wide text-muted-foreground">
+                      {labels.current}
+                    </span>
+                  )}
+                </span>
+
+                {/* Бейджи стоят ПОД именем, а не рядом с меткой «сейчас»: та
+                    говорит о состоянии панели, эти — о требовании к модели, и
+                    смешивать их в одну строку значит равнять их в весе. */}
+                {item.badges.length > 0 && (
+                  <span className="mt-1.5 flex flex-wrap gap-1.5">
+                    {item.badges.map((badge) => (
+                      <span
+                        key={badge}
+                        className="rounded-full border border-sky-500/40 bg-sky-500/10 px-2 py-0.5 text-[9px] font-medium text-sky-700 dark:text-sky-300"
+                      >
+                        {badge}
+                      </span>
+                    ))}
                   </span>
                 )}
+
+                <span className="mt-1.5 block text-[11px] leading-relaxed text-muted-foreground">{item.description}</span>
+                {/* «Когда брать» отделено: описание отвечает на «что это», а выбирают
+                    по второму вопросу — подходит ли это моей сегодняшней задаче. */}
+                <span className="mt-1.5 block text-[10px] leading-relaxed text-emerald-700 dark:text-emerald-300">
+                  {item.when}
+                </span>
               </span>
-              <span className="mt-1 block text-[11px] leading-relaxed text-muted-foreground">{item.description}</span>
-              {/* «Когда брать» отделено: описание отвечает на «что это», а выбирают
-                  по второму вопросу — подходит ли это моей сегодняшней задаче. */}
-              <span className="mt-1.5 block text-[10px] leading-relaxed text-emerald-700 dark:text-emerald-300">
-                {item.when}
-              </span>
-            </span>
-          </button>
+            </label>
+
+            {/* 🔒 ДВЕРИ ПОЯВЛЯЮТСЯ ПОСЛЕ СОХРАНЕНИЯ, А НЕ ПОСЛЕ ВЫБОРА (2026-08-18).
+                Ссылка, показанная по несохранённому выбору, уводила бы со страницы
+                вместе с выбором: режим остался бы прежним, группа «Продукты» —
+                спрятанной, и человек попал бы в раздел, которого в его меню нет.
+                Поэтому здесь `initial` (сохранённое значение), а не `mode`. */}
+            {id === "cases" && (
+              <div className="mt-2.5 pl-6">
+                {initial === "cases" ? (
+                  <div className="flex flex-wrap gap-2">
+                    <Link
+                      href={labels.cases.productsHref}
+                      className="inline-flex h-7 items-center gap-1.5 rounded-md bg-sky-600 px-2.5 text-[11px] font-medium text-white transition-colors hover:bg-sky-700"
+                    >
+                      <Boxes size={11} />{labels.cases.productsLabel}
+                    </Link>
+                    <Link
+                      href={labels.cases.workflowsHref}
+                      className="inline-flex h-7 items-center gap-1.5 rounded-md border border-border px-2.5 text-[11px] text-foreground transition-colors hover:bg-muted"
+                    >
+                      <Workflow size={11} />{labels.cases.workflowsLabel}
+                    </Link>
+                  </div>
+                ) : (
+                  <p className="text-[10px] leading-relaxed text-muted-foreground">{labels.cases.openHint}</p>
+                )}
+              </div>
+            )}
+          </div>
         );
       })}
 

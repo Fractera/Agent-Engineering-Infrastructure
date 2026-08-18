@@ -68,7 +68,7 @@ export type AdminStrings = {
      * OpenAI» против «Нет ключа OpenAI — граф знаний останется выключенным».
      */
     warnCta: {
-      languages: string; github: string; "use-cases": string; openai: string; domain: string;
+      languages: string; github: string; products: string; openai: string; domain: string;
       "context-state": string; "dev-browser": string;
       "dev-claude-code": string; "dev-editor": string;
     };
@@ -127,6 +127,21 @@ export type AdminStrings = {
     classicLabel: string; classicBody: string; classicWhen: string;
     stepsLabel: string; stepsBody: string; stepsWhen: string;
     casesLabel: string; casesBody: string; casesWhen: string;
+    // 🔒 БЕЙДЖИ НАЗЫВАЮТ МОДЕЛЬ, А НЕ ХВАЛЯТ РЕЖИМ (владелец 2026-08-18).
+    // Режим — это не вкус, а требование к тому, кто по нему работает: шаги
+    // держит модель послабее, кейсы требуют рассуждения через всю сессию.
+    // Человек, выбравший режим не по своей модели, получит не «хуже», а
+    // разваливающуюся работу, и узнает об этом на третьем шаге.
+    //
+    // Названия моделей — машинные строки и НЕ переводятся (правило 4г):
+    // «Opus 5» и «Fable 5+» пишутся так в любом языке. Переводится только
+    // обрамление — «рекомендуется», «минимальные требования».
+    stepsBadgeModel: string;
+    casesBadgeModel: string;
+    casesBadgeWorkflows: string;
+    // Дверь из карточки в работу: режим кейсов открывает проектирование
+    // продуктов, и оттуда же включаются динамические рабочие процессы.
+    casesToProducts: string; casesToWorkflows: string; casesOpenHint: string;
     lawTitle: string; law: string;
     helpLabel: string; helpWhereTitle: string; helpWhere: string;
     helpCostTitle: string; helpCost: string;
@@ -508,7 +523,7 @@ export type AdminStrings = {
   warnings: {
     title: string;
     items: {
-      languages: string; github: string; "use-cases": string; openai: string; domain: string;
+      languages: string; github: string; products: string; openai: string; domain: string;
       "context-state": string; "dev-browser": string;
       "dev-claude-code": string; "dev-editor": string;
     };
