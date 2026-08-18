@@ -108,7 +108,7 @@ export function ProductsSection(
               }`}
             >
               <Link
-                href={`/${lang}/doc-use-cases?product=${product.id}`}
+                href={`/${lang}/products/${product.id}`}
                 aria-label={product.title}
                 className="absolute inset-0 rounded-lg"
               />
