@@ -26,6 +26,7 @@ import { NAV_GROUPS, NAV_BY_GROUP, adminHref, type AdminPageSlug } from "@/lib/a
 import { warningsBySlug, type AdminWarning } from "@/lib/admin-warnings";
 import { hiddenSlugs } from "@/lib/platform-features";
 import { publicAppUrl } from "@/lib/public-app-url";
+import { listProducts } from "@/lib/products-config";
 import type { AdminStrings } from "@/lib/i18n/admin-strings";
 
 // Иконки живут ЗДЕСЬ, а не в `lib/admin-nav.ts`: список маршрутов должен
@@ -81,7 +82,6 @@ const ICONS: Record<AdminPageSlug, LucideIcon> = {
   "how-to-build": BookOpen,
   help: HelpCircle,
   "development-mode": GitBranch,
-  "map-products": Boxes,
   products: Boxes,
   "doc-overview": Compass,
   "doc-instruction": FileText,
@@ -138,6 +138,9 @@ export function AdminHeader(
   // Разделы, чья возможность выключена в «Возможностях приложения», из меню
   // убираются: настраивать баннер, которого в приложении не будет, незачем.
   const hidden = hiddenSlugs();
+  // Продукты — дочерние пункты группы «Продукты». Читаются здесь, потому что
+  // шапка серверная: реестр не уезжает в браузер, уезжает готовая разметка.
+  const products = listProducts();
 
   // Адрес гостевого приложения для кнопки «Просмотр». Отказ не имеет права
   // уронить шапку: она рисуется на каждой странице панели.
@@ -291,6 +294,22 @@ export function AdminHeader(
                     </Link>
                   );
                 })}
+
+                {/* 🔒 ПРОДУКТЫ — ДОЧЕРНИЕ ПУНКТЫ, КОТОРЫХ НЕТ В НАВИГАЦИИ (2026-08-18).
+                    Их страницы рождаются вместе с записью и живут по
+                    динамическому адресу; статического пункта у них нет и быть не
+                    может. Меню, показавшее только «Продукты» там, где продуктов
+                    два, отправляет человека искать их вручную. */}
+                {group === "products" && products.map((product) => (
+                  <Link
+                    key={product.id}
+                    href={`/${lang}/products/${product.id}`}
+                    className="flex items-center gap-2 rounded px-2 py-1.5 pl-10 text-[11px] text-muted-foreground hover:bg-muted hover:text-foreground"
+                  >
+                    <Boxes size={10} className="shrink-0" />
+                    <span className="truncate">{product.title}</span>
+                  </Link>
+                ))}
               </div>
             </div>
           ))}
