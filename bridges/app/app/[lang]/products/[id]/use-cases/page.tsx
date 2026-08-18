@@ -26,8 +26,7 @@ import { PageShell } from "../../../_components/page-shell";
 import { HelpDetails } from "../../../_components/help-details";
 import { DocPopup } from "../../../_components/doc-popup.client";
 import {
-  listCases, useCasesGate, readSeed, readQuestions, resetPreview,
-  useCasesPaths, migrateLegacyLayout,
+  listCases, useCasesGate, readSeed, readQuestions, resetPreview, useCasesPaths,
 } from "@/lib/use-cases-store";
 import { PROJECT_TYPES, isProjectTypeId } from "@/lib/project-types";
 import { findProduct } from "@/lib/products-config";
@@ -55,8 +54,6 @@ export default async function ProductUseCasesPage(
   if (!product) notFound();
 
   const pid = product.id;
-  // Кейсы, написанные до появления продуктов, переезжают в папку продукта.
-  migrateLegacyLayout(pid);
   const paths = useCasesPaths(pid);
 
   const { cases, legacy } = listCases(pid);

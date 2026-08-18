@@ -417,7 +417,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok, gate: useCasesGate(pid) });
     }
     case "migrate": {
-      const r = migrateLegacy(pid);
+      // 🪦 Формата с одиночным файлом больше нет: продукт рождается с досье.
+      const r = migrateLegacy();
       return NextResponse.json({ ...r, gate: useCasesGate(pid) });
     }
     // Стенограмма из клиента: ручной диалог держится на клиенте (сервер сессию
