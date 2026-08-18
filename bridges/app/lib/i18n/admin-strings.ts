@@ -95,7 +95,14 @@ export type AdminStrings = {
   // `pages[slug]` keeps the uniform title/hint of EVERY page; anything a single
   // page needs beyond that lives in its own section, so the shape of `pages`
   // never has to bend for one surface (step 501, Ф2).
-  howToBuild: { welcomeTitle: string; welcomeBody: string; missing: string };
+  howToBuild: {
+    welcomeTitle: string; welcomeBody: string; missing: string;
+    // Запрос на доработку платформы — единственная сегодня дверь для партнёра,
+    // которому нужна правка вне его проекта (владелец 2026-08-18).
+    changeTitle: string; changeBody: string; changeButton: string;
+    changeCopied: string; changeMailSubject: string; changeMailBody: string;
+    changeMailHint: string;
+  };
   users: {
     search: string; searchPlaceholder: string;
     name: string; email: string; role: string; status: string;

@@ -18,6 +18,9 @@ import { PageShell } from "../_components/page-shell";
 import { readGuide } from "./_lib/guide";
 import { GuideProse } from "./_components/guide-prose";
 import { FirstRunNote } from "./_components/first-run-note.client";
+import { PlatformChangeRequest } from "./_components/platform-change-request.client";
+import { publicAppUrl } from "@/lib/public-app-url";
+import { fill } from "@/lib/i18n/admin-strings";
 
 export const revalidate = 300;
 
@@ -36,6 +39,21 @@ export default async function HowToBuildPage({ params }: { params: Promise<{ lan
   const s = getAdminStrings(lang);
   const page = s.pages["how-to-build"];
   const guide = readGuide(lang);
+
+  // Адрес сервера подставляется в письмо на СЕРВЕРЕ: партнёру не нужно вспоминать
+  // свой IP, а нам этот адрес — единственное, что требуется во вводном письме.
+  // Тот же источник, что у канонических адресов сайта, поэтому в письме окажется
+  // домен, когда он подключён, и IP, пока нет.
+  const address = publicAppUrl().url;
+  const change = {
+    title: s.howToBuild.changeTitle,
+    body: s.howToBuild.changeBody,
+    button: s.howToBuild.changeButton,
+    copied: s.howToBuild.changeCopied,
+    hint: s.howToBuild.changeMailHint,
+    mailSubject: s.howToBuild.changeMailSubject,
+    mailBody: fill(s.howToBuild.changeMailBody, { address }),
+  };
 
   return (
     <PageShell lang={lang} slug="how-to-build" s={s} title={page.title} hint={page.hint}>
@@ -61,6 +79,7 @@ export default async function HowToBuildPage({ params }: { params: Promise<{ lan
           </ul>
         </div>
       )}
+      <PlatformChangeRequest ui={change} to="admin@fractera.ai" />
     </PageShell>
   );
 }

@@ -19,7 +19,14 @@
     "howToBuild": {
       "welcomeTitle": "Your server is up. Welcome.",
       "welcomeBody": "Everything below is already running — the application, the accounts, the data. What is left is to connect a repository and start building. This welcome is shown once; the guide itself stays behind the button in the footer.",
-      "missing": "The guide file is missing on the server. This is a deployment problem, not a wording one."
+      "missing": "The guide file is missing on the server. This is a deployment problem, not a wording one.",
+      "changeTitle": "Changing the platform itself — tools, agents, your own solution",
+      "changeBody": "Your project is yours: pages, logic, data, the whole application on port 3000. The platform underneath it — sign-in, the data layer, this panel, the services — is delivered ready and is replaced wholesale on every deployment, so a change made to it on this server would not survive the next one and is stored nowhere. Today there is exactly one way to get a change into the platform: ask the people who build it.",
+      "changeButton": "Get the request text",
+      "changeCopied": "Copied — send it from your own email to admin@fractera.ai",
+      "changeMailSubject": "Platform development request",
+      "changeMailBody": "Platform development request from {address}.",
+      "changeMailHint": "Send it from your own email to admin@fractera.ai. Nothing else is needed in this first letter: the address identifies your server, and we take it from there."
     },
     "users": {
       "search": "Search",
@@ -3069,7 +3076,14 @@
     "howToBuild": {
       "welcomeTitle": "Сервер поднят. Добро пожаловать.",
       "welcomeBody": "Всё, что ниже, уже работает — приложение, учётные записи, данные. Осталось подключить репозиторий и начать строить. Это приветствие показывается один раз; само руководство остаётся за кнопкой в подвале.",
-      "missing": "Файла руководства нет на сервере. Это дефект развёртывания, а не формулировки."
+      "missing": "Файла руководства нет на сервере. Это дефект развёртывания, а не формулировки.",
+      "changeTitle": "Изменения в самой платформе — инструменты, агенты, собственное решение",
+      "changeBody": "Ваш проект принадлежит вам: страницы, логика, данные — всё приложение на порту 3000. Платформа под ним — вход, слой данных, эта панель, службы — приезжает готовой и заменяется целиком при каждом развёртывании, поэтому правка, сделанная в ней на этом сервере, не переживёт следующего развёртывания и не хранится нигде. Сегодня способ получить изменение в платформе ровно один: попросить тех, кто её строит.",
+      "changeButton": "Получить текст письма",
+      "changeCopied": "Скопировано — отправьте со своей почты на admin@fractera.ai",
+      "changeMailSubject": "Запрос на разработку платформы",
+      "changeMailBody": "Запрос на разработку платформы от {address}.",
+      "changeMailHint": "Отправьте со своей почты на admin@fractera.ai. Больше во вводном письме ничего не нужно: адрес называет ваш сервер, дальше мы связываемся сами."
     },
     "users": {
       "search": "Найти",
