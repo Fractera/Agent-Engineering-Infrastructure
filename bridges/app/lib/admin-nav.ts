@@ -40,6 +40,10 @@ export const NAV = [
   { slug: "languages",       group: "application" },
   { slug: "parallel-routing", group: "application" },
   { slug: "app-features",    group: "application" },
+  // Как ведётся работа над проектом: классический стиль, шаги, кейсы.
+  // Стоит в «Приложении», потому что это настройка ПРОЕКТА, а не документ о нём;
+  // сам режим агент читает из PLATFORM-CONFIG вместе с остальным состоянием.
+  { slug: "development-mode", group: "application" },
   { slug: "top-menu",        group: "application" },
   { slug: "footer-pages",    group: "application" },
   { slug: "cookie-banner",   group: "application" },

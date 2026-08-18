@@ -80,6 +80,7 @@ const ICONS: Record<AdminPageSlug, LucideIcon> = {
   env: Settings,
   "how-to-build": BookOpen,
   help: HelpCircle,
+  "development-mode": GitBranch,
   "map-products": Boxes,
   products: Boxes,
   "doc-overview": Compass,

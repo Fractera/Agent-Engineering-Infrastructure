@@ -1472,6 +1472,10 @@
       "products": {
         "title": "Products",
         "hint": "One server carries several products. Each has its own address, pages and use cases."
+      },
+      "development-mode": {
+        "title": "Development mode",
+        "hint": "How work on this project is run: classic, steps, or use cases."
       }
     },
     "breadcrumbHome": "Panel",
@@ -3070,6 +3074,32 @@
         "sections": "The rule, and what is coming",
         "sectionsTitle": "Sections: how design is built and reused"
       }
+    },
+    "developmentMode": {
+      "lead": "The mode decides one thing: whether a confirmed use case and an open step are required before work begins. Everything else — the technical laws of the project — holds in all three.",
+      "unavailable": "Cannot read the settings file on the server. This is a deployment problem, not a wording one.",
+      "save": "Save",
+      "saving": "Saving…",
+      "savedNotice": "Mode saved",
+      "failed": "Could not save",
+      "nothingToSave": "Nothing changed",
+      "current": "current",
+      "classicLabel": "Classic",
+      "classicBody": "Ordinary work by request: you say what to change, the agent changes it. No case, no step, no queue.",
+      "classicWhen": "Take it for small, separate tasks — a fix, a wording, one page.",
+      "stepsLabel": "Development steps",
+      "stepsBody": "The agent breaks the task into numbered steps with sub-steps, and works the queue. What is planned survives the end of a session, because it is written down before it is executed.",
+      "stepsWhen": "Take it when the work is longer than one conversation.",
+      "casesLabel": "Use cases",
+      "casesBody": "The fullest order: the owner confirms use cases, they become products, products become a queue of steps. Nothing is built on a guess, and every step names the case it serves.",
+      "casesWhen": "Take it when a product is being built, not patched.",
+      "lawTitle": "What the mode never changes.",
+      "law": "Static public pages, size limits, translations instead of inline text, settings read from config — these hold in every mode. A law that a mode could switch off would not be a law.",
+      "helpLabel": "How this works",
+      "helpWhereTitle": "Where the choice lives.",
+      "helpWhere": "In PLATFORM-CONFIG on the server, beside the feature switches. The agent reads it at the start of a session, so it survives the end of a conversation — which is why this is a setting and not a phrase said in chat.",
+      "helpCostTitle": "What it costs.",
+      "helpCost": "Use cases cost more than steps, and steps more than classic — in tokens and in your time. That is the trade-off, and it is yours to make: the choice is not tied to which model happens to be running."
     }
   },
   "ru": {
@@ -4545,6 +4575,10 @@
       "products": {
         "title": "Продукты",
         "hint": "Один сервер несёт несколько продуктов. У каждого свой адрес, свои страницы и свои кейсы."
+      },
+      "development-mode": {
+        "title": "Режим разработки",
+        "hint": "Как ведётся работа над проектом: классический стиль, шаги или кейсы."
       }
     },
     "breadcrumbHome": "Панель",
@@ -6143,6 +6177,32 @@
         "sections": "Правило и что придёт",
         "sectionsTitle": "Секции: как устроен и как переиспользуется дизайн"
       }
+    },
+    "developmentMode": {
+      "lead": "Режим решает одно: обязательны ли подтверждённый кейс и открытый шаг перед началом работы. Всё остальное — технические законы проекта — действует во всех трёх.",
+      "unavailable": "Файл настроек на сервере не читается. Это дефект развёртывания, а не формулировки.",
+      "save": "Сохранить",
+      "saving": "Сохраняю…",
+      "savedNotice": "Режим сохранён",
+      "failed": "Не удалось сохранить",
+      "nothingToSave": "Ничего не изменилось",
+      "current": "сейчас",
+      "classicLabel": "Классический",
+      "classicBody": "Обычная работа по просьбе: вы говорите, что изменить, — агент меняет. Ни кейса, ни шага, ни очереди.",
+      "classicWhen": "Берите для мелких отдельных задач — правка, формулировка, одна страница.",
+      "stepsLabel": "Шаги разработки",
+      "stepsBody": "Агент раскладывает задачу на нумерованные шаги с подшагами и работает очередь. Запланированное переживает конец сессии, потому что записано до того, как исполнено.",
+      "stepsWhen": "Берите, когда работа длиннее одного разговора.",
+      "casesLabel": "Пользовательские кейсы",
+      "casesBody": "Самый полный порядок: владелец подтверждает кейсы, из них рождаются продукты, из продуктов — очередь шагов. Ничего не строится на догадке, и каждый шаг называет кейс, которому служит.",
+      "casesWhen": "Берите, когда продукт строят, а не латают.",
+      "lawTitle": "Чего режим не меняет никогда.",
+      "law": "Статика публичных страниц, лимиты размера, переводы вместо вписанного текста, настройки из конфигов — действуют в любом режиме. Закон, который режим мог бы выключить, законом не был бы.",
+      "helpLabel": "Как это устроено",
+      "helpWhereTitle": "Где живёт выбор.",
+      "helpWhere": "В PLATFORM-CONFIG на сервере, рядом с выключателями возможностей. Агент читает его на старте сессии — поэтому выбор переживает конец разговора, и поэтому это настройка, а не фраза в чате.",
+      "helpCostTitle": "Чего это стоит.",
+      "helpCost": "Кейсы дороже шагов, шаги дороже классического — и в токенах, и в вашем времени. Это и есть выбор, и он ваш: к тому, какая модель сейчас работает, он не привязан."
     }
   }
 }
