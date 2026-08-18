@@ -50,8 +50,8 @@ export function PlatformChangeRequest({ ui, to }: { ui: PlatformChangeUi; to: st
   }
 
   return (
-    <section className="mt-10 rounded-lg border border-border bg-muted/30 px-4 py-4">
-      <h2 className="text-[13px] font-semibold text-foreground">{ui.title}</h2>
+    <section className="mt-10 rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-4">
+      <h2 className="text-[13px] font-semibold text-amber-700 dark:text-amber-300">{ui.title}</h2>
       <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">{ui.body}</p>
 
       <pre className="mt-3 overflow-x-auto rounded-md border border-border bg-background px-3 py-2 font-mono text-[10px] leading-relaxed text-foreground">
