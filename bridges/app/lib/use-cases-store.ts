@@ -45,7 +45,7 @@ export type CasesState = {
 };
 
 export type RawTurn = { role: "user" | "assistant"; content: string };
-export type PlannedPage = { path: string; purpose: string };
+export type PlannedPage = { path: string; purpose: string; cases?: string[] };
 
 export type ResetStat = {
   seedAnswers: number;
@@ -259,7 +259,11 @@ export function readRaw(pid: string): string {
 export function writePagesPlan(pid: string, pages: PlannedPage[], _productTitle?: string): void {
   mutate(pid, (d) => {
     d.pages = pages
-      .map((p) => ({ path: p.path.trim(), purpose: p.purpose.trim() }))
+      .map((p) => ({
+        path: p.path.trim(),
+        purpose: p.purpose.trim(),
+        ...(p.cases?.length ? { cases: p.cases.map((c) => c.trim()).filter(Boolean) } : {}),
+      }))
       .filter((p) => p.path);
   });
 }

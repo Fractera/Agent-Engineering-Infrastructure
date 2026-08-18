@@ -357,11 +357,12 @@ export default async function ProductPage(
           ui={{
             empty: t.pagesEmpty, built: t.pageBuilt, planned: t.pagePlanned, extra: t.pageExtra,
             purpose: t.pagePurpose, steps: t.pageSteps, pagesRoot: t.rootPages,
+            cases: t.pageCases, noCases: t.pageNoCases,
           }}
         />
       </Section>
 
-      {/* ── ФАЙЛЫ И КОРНИ ─────────────────────────────────────────────────── */}
+      {/* ── ФАЙЛЫ, КОРНИ И ШАГИ, КОТОРЫМИ ЭТО ПОСТРОЕНО ───────────────────── */}
       <Section title={t.sectionRoots} hint={t.sectionRootsHint}>
         <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5">
           {[
@@ -377,6 +378,31 @@ export default async function ProductPage(
             </div>
           ))}
         </dl>
+
+        {/* 🔒 ЧЕМ ЭТО ПОСТРОЕНО — ЧАСТЬ ОТВЕТА «ГДЕ ЖИВЁТ ПРОДУКТ». Файлы говорят,
+            куда смотреть; шаги — почему там оказалось именно это. Список короткий:
+            номер и имя, без планов и результатов, — те раскрываются в своей секции.
+
+            🔒 ИМЯ ШАГА — ЧИСЛО, ТИРЕ И ШЕСТЬ-ВОСЕМЬ СЛОВ (владелец 2026-08-18).
+            Короче — имя не говорит, что сделано («правка», «фикс»); длиннее — его
+            перестают читать целиком и узнают шаг по номеру, то есть имя перестаёт
+            работать. Слов именно столько, сколько нужно назвать действие и предмет:
+            «12 — build minimal course skeleton with lesson list». */}
+        {product.steps.length > 0 && (
+          <div className="mt-4 border-t border-border pt-3">
+            <p className="mb-2 text-[13px] font-medium text-foreground">{t.rootStepsTitle}</p>
+            <ul className="space-y-1">
+              {[...product.steps].sort((a, b) => a.number - b.number).map((step) => (
+                <li key={step.number} className="flex flex-wrap items-baseline gap-x-2">
+                  <Mono className="shrink-0">{step.number} —</Mono>
+                  <span className="text-[13px] leading-snug text-foreground">{step.title}</span>
+                  <Small>{t.stepStatuses[step.status] ?? step.status}</Small>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-2"><Small>{t.rootStepsNaming}</Small></p>
+          </div>
+        )}
       </Section>
     </PageShell>
   );

@@ -114,6 +114,8 @@ export type AdminStrings = {
     stepStatuses: Record<"new" | "in-progress" | "blocked" | "done" | "cancelled", string>;
     sectionPages: string; sectionPagesHint: string; pagesEmpty: string;
     pageBuilt: string; pagePlanned: string; pageExtra: string; pagePurpose: string; pageSteps: string;
+    pageCases: string; pageNoCases: string;
+    rootStepsTitle: string; rootStepsNaming: string;
     sectionRoots: string; sectionRootsHint: string;
     rootDossier: string; rootQuiz: string; rootPages: string; rootLogic: string; rootTables: string;
     saving: string; failed: string;

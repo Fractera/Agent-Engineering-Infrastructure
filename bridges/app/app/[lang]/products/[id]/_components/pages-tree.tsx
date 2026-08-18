@@ -29,14 +29,23 @@ type Node = {
   purpose: string;
   /** Номера шагов, в тексте которых эта страница названа. */
   steps: number[];
+  /** Заголовки кейсов, которым служит страница: хранятся слаги, показываются имена. */
+  cases: string[];
 };
 
 export function pagesTreeOf(product: ProductDossier): Node[] {
   const root = normalizeRoute(product.route || "/");
   const isRootProduct = root === "/";
 
-  const planned = product.pages.map((p) => ({ route: normalizeRoute(p.path), purpose: p.purpose }));
-  const plannedByRoute = new Map(planned.map((p) => [p.route, p.purpose]));
+  const planned = product.pages.map((p) => ({
+    route: normalizeRoute(p.path), purpose: p.purpose, cases: p.cases ?? [],
+  }));
+  const plannedByRoute = new Map(planned.map((p) => [p.route, p]));
+
+  // Слаг → заголовок. Связь хранится СЛАГОМ (он вечен), а человеку показывается имя
+  // кейса. Слаг, кейса для которого больше нет, показывается как есть: промолчать о
+  // висящей связи хуже, чем назвать её.
+  const caseTitle = new Map(product.cases.map((c) => [c.slug, c.title]));
 
   // Своё — то, что начинается с корня продукта. Корневому продукту принадлежат
   // только его корень и то, что он сам запланировал: остальное под `/` — страницы
@@ -47,14 +56,16 @@ export function pagesTreeOf(product: ProductDossier): Node[] {
   const routes = [...new Set([...built, ...planned.map((p) => p.route)])].sort();
 
   return routes.map((route) => {
-    const inPlan = plannedByRoute.has(route);
+    const plan = plannedByRoute.get(route);
+    const inPlan = plan !== undefined;
     const isBuilt = built.includes(route);
     const relative = route === root ? "" : route.slice(root === "/" ? 1 : root.length);
     return {
       route,
       depth: relative.split("/").filter(Boolean).length,
       state: isBuilt ? (inPlan ? "built" : "extra") : "planned",
-      purpose: plannedByRoute.get(route) ?? "",
+      purpose: plan?.purpose ?? "",
+      cases: (plan?.cases ?? []).map((slug) => caseTitle.get(slug) ?? slug),
       steps: product.steps
         .filter((s) => `${s.title} ${s.plan} ${s.result}`.includes(route) && route !== "/")
         .map((s) => s.number),
@@ -68,7 +79,7 @@ export function PagesTree(
     nodes: Node[];
     ui: {
       empty: string; built: string; planned: string; extra: string;
-      purpose: string; steps: string; pagesRoot: string;
+      purpose: string; steps: string; pagesRoot: string; cases: string; noCases: string;
     };
   },
 ) {
@@ -113,6 +124,17 @@ export function PagesTree(
                 <p className="mt-1.5 text-[13px] leading-relaxed text-foreground">
                   <span className="text-[11px] uppercase tracking-wide text-muted-foreground">{ui.purpose}: </span>
                   {node.purpose || "—"}
+                </p>
+
+                {/* 🔒 СВЯЗЬ С КЕЙСАМИ — ЭТО ОТВЕТ НА «ЗАЧЕМ СТРАНИЦА ВООБЩЕ ЕСТЬ».
+                    Назначение говорит, что на ней работает; кейс — чью задачу она
+                    закрывает. Одна страница закрывает несколько сценариев чаще, чем
+                    один, поэтому здесь список. Страница без кейса — законное
+                    состояние служебной страницы, и оно сказано словами, а не
+                    пустотой: пустое место читается как недоделка. */}
+                <p className="mt-1.5 text-[13px] leading-relaxed text-foreground">
+                  <span className="text-[11px] uppercase tracking-wide text-muted-foreground">{ui.cases}: </span>
+                  {node.cases.length > 0 ? node.cases.join(" · ") : ui.noCases}
                 </p>
 
                 {node.steps.length > 0 && (

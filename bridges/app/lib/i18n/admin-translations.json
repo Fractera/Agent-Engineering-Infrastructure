@@ -3189,7 +3189,11 @@
       "rootLogic": "Logic",
       "rootTables": "Tables",
       "saving": "Saving…",
-      "failed": "Did not work out"
+      "failed": "Did not work out",
+      "pageCases": "Serves the cases",
+      "pageNoCases": "no case — a service page",
+      "rootStepsTitle": "Built by these steps",
+      "rootStepsNaming": "A step is named by a number, a dash and six to eight words: shorter says nothing about what was done, longer stops being read and the step gets known by its number instead."
     }
   },
   "ru": {
@@ -6382,7 +6386,11 @@
       "rootLogic": "Логика",
       "rootTables": "Таблицы",
       "saving": "Сохраняю…",
-      "failed": "Не получилось"
+      "failed": "Не получилось",
+      "pageCases": "Служит кейсам",
+      "pageNoCases": "без кейса — служебная страница",
+      "rootStepsTitle": "Чем это построено",
+      "rootStepsNaming": "Имя шага — число, тире и шесть-восемь слов: короче — не говорит, что сделано; длиннее — его перестают читать, и шаг узнают по номеру, то есть имя перестаёт работать."
     }
   }
 }
