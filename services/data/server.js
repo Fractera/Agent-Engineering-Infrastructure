@@ -86,21 +86,26 @@ const appDb = new Database(APP_DB)
 appDb.pragma('journal_mode = WAL')
 appDb.pragma('foreign_keys = ON')
 
-appDb.exec(`
-  CREATE TABLE IF NOT EXISTS products (
-    id         TEXT PRIMARY KEY NOT NULL,
-    name       TEXT NOT NULL,
-    price      REAL NOT NULL DEFAULT 0,
-    media_id   TEXT,
-    media_url  TEXT,
-    created_at TEXT NOT NULL DEFAULT (datetime('now'))
-  )
-`)
-
-const productsCols = new Set(appDb.prepare('PRAGMA table_info(products)').all().map(c => c.name))
-if (!productsCols.has('media_id'))    appDb.exec(`ALTER TABLE products ADD COLUMN media_id   TEXT`)
-if (!productsCols.has('media_url'))   appDb.exec(`ALTER TABLE products ADD COLUMN media_url  TEXT`)
-if (!productsCols.has('created_by'))  appDb.exec(`ALTER TABLE products ADD COLUMN created_by TEXT NOT NULL DEFAULT 'system'`)
+// 🪦 ЗДЕСЬ ПЛАТФОРМА СОЗДАВАЛА ТАБЛИЦУ `products` — УДАЛЕНО 2026-08-18.
+//
+// 🔒 ЧТО ЭТО СЛОМАЛО. Форма таблицы была здешней и старой: без `description`, без
+// `i18n`, без размеров картинки. Гостевое приложение объявляет свою — полную, — но
+// объявляет через `CREATE TABLE IF NOT EXISTS`, а к тому времени таблица уже
+// существовала, и объявление молча не делало ничего. Пока приложение писало в
+// собственный файл, расхождение спало. Как только оно пошло в слой данных
+// (`4c21090`, 2026-08-17), КАЖДЫЙ запрос каталога стал получать
+// `no such column: description`, и развёртывание нового сервера не завершилось.
+//
+// 🔒 ПОЧЕМУ УДАЛЕНО, А НЕ ДОПОЛНЕНО КОЛОНКАМИ. Дописать сюда `description` значило
+// бы завести ВТОРОГО хозяина формы таблицы: два места, где живёт правда о товарах,
+// расходятся молча и по определению. Правило продукта давнее: новые таблицы
+// объявляет гостевое приложение в `SCHEMA` (`lib/db/index.ts`), а слой данных их
+// исполняет и хранит. Товары — таблица гостя, платформа их не читает и не пишет:
+// после удаления этого блока слово `products` в службе не встречается вовсе.
+//
+// Что при этом ничего не ломает: таблица рождается при подготовке схемы, которую
+// приложение выполняет на старте и на сборке; на уже живущих серверах она никуда
+// не девается, а недостающие колонки доедут лестницей `LATE_COLUMNS`.
 
 // ── Vector store (step 500) ────────────────────────
 // The third warehouse of the data layer, next to rows (/db) and objects (/media).
