@@ -510,6 +510,8 @@ export type AdminStrings = {
   }>;
   /** Подписи вокруг выбора структуры: заголовок, окно, две кнопки внизу окна. */
   projectPicker: {
+    // Подписи полей записи продукта на его собственной странице (2026-08-18).
+    surfaceLabel: string; routeLabel: string; statusLabel: string;
     /**
      * Зелёная врезка «один сервер — много продуктов» (владелец 2026-08-15).
      *
@@ -611,6 +613,8 @@ export type AdminStrings = {
   };
   // Пользовательские кейсы: гейт, вводные вопросы и Quiz.
   useCases: {
+    // Вкладки продукта и его четыре корня (2026-08-18).
+    tabCases: string; tabCasesEmpty: string; rootsTitle: string;
     gateMissing: string; gateUnconfirmed: string; gateReady: string;
     // Экран 0 — правка САМИХ вопросов до опроса (владелец 2026-08-14). Вопрос
     // это половина ответа: зашитый вопрос уводит человека описывать не тот

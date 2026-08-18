@@ -15,7 +15,7 @@
 // панель. Раньше первыми стояли настройки приложения — список работы, которую
 // ещё предстоит сделать. Теперь первым идёт список того, что уже работает без
 // него: до того, как просить о настройке, стоит показать полученную ценность.
-export const NAV_GROUPS = ["visibility", "design", "application", "data", "tools", "backup", "access", "project", "documents", "help"] as const;
+export const NAV_GROUPS = ["visibility", "design", "application", "products", "data", "tools", "backup", "access", "project", "documents", "help"] as const;
 export type NavGroup = (typeof NAV_GROUPS)[number];
 
 // Порядок внутри группы = порядок в меню. Он повторяет порядок сегодняшнего
@@ -43,6 +43,19 @@ export const NAV = [
   { slug: "top-menu",        group: "application" },
   { slug: "footer-pages",    group: "application" },
   { slug: "cookie-banner",   group: "application" },
+
+  // ── ПРОДУКТЫ (2026-08-18) ───────────────────────────────────────────────
+  // Группа стоит сразу за «Приложением», и это перенос, а не изобретение:
+  // механика продуктов и пользовательских кейсов жила ОДНОЙ страницей в группе
+  // «Документы разработки», между двадцатью одним текстом. По виду меню она от
+  // них не отличалась, хотя это не документ, а рабочая поверхность — та самая,
+  // с которой начинается разработка продукта.
+  //
+  // Порядок внутри группы: карта → список продуктов. Страница отдельного
+  // продукта в меню НЕ значится: у неё динамический адрес
+  // (`/products/{id}`), и попадают на неё из списка, а не из навигации.
+  { slug: "map-products",    group: "products" },
+  { slug: "products",        group: "products" },
 
   // ОДНА ВКЛАДКА В СВОЕЙ ГРУППЕ — так и задумано (владелец 2026-08-13).
   //
@@ -168,6 +181,7 @@ export const NAV_BY_GROUP: Record<NavGroup, readonly AdminPageSlug[]> = NAV_GROU
  */
 export const GROUP_INDEX = {
   application: "map-application",
+  products: "map-products",
   // Своей карты у группы нет и не нужно: в ней одна вкладка, и карта вела бы на
   // оглавление из одного пункта. Индекс группы — сама вкладка, как у инструментов.
   visibility: "visibility",

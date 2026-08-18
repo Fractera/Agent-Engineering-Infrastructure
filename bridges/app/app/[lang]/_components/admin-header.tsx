@@ -20,7 +20,7 @@ import {
   Menu, Globe, X as XIcon, Palette, Languages, Columns3, SlidersHorizontal, PanelTop, PanelBottom,
   Cookie, Users, ImagePlus, Database, BrainCircuit, Brain, Map as MapIcon, Download, Upload,
   Link2, KeyRound, MessagesSquare, Sparkles, GitBranch, Info, History, Settings, BookOpen,
-  HelpCircle, PackagePlus, FileText, Target, Wrench, Network, BookMarked, GraduationCap,
+  HelpCircle, PackagePlus, FileText, Target, Boxes, Wrench, Network, BookMarked, GraduationCap,
   ListChecks, AlertTriangle, Search, Bot, Smartphone, Paintbrush, LayoutTemplate, Ruler, LifeBuoy, Compass, Code2, ChevronRight, Crop, Scissors, Mic, Hourglass, FlaskConical, UserRound, IdCard, Workflow, Radar, MonitorSmartphone, Type, ALargeSmall, Frame, type LucideIcon } from "lucide-react";
 import { NAV_GROUPS, NAV_BY_GROUP, adminHref, type AdminPageSlug } from "@/lib/admin-nav";
 import { warningsBySlug, type AdminWarning } from "@/lib/admin-warnings";
@@ -80,6 +80,8 @@ const ICONS: Record<AdminPageSlug, LucideIcon> = {
   env: Settings,
   "how-to-build": BookOpen,
   help: HelpCircle,
+  "map-products": Boxes,
+  products: Boxes,
   "doc-overview": Compass,
   "doc-instruction": FileText,
   "doc-dynamic-workflows": Workflow,

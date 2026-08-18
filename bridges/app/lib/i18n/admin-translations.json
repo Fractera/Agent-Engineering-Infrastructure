@@ -1145,7 +1145,8 @@
       "backup": "Backup & restore",
       "tools": "Tools",
       "visibility": "Done for you",
-      "design": "Design"
+      "design": "Design",
+      "products": "Products"
     },
     "footer": {
       "deploy": "Deploy",
@@ -1297,8 +1298,8 @@
         "hint": "The rules the agent works by, read at the start of every session."
       },
       "doc-use-cases": {
-        "title": "User cases",
-        "hint": "What this product is for. Development is pointless before this exists."
+        "title": "Use cases",
+        "hint": "What a use case is and why nothing is built without a confirmed one. The work itself is in Products."
       },
       "doc-platform-tools": {
         "title": "Platform tools",
@@ -1463,6 +1464,14 @@
       "doc-case-to-step": {
         "title": "Case to step",
         "hint": "How confirmed use cases turn into a queue of development steps."
+      },
+      "map-products": {
+        "title": "Products",
+        "hint": "Everything this server carries, and where each product lives."
+      },
+      "products": {
+        "title": "Products",
+        "hint": "One server carries several products. Each has its own address, pages and use cases."
       }
     },
     "breadcrumbHome": "Panel",
@@ -1473,7 +1482,8 @@
       "access": "How people and services reach the project, and how it reaches out: your own domain, sign-in methods, communication channels and the OpenAI key.",
       "project": "The repository behind the app, the history of its deployments and the environment they run with.",
       "help": "How to build with this panel and where to ask when something is unclear.",
-      "design": "Four decisions, in the order they matter: the fonts first, then how big the text is, then the shape of surfaces, then colour. Each applies to the whole site at once and takes effect without a rebuild."
+      "design": "Four decisions, in the order they matter: the fonts first, then how big the text is, then the shape of surfaces, then colour. Each applies to the whole site at once and takes effect without a rebuild.",
+      "products": "What this server carries. A product is one thing it serves — a landing page, a store, a company brain — with its own address, its own pages and its own use cases. Everything about a product starts here."
     },
     "testing": {
       "whyTitle": "Why this document exists.",
@@ -2419,7 +2429,10 @@
       "delWorking": "Deleting…",
       "delDone": "Product deleted",
       "delFailed": "Could not delete the product",
-      "delArchive": "Archived to"
+      "delArchive": "Archived to",
+      "surfaceLabel": "Surface",
+      "routeLabel": "Address",
+      "statusLabel": "Status"
     },
     "useCases": {
       "gateMissing": "No user cases yet — development does not start without them. Answer the questions below; the Quiz turns your answers into cases.",
@@ -2576,7 +2589,10 @@
       "or": "or",
       "autoAgain": "Extend the auto-quiz: 5 more",
       "autoAssumption": "Answers beginning with «Assumption» are the model's guesses, not your words — correct them here, before they turn into cases.",
-      "autoAccepted": "{n} question-answer pairs added to the conversation"
+      "autoAccepted": "{n} question-answer pairs added to the conversation",
+      "tabCases": "Use cases",
+      "tabCasesEmpty": "Nothing described yet",
+      "rootsTitle": "Where this product lives"
     },
     "passport": {
       "whyTitle": "Why it exists separately.",
@@ -4202,7 +4218,8 @@
       "backup": "Резервное копирование",
       "tools": "Инструменты",
       "visibility": "Сделано за вас",
-      "design": "Дизайн"
+      "design": "Дизайн",
+      "products": "Продукты"
     },
     "footer": {
       "deploy": "Развернуть",
@@ -4355,7 +4372,7 @@
       },
       "doc-use-cases": {
         "title": "Пользовательские кейсы",
-        "hint": "Зачем нужен продукт. Пока их нет, разработку начинать не с чего."
+        "hint": "Что такое кейс и почему без подтверждённого ничего не строится. Сама работа — в разделе «Продукты»."
       },
       "doc-platform-tools": {
         "title": "Инструменты платформы",
@@ -4520,6 +4537,14 @@
       "doc-case-to-step": {
         "title": "Кейс → шаг",
         "hint": "Как подтверждённые кейсы превращаются в очередь шагов разработки."
+      },
+      "map-products": {
+        "title": "Продукты",
+        "hint": "Всё, что несёт этот сервер, и где живёт каждый продукт."
+      },
+      "products": {
+        "title": "Продукты",
+        "hint": "Один сервер несёт несколько продуктов. У каждого свой адрес, свои страницы и свои кейсы."
       }
     },
     "breadcrumbHome": "Панель",
@@ -4530,7 +4555,8 @@
       "access": "Как люди и службы добираются до проекта и как он выходит наружу: свой домен, способы входа, каналы связи и ключ OpenAI.",
       "project": "Репозиторий, из которого живёт приложение, история его развёртываний и окружение, с которым они идут.",
       "help": "Как строить в этой панели и куда спросить, если что-то непонятно.",
-      "design": "Четыре решения в том порядке, в котором они важны: сначала шрифты, потом размер текста, потом форма поверхностей, потом цвет. Каждое действует сразу на весь сайт и применяется без пересборки."
+      "design": "Четыре решения в том порядке, в котором они важны: сначала шрифты, потом размер текста, потом форма поверхностей, потом цвет. Каждое действует сразу на весь сайт и применяется без пересборки.",
+      "products": "Что несёт этот сервер. Продукт — одна вещь, которую он отдаёт: посадочная страница, магазин, мозг компании, — со своим адресом, своими страницами и своими кейсами. Вся работа над продуктом начинается здесь."
     },
     "testing": {
       "whyTitle": "Зачем этот документ.",
@@ -5476,7 +5502,10 @@
       "delWorking": "Удаляю…",
       "delDone": "Продукт удалён",
       "delFailed": "Не удалось удалить продукт",
-      "delArchive": "Архив"
+      "delArchive": "Архив",
+      "surfaceLabel": "Поверхность",
+      "routeLabel": "Адрес",
+      "statusLabel": "Состояние"
     },
     "useCases": {
       "gateMissing": "Кейсов ещё нет — без них разработка не начинается. Ответьте на вопросы ниже, а Quiz превратит ваши ответы в кейсы.",
@@ -5633,7 +5662,10 @@
       "or": "или",
       "autoAgain": "Дополнить автоквиз: ещё 5",
       "autoAssumption": "Ответы, начинающиеся со слова «Предположение», — догадки модели, а не ваши слова. Поправьте их здесь, пока они не превратились в кейсы.",
-      "autoAccepted": "Добавлено пар «вопрос — ответ»: {n}"
+      "autoAccepted": "Добавлено пар «вопрос — ответ»: {n}",
+      "tabCases": "Пользовательские кейсы",
+      "tabCasesEmpty": "Ещё ничего не описано",
+      "rootsTitle": "Где живёт этот продукт"
     },
     "passport": {
       "whyTitle": "Зачем он отдельно.",
