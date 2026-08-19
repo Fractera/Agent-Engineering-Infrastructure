@@ -88,7 +88,6 @@ const ICONS: Record<AdminPageSlug, LucideIcon> = {
   "doc-dynamic-workflows": Workflow,
   "doc-use-cases": Target,
   "doc-platform-tools": Wrench,
-  "doc-architecture": Network,
   "doc-seo": Search,
   "doc-aio": Bot,
   "doc-pwa": Smartphone,
@@ -101,12 +100,10 @@ const ICONS: Record<AdminPageSlug, LucideIcon> = {
   "doc-parallel-routing": LayoutTemplate,
   "doc-coding-standards": Ruler,
   "doc-troubleshooting": LifeBuoy,
-  "doc-context-state": Hourglass,
   "doc-testing": FlaskConical,
   "doc-single-agent": UserRound,
   "doc-dialogue-format": MessagesSquare,
   "doc-content-engine": FileText,
-  "doc-passport": IdCard,
   "doc-case-to-step": GitBranch,
 };
 

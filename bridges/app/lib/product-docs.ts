@@ -1,7 +1,4 @@
-// Документы разработки продуктового слоя (шаг 501, слой «Документы»).
-//
-// ЗАЧЕМ ЭТО СУЩЕСТВУЕТ. Инструкции, по которым работает агент в приложении
-// клиента, лежат файлами в КОРНЕ СЛОТА (`/opt/fractera/app/*.md`). До этого слоя
+// Документы разработки продуктового слоя (шаг 501, слой «Документы»).//// ЗАЧЕМ ЭТО СУЩЕСТВУЕТ. Инструкции, по которым работает агент в приложении// клиента, лежат файлами в КОРНЕ СЛОТА (`/opt/fractera/app/*.md`). До этого слоя
 // их можно было прочитать только через терминал или локальный клон: владелец,
 // сидящий в панели, свои же правила не видел. Здесь они получают страницы.
 //
@@ -24,7 +21,6 @@ export type DocKey =
   | "doc-instruction"
   | "doc-dynamic-workflows"
   | "doc-platform-tools"
-  | "doc-architecture"
   | "doc-glossary"
   | "doc-lessons"
   | "doc-antipatterns"
@@ -32,13 +28,11 @@ export type DocKey =
   | "doc-parallel-routing"
   | "doc-coding-standards"
   | "doc-troubleshooting"
-  | "doc-context-state"
   | "doc-testing"
   | "doc-single-agent"
   | "doc-dialogue-format"
   | "doc-content-engine"
   | "doc-sections"
-  | "doc-passport"
   | "doc-case-to-step"
   | "doc-seo"
   | "doc-aio"
@@ -58,7 +52,6 @@ export const DOC_FILES: Record<DocKey, string> = {
   // инструментам, и единственный способ узнать про векторный склад, граф знаний,
   // базу, карту и каналы — прочитать этот документ. Не зная, он строит второе.
   "doc-platform-tools": "development-docs/PLATFORM-TOOLS.md",
-  "doc-architecture": "development-docs/ARCHITECTURE.md",
   // Как устроена поисковая оптимизация ИМЕННО в этом проекте (шаг 503): статика
   // вместо динамики, один сборщик меты, языковые сигналы, структурированные
   // данные, карты сайта. Задан платформой, а не растёт по ходу проекта — это
@@ -86,7 +79,6 @@ export const DOC_FILES: Record<DocKey, string> = {
   // владельца был способ её ПРОЧИТАТЬ и ОЧИСТИТЬ: устаревшая передача вреднее
   // отсутствующей, а очистка — единственное действие, которое человек обязан
   // мочь выполнить сам.
-  "doc-context-state": "development-docs/CONTEXT-STATE.md",
   // Как шаг доказывается законченным: два независимых доказательства из разных
   // плоскостей. Документ ЗАДАННЫЙ — это требование к работе, а не наблюдение о
   // ней, и агент правит его только по прямой просьбе.
@@ -104,7 +96,6 @@ export const DOC_FILES: Record<DocKey, string> = {
   "doc-content-engine": "development-docs/CONTENT-ENGINE.md",
   // Сущности проекта и состояние каждой. ЕДИНСТВЕННЫЙ документ, который несёт
   // ПРОГРЕСС: кейсы не знают состояния экранов, архитектура не знает, что готово.
-  "doc-passport": "development-docs/PASSPORT.md",
   // Переход «кейс → шаг разработки» (владелец 2026-08-17). ДУБЛИКАТ по замыслу:
   // сама процедура живёт навыком `.claude/skills/manage-cases-and-steps/`, и
   // агент грузит её по поводу, а не в каждой сессии. Документ существует, чтобы
@@ -162,49 +153,20 @@ export const DOC_KIND: Record<string, "evolving" | "static"> = {
   "doc-sections": "evolving",
   "doc-parallel-routing": "static",
 
-  "doc-architecture": "evolving",
   "doc-glossary": "evolving",
   "doc-lessons": "evolving",
   "doc-steps": "evolving",
   "doc-antipatterns": "evolving",
   "doc-troubleshooting": "evolving",
-  "doc-context-state": "evolving",
   "doc-testing": "static",
   "doc-single-agent": "static",
   // Обыкновенный, не саморазвивающийся (решение владельца 2026-08-11): это форма
   // ответа, заданная владельцем, а не наблюдение агента о ходе проекта.
   "doc-dialogue-format": "static",
   "doc-content-engine": "static",
-  "doc-passport": "evolving",
   // ЗАДАННЫЙ: это закон перехода «кейс → шаг», а не наблюдение агента о проекте.
   "doc-case-to-step": "static",
 };
-
-/**
- * Есть ли в файле передачи НЕПУСТАЯ запись (2026-08-10).
- *
- * Проверка идёт в верхнюю область предупреждений, а её делает шапка на КАЖДОЙ
- * странице панели — поэтому читается только начало файла, где стоит машинная
- * шапка, а не весь документ.
- *
- * Пустой файл — норма и молчит. Чужой формат считается записью намеренно: если
- * там лежит что-то, чего мы не понимаем, честнее сказать о нём человеку, чем
- * промолчать и дать следующей сессии наткнуться на это первой.
- */
-export function contextStateHandoff(): boolean {
-  try {
-    const fd = fs.openSync(path.join(APP_DIR, DOC_FILES["doc-context-state"]), "r");
-    const buf = Buffer.alloc(512);
-    const read = fs.readSync(fd, buf, 0, 512, 0);
-    fs.closeSync(fd);
-    const head = buf.subarray(0, read).toString("utf-8");
-    if (!head.includes("fractera:context-state")) return true;
-    return !/\*\*state:\*\*\s*empty/i.test(head);
-  } catch {
-    // Файла нет — механизм не установлен или передавать нечего. Молчим.
-    return false;
-  }
-}
 
 /**
  * 🔴 ГЕЙТ РАЗРАБОТКИ (решение владельца 2026-08-09, расширено 2026-08-10).

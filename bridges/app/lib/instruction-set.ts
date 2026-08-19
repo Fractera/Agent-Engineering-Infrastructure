@@ -82,7 +82,6 @@ export const TOGGLEABLE: string[] = [
  * работы, а не удобство.
  */
 export const INSTRUCTION_DEFAULTS: Record<string, boolean> = {
-  "doc-context-state": false,
   // Параллельная маршрутизация ещё не открыта (решение владельца 2026-08-11):
   // выключена по умолчанию и включиться не может, см. `IN_DEVELOPMENT`.
   "doc-parallel-routing": false,
@@ -221,18 +220,6 @@ whatever mode you are in. Details: \`DYNAMIC-WORKFLOWS.md\`.`,
 Do not propose it, do not describe a task as "a good fit for a workflow", and do not treat a large request
 as a reason to ask for it. \`SINGLE-AGENT.md\` governs; work in this window.`,
   },
-  "doc-context-state": {
-    on: `**Context handoff — ON.** \`CONTEXT-STATE.md\` is the handoff between two context windows:
-1. **Read it at session entry, before any other document.** Empty means there is nothing to resume.
-2. **Write it as the window fills:** at **50%** write it and tell the architect half the window is spent;
-   at **65%** close what is open and start nothing new; at **75%** require the architect to end the step.
-3. **What it says is a HINT, not proof.** It records where work was INTERRUPTED, not where it is: the file
-   may say step 123 while the repository has passed 124, 125 and closed 126. Verify with
-   \`git log --oneline -10\` and the recorded \`git_head\` BEFORE acting, and say which account you follow.
-4. **A baton is handed over once.** Once adopted and confirmed, the file must be empty again.`,
-    off: `**Context handoff — OFF.** Do not read \`CONTEXT-STATE.md\`, do not write it, and never demand
-that a step be closed on account of it.`,
-  },
 };
 
 // ── Команды активации ─────────────────────────────────────────────────────────
@@ -302,9 +289,6 @@ export const COMMAND_DEFAULTS: Record<string, Partial<Record<CommandVerb, Record
   // показывает команды только включённых документов — иначе выключатель был бы
   // ложью. Передача сессии выключена по умолчанию (возможность
   // экспериментальная), поэтому команда оживёт вместе с ней.
-  "doc-context-state": {
-    activate: { en: "remember the current state", ru: "запомни текущее состояние" },
-  },
   // ДВА РАЗНЫХ ДЕЙСТВИЯ, а не два названия одного (владелец 2026-08-11).
   // «Почему» — ЧИТАТЬ: владелец смотрит на неверное поведение живого сервера и
   // хочет настоящую причину, а не догадку по памяти о похожем проекте.
@@ -337,11 +321,6 @@ export const COMMAND_DEFAULTS: Record<string, Partial<Record<CommandVerb, Record
   // на язык, а плодить глаголы ради синонима — ломать модель команд.
   "doc-dialogue-format": {
     activate: { en: "tell me how you understood me", ru: "скажи как ты меня понял" },
-  },
-  "doc-passport": {
-    add: { en: "add to the project passport", ru: "добавь в паспорт проекта" },
-    find: { en: "find in the project passport", ru: "найди в паспорте проекта" },
-    edit: { en: "change in the project passport", ru: "измени в паспорте проекта" },
   },
   "doc-use-cases": {
     add: { en: "add to the user cases", ru: "добавь в пользовательские кейсы" },
@@ -597,13 +576,10 @@ export function syncInstructionSection(
 // Правило: добавил документ в стартер — положи шаблон сюда той же партией.
 const TEMPLATES: Record<string, string> = {
   "doc-dynamic-workflows": "DYNAMIC-WORKFLOWS.template.md",
-  "doc-context-state": "CONTEXT-STATE.template.md",
   "doc-testing": "TESTING.template.md",
   "doc-single-agent": "SINGLE-AGENT.template.md",
   "doc-dialogue-format": "DIALOGUE-FORMAT.template.md",
   "doc-content-engine": "CONTENT-ENGINE.template.md",
-  "doc-passport": "PASSPORT.template.md",
-  "doc-architecture": "ARCHITECTURE.template.md",
   "doc-antipatterns": "ANTI-PATTERNS.template.md",
   "doc-design": "DESIGN.template.md",
   "doc-parallel-routing": "PARALLEL-ROUTING.template.md",

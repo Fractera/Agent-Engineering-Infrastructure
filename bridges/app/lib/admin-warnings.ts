@@ -18,12 +18,10 @@
 
 import fs from "fs";
 import path from "path";
-import { contextStateHandoff } from "@/lib/product-docs";
 import { isSecureMode } from "@/lib/secure-mode";
 import { listProducts } from "@/lib/products-config";
 import { readFeatures } from "@/lib/platform-features";
 import { productsDesignOpen, developmentModeChosen } from "@/lib/development-mode";
-import { readInstructionSet } from "@/lib/instruction-set";
 import { markKey, ENV_TRANSFERRED_KEY } from "@/lib/dev-tools-marks";
 import type { AdminPageSlug } from "@/lib/admin-nav";
 
@@ -35,7 +33,7 @@ export type WarningLevel = "blocking" | "advised";
 
 export type AdminWarning = {
   id:
-    | "languages" | "github" | "env-local" | "mode" | "products" | "openai" | "domain" | "context-state"
+    | "languages" | "github" | "env-local" | "mode" | "products" | "openai" | "domain"
     // Инструменты разработки — по одному на каждый, в порядке владельца
     // (2026-08-14): сначала то, без чего обойтись можно, последним — то, без
     // чего нельзя.
@@ -284,15 +282,6 @@ export function collectWarnings(): AdminWarning[] {
     out.push({ id: "dev-editor", level: "advised", slug: "dev-tools" });
   }
 
-  // Незакрытая передача между контекстными окнами. НЕ поломка: чаще всего это
-  // нормальный след прерванной сессии. Область называется «Прежде чем начинать»
-  // ровно поэтому — знать о ней надо ДО того, как начнут строить, иначе новая
-  // сессия либо повторит сделанное, либо продолжит с шага, который уже закрыт.
-  // Возможность экспериментальная и по умолчанию выключена: выключенный
-  // механизм не имеет права ни о чём предупреждать.
-  if (readInstructionSet().enabled["doc-context-state"] && contextStateHandoff()) {
-    out.push({ id: "context-state", level: "advised", slug: "doc-context-state" });
-  }
 
   return out;
 }

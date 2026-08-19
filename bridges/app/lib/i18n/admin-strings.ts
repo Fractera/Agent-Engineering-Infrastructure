@@ -69,7 +69,7 @@ export type AdminStrings = {
      */
     warnCta: {
       languages: string; github: string; "env-local": string; mode: string; products: string; openai: string; domain: string;
-      "context-state": string; "dev-browser": string;
+ "dev-browser": string;
       "dev-claude-code": string; "dev-editor": string;
     };
     howToBuild: string;
@@ -534,7 +534,7 @@ export type AdminStrings = {
     title: string;
     items: {
       languages: string; github: string; "env-local": string; mode: string; products: string; openai: string; domain: string;
-      "context-state": string; "dev-browser": string;
+ "dev-browser": string;
       "dev-claude-code": string; "dev-editor": string;
     };
   };

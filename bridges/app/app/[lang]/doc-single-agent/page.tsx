@@ -14,7 +14,7 @@ import { DocKindBadge } from "../_components/doc-kind-badge";
 import { readDoc, DOC_KIND } from "@/lib/product-docs";
 import { readTemplate, readInstructionSet } from "@/lib/instruction-set";
 import { DocCommands } from "../_components/doc-commands";
-import { CreateDoc } from "../doc-context-state/_components/create-doc.client";
+import { CreateDoc } from "../_components/create-doc.client";
 
 export const dynamic = "force-dynamic";
 
