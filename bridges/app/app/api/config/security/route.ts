@@ -3,6 +3,7 @@ import { spawn } from "child_process";
 import fs from "fs";
 import path from "path";
 import { requireAuth } from "@/lib/require-auth";
+import { RESTART_AUTH_AND_DATA } from "@/lib/pm2-restart";
 
 const ENV_FILES = [
   process.env.AUTH_ENV_PATH   ?? "/opt/fractera/services/auth/.env.local",
@@ -97,7 +98,7 @@ export async function POST(req: NextRequest) {
   setTimeout(() => {
     const child = spawn(
       "sh",
-      ["-c", `pm2 restart fractera-data fractera-auth --update-env; pm2 reload ${PM2_PROCESSES}`],
+      ["-c", `${RESTART_AUTH_AND_DATA}; pm2 reload ${PM2_PROCESSES}`],
       { detached: true, stdio: "ignore" },
     );
     child.unref();
