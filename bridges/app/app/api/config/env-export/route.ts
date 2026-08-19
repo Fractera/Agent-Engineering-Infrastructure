@@ -5,6 +5,7 @@ import { publicDataUrl } from "@/lib/public-data-url"
 
 const APP_ENV  = process.env.APP_ENV_PATH  ?? "/opt/fractera/app/.env.local"
 const DATA_ENV = process.env.DATA_ENV_PATH ?? "/opt/fractera/services/data/.env"
+const PANEL_ENV = process.env.PANEL_ENV_PATH ?? "/opt/fractera/bridges/app/.env.local"
 
 // Keys that are server-infrastructure-only and should not go into local dev
 const EXCLUDE_KEYS = new Set([
@@ -39,6 +40,7 @@ export async function GET(req: NextRequest) {
 
   const appVars    = readAllVars(APP_ENV)
   const dataSecret = readVar(DATA_ENV, "DATA_SECRET")
+  const deploySecret = readVar(PANEL_ENV, "DEPLOY_SECRET")
 
   // (step 500) The address is RESOLVED for the receiving machine, not copied from
   // this server's own env. NEXT_PUBLIC_MEDIA_URL is "http://localhost:3300" here —
@@ -75,6 +77,26 @@ export async function GET(req: NextRequest) {
     `DATA_API_KEY=${dataSecret}`,
     ``,
   ]
+
+  // 🔒 КЛЮЧ ЗАПУСКА РАЗВЁРТЫВАНИЯ (владелец 2026-08-19). Без него агент на машине
+  // владельца может только собрать проект сам по SSH — в обход очереди панели, её
+  // журнала развёртываний и отката на последнюю рабочую сборку. Панель после такой
+  // сборки показывает в подвале ЧУЖУЮ, предыдущую запись, и владелец читает журнал
+  // своего сервера как неверный.
+  //
+  // Ключ уже существует: его заводит установщик (`bootstrap.sh`) в окружении панели,
+  // и `POST /api/deploy` принимает его заголовком `x-deploy-secret`. Здесь он только
+  // ВЫДАЁТСЯ — нового механизма не появляется.
+  //
+  // Отсутствует — строку не пишем вовсе: пустое значение читалось бы как «ключ есть,
+  // но неверный», и агент бил бы в 401 вместо честного «панель ключа не выдала».
+  if (deploySecret) {
+    lines.push(
+      `# --- Deployment (lets your agent press Deploy without opening the panel) ---`,
+      `FRACTERA_DEPLOY_SECRET=${deploySecret}`,
+      ``,
+    )
+  }
 
   // Append all remaining custom vars from app/.env.local
   const customEntries = Object.entries(appVars).filter(([k]) => !EXCLUDE_KEYS.has(k))
