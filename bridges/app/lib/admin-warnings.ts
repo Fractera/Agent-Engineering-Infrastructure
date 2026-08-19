@@ -24,7 +24,7 @@ import { listProducts } from "@/lib/products-config";
 import { readFeatures } from "@/lib/platform-features";
 import { productsDesignOpen, developmentModeChosen } from "@/lib/development-mode";
 import { readInstructionSet } from "@/lib/instruction-set";
-import { markKey } from "@/lib/dev-tools-marks";
+import { markKey, ENV_TRANSFERRED_KEY } from "@/lib/dev-tools-marks";
 import type { AdminPageSlug } from "@/lib/admin-nav";
 
 const APP_DIR = process.env.APP_DIR ?? "/opt/fractera/app";
@@ -35,7 +35,7 @@ export type WarningLevel = "blocking" | "advised";
 
 export type AdminWarning = {
   id:
-    | "languages" | "github" | "mode" | "products" | "openai" | "domain" | "context-state"
+    | "languages" | "github" | "env-local" | "mode" | "products" | "openai" | "domain" | "context-state"
     // Инструменты разработки — по одному на каждый, в порядке владельца
     // (2026-08-14): сначала то, без чего обойтись можно, последним — то, без
     // чего нельзя.
@@ -134,6 +134,27 @@ export function collectWarnings(): AdminWarning[] {
   // «Отправить» выглядели рабочими (владелец 2026-08-13).
   if (!envHas(APP_ENV, "USER_GITHUB_REPO_URL") || !envHas(APP_ENV, "USER_GITHUB_VERIFIED_AT")) {
     out.push({ id: "github", level: "blocking", slug: "github" });
+  }
+  //
+  // 🔒 ПЕРЕНОС `.env.local` — ОТДЕЛЬНЫЙ ШАГ, И БЕЗ НЕГО ЛОКАЛЬНАЯ РАБОТА НЕ
+  // НАЧИНАЕТСЯ ВОВСЕ (владелец 2026-08-19).
+  //
+  // Человек подключил GitHub, забрал проект на свою машину — и не запустил
+  // ничего: `.gitignore` слота блокирует `.env`, `.env.local` и `.env.*.local`,
+  // поэтому ключи через git не едут НИКОГДА, и это сделано намеренно. Забрать их
+  // можно ровно одной кнопкой — выгрузкой на странице «Переменные окружения».
+  //
+  // Об этом шаге не говорилось нигде: ни в письме после развёртывания, ни здесь,
+  // ни в подвале. Тупик выглядел как поломка продукта, а поломки не было.
+  //
+  // Красный, потому что это не совет: без файла локальный клон не поднимается.
+  // Стоит СРАЗУ ЗА GitHub — сначала проект попадает на машину, потом к нему
+  // приезжают ключи; обратный порядок заставил бы переносить их в пустоту.
+  //
+  // Гаснет отметкой о поступке, а не фактом скачивания: доехал ли файл до папки
+  // проекта, отсюда не видно (`ENV_TRANSFERRED_KEY`, `lib/dev-tools-marks.ts`).
+  if (!envHas(APP_ENV, ENV_TRANSFERRED_KEY)) {
+    out.push({ id: "env-local", level: "blocking", slug: "env" });
   }
   // 🔒 ЧТО ТРЕБУЕТСЯ, РЕШАЕТ РЕЖИМ РАЗРАБОТКИ (владелец 2026-08-18).
   //

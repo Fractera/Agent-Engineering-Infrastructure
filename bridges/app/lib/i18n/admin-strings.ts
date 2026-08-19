@@ -68,7 +68,7 @@ export type AdminStrings = {
      * OpenAI» против «Нет ключа OpenAI — граф знаний останется выключенным».
      */
     warnCta: {
-      languages: string; github: string; mode: string; products: string; openai: string; domain: string;
+      languages: string; github: string; "env-local": string; mode: string; products: string; openai: string; domain: string;
       "context-state": string; "dev-browser": string;
       "dev-claude-code": string; "dev-editor": string;
     };
@@ -414,6 +414,16 @@ export type AdminStrings = {
     helpBuildTitle: string; helpBuild: string;
     helpMaskTitle: string; helpMask: string;
     helpLockedTitle: string; helpLocked: string;
+    // Перенос файла на локальную машину — отдельный шаг онбординга (владелец
+    // 2026-08-19). Скачивание не равно переносу, поэтому у него своя галочка.
+    transferTitle: string; transferLabel: string; transferHint: string;
+    transferSaving: string; transferFailed: string;
+    // Доступ к собственному серверу по SSH: короткий абзац и окно с процедурой.
+    sshLead: string; sshOpen: string; sshTitle: string;
+    sshWhyTitle: string; sshWhy: string;
+    sshAllowedTitle: string; sshAllowed: string;
+    sshForbiddenTitle: string; sshForbidden: string;
+    sshHowTitle: string; sshHow: string;
   };
   // Верхняя область меню: всё красное и оранжевое в одном месте. Ключи предметные
   // (github / use-cases / …), а не «warning1» — запись обязана называть причину.
@@ -523,7 +533,7 @@ export type AdminStrings = {
   warnings: {
     title: string;
     items: {
-      languages: string; github: string; mode: string; products: string; openai: string; domain: string;
+      languages: string; github: string; "env-local": string; mode: string; products: string; openai: string; domain: string;
       "context-state": string; "dev-browser": string;
       "dev-claude-code": string; "dev-editor": string;
     };

@@ -719,7 +719,23 @@
       "exportHint": "Working on this project from your own machine? Download the environment file: your local copy then reads and writes the SERVER's rows, files and vector memory through it. Nothing is copied to your laptop, so there are no two versions of the data drifting apart.",
       "exportAction": ".env.local",
       "exportTitle": "Download .env.local for local development",
-      "exportWarning": "The file carries the data-layer key. Put it in the project root, never into git — the starter's .gitignore already excludes it."
+      "exportWarning": "The file carries the data-layer key. Put it in the project root, never into git — the starter's .gitignore already excludes it.",
+      "transferTitle": "Move it to your machine",
+      "transferLabel": "I have already moved .env.local to my local machine",
+      "transferHint": "Git never carries this file: .env, .env.local and .env.*.local are ignored on purpose, so keys cannot leak into a public repository. Downloading is not moving — put the file next to package.json in your local clone, then tick the box.",
+      "transferSaving": "Saving…",
+      "transferFailed": "Could not save the mark",
+      "sshLead": "This server is yours, and you can reach it directly over SSH — that is how your coding agent builds the project, restarts it and reads why something failed.",
+      "sshOpen": "How the agent works with the server",
+      "sshTitle": "Working with the server over SSH",
+      "sshWhyTitle": "What it is for.",
+      "sshWhy": "Two channels serve this project and they do not replace each other. GitHub carries the code — pull and push. SSH carries state and control: build the project, reload it with pm2, see which process actually answers on the port, read the logs and the deployed commit. Through GitHub you cannot learn whether what you sent is alive; through SSH you cannot deliver a change into your repository.",
+      "sshAllowedTitle": "What may be changed.",
+      "sshAllowed": "One folder — /opt/fractera/app. That is your project: your pages, your logic, your tables. Change it through pull and push rather than by hand on the server, so your repository stays the original.",
+      "sshForbiddenTitle": "What must not be changed — and why it is not a prohibition.",
+      "sshForbidden": "Everything in /opt/fractera outside app/ is the platform: authorisation, the data layer, this control panel, the services. Reading its code is useful and encouraged — a service answered oddly, open its handler. Editing it changes nothing that lasts: deployment runs rm -rf /opt/fractera and installs the platform again, so the edit does not survive the next deployment and is stored nowhere.",
+      "sshHowTitle": "How to change what cannot be changed.",
+      "sshHow": "Ask us. Name the service, the file and the line, and say whether a workaround exists. The button below writes the letter for you, with this server's address already in it — send it from your own mail."
     },
     "appFeatures": {
       "intro": "These switches apply without a rebuild — the app reads them on the next page load. Some of them also open and close a settings section of their own; each such switch says below it which section, and where in the menu to find it.",
@@ -784,6 +800,7 @@
       "items": {
         "languages": "The language set is not confirmed — it decides the shape of every address",
         "github": "GitHub is not connected — the project has nowhere to live",
+        "env-local": "The environment file has not been moved to your machine — the local copy cannot start without it",
         "mode": "The development mode has not been chosen — classic is running by default, and it decides what the whole project asks of you",
         "products": "No product is described yet — development has nothing to build towards",
         "openai": "No OpenAI key — the knowledge graph and embeddings stay off",
@@ -1156,6 +1173,7 @@
       "warnCta": {
         "languages": "Choose the languages of the project",
         "github": "GitHub connection required",
+        "env-local": "Move .env.local to your machine",
         "mode": "Choose how development is run",
         "products": "Describe your first product",
         "openai": "Connect an OpenAI key",
@@ -3924,7 +3942,23 @@
       "exportHint": "Работаете над проектом со своей машины? Скачайте файл окружения: локальная копия будет читать и писать строки, файлы и векторную память ЖИВОГО сервера через него. На ноутбук ничего не копируется, поэтому двух расходящихся версий данных не возникает.",
       "exportAction": ".env.local",
       "exportTitle": "Скачать .env.local для локальной разработки",
-      "exportWarning": "В файле лежит ключ слоя данных. Положите его в корень проекта и никогда не отправляйте в git — в .gitignore стартера он уже исключён."
+      "exportWarning": "В файле лежит ключ слоя данных. Положите его в корень проекта и никогда не отправляйте в git — в .gitignore стартера он уже исключён.",
+      "transferTitle": "Перенесите файл на свою машину",
+      "transferLabel": "Я уже перенёс .env.local на свою локальную машину",
+      "transferHint": "Git этот файл не возит никогда: .env, .env.local и .env.*.local намеренно в игноре, чтобы ключи не уехали в публичный репозиторий. Скачать — не значит перенести: положите файл рядом с package.json в локальном клоне и поставьте галочку.",
+      "transferSaving": "Сохраняем…",
+      "transferFailed": "Не удалось сохранить отметку",
+      "sshLead": "Этот сервер ваш, и к нему можно подключиться напрямую по SSH — так ваш агент-программист собирает проект, перезапускает его и читает, почему что-то упало.",
+      "sshOpen": "Как агент работает с сервером",
+      "sshTitle": "Работа с сервером по SSH",
+      "sshWhyTitle": "Зачем это нужно.",
+      "sshWhy": "Проекту служат два канала, и они не заменяют друг друга. GitHub возит код — pull и push. SSH даёт состояние и управление: собрать проект, поднять его через pm2, увидеть, какой процесс на самом деле отвечает на порту, прочитать логи и развёрнутый коммит. Через GitHub нельзя узнать, живо ли то, что вы отправили; через SSH нельзя доставить правку в ваш репозиторий.",
+      "sshAllowedTitle": "Что менять можно.",
+      "sshAllowed": "Одну папку — /opt/fractera/app. Это ваш проект: ваши страницы, ваша логика, ваши таблицы. Меняйте его через pull и push, а не руками на сервере, — тогда оригиналом остаётся ваш репозиторий.",
+      "sshForbiddenTitle": "Что менять нельзя — и почему это не запрет.",
+      "sshForbidden": "Всё в /opt/fractera за пределами app/ — платформа: авторизация, слой данных, эта панель, службы. Читать её код полезно и нужно: служба ответила не тем — откройте её обработчик. А вот править бессмысленно: развёртывание делает rm -rf /opt/fractera и ставит платформу заново, поэтому правка не переживает следующего развёртывания и не хранится нигде.",
+      "sshHowTitle": "Как изменить то, что менять нельзя.",
+      "sshHow": "Попросите нас. Назовите службу, файл и строку и скажите, есть ли обход. Кнопка ниже соберёт письмо сама — адрес этого сервера уже будет в нём, останется отправить со своей почты."
     },
     "appFeatures": {
       "intro": "Эти переключатели применяются без пересборки — приложение читает их на следующей загрузке страницы. Часть из них вдобавок открывает и закрывает собственный раздел настроек: у такого переключателя ниже написано, какой это раздел и в какой группе меню его искать.",
@@ -3989,6 +4023,7 @@
       "items": {
         "languages": "Набор языков не подтверждён — от него зависит вид всех адресов",
         "github": "GitHub не подключён — проекту негде жить",
+        "env-local": "Файл окружения не перенесён на вашу машину — без него локальная копия не запустится",
         "mode": "Режим разработки не выбран — по умолчанию работает классический, а от режима зависит весь порядок работы",
         "products": "Не описан ни один продукт — разработке не к чему стремиться",
         "openai": "Нет ключа OpenAI — граф знаний и векторы останутся выключенными",
@@ -4361,6 +4396,7 @@
       "warnCta": {
         "languages": "Выберите языки проекта",
         "github": "Требуется соединить с GitHub",
+        "env-local": "Перенести .env.local на свою машину",
         "mode": "Выберите, как ведётся разработка",
         "products": "Опишите первый продукт",
         "openai": "Подключите ключ OpenAI",

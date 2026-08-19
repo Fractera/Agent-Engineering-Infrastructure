@@ -70,24 +70,46 @@ function remove(content: string, key: string): string {
   return next.join("\n") + "\n";
 }
 
-/** Поставить или снять отметку. Пишем ТОЛЬКО свою строку — остальной файл цел. */
-export function setInstalled(tool: DevTool, installed: boolean): void {
-  const key = markKey(tool);
+/**
+ * Поставить или снять ЛЮБУЮ отметку решения. Пишем ТОЛЬКО свою строку — остальной
+ * файл цел.
+ *
+ * 🔒 ОДИН ПИСАТЕЛЬ НА ЭТОТ ФАЙЛ. `.env.local` слота держит и языки, и GitHub, и
+ * отметки инструментов; вторая реализация записи стоила бы этого файла целиком
+ * при первой же гонке. Поэтому новые отметки заводятся ключом здесь, а не своим
+ * модулем рядом.
+ */
+export function setMark(key: string, on: boolean): void {
   const existing = fs.existsSync(APP_ENV) ? fs.readFileSync(APP_ENV, "utf-8") : "";
-  const next = installed ? upsert(existing, key, new Date().toISOString()) : remove(existing, key);
+  const next = on ? upsert(existing, key, new Date().toISOString()) : remove(existing, key);
   fs.mkdirSync(path.dirname(APP_ENV), { recursive: true });
   fs.writeFileSync(APP_ENV, next, "utf-8");
 }
 
-export function isInstalled(tool: DevTool): boolean {
+export function hasMark(key: string): boolean {
   try {
-    const re = new RegExp(`^${markKey(tool)}=(.+)$`, "m");
+    const re = new RegExp(`^${key}=(.+)$`, "m");
     const m = fs.readFileSync(APP_ENV, "utf-8").match(re);
     return Boolean(m && m[1].trim());
   } catch {
     return false;
   }
 }
+
+/**
+ * Отметка «файл окружения перенесён на локальную машину» (владелец 2026-08-19).
+ *
+ * 🔒 СКАЧИВАНИЕ ЕЁ НЕ СТАВИТ. Панель отдаёт файл браузеру и на этом её знание
+ * кончается: доехал ли он до папки проекта, положили ли его рядом с `package.json`
+ * — отсюда не видно. Отметка о поступке ставится тем, кто поступок совершил, тем
+ * же приёмом, что у языков и у инструментов разработки.
+ */
+export const ENV_TRANSFERRED_KEY = "USER_ENV_TRANSFERRED_AT";
+
+export const setInstalled = (tool: DevTool, installed: boolean): void =>
+  setMark(markKey(tool), installed);
+
+export const isInstalled = (tool: DevTool): boolean => hasMark(markKey(tool));
 
 export function installedMap(): Record<DevTool, boolean> {
   return {
