@@ -864,6 +864,10 @@
         "code-view": {
           "title": "Code view",
           "body": "Source code with real syntax colouring — the kind that understands the language rather than guessing at it: nested CSS inside HTML, generics in TypeScript, keys and strings in JSON all come out right. Detects the language from the file extension and covers what a front end is written in: html, css, scss, ts, tsx, js, jsx, json, md, yaml, sql, bash and more. Carries light and dark colours in the same markup, so switching theme recolours instantly instead of re-parsing."
+        },
+        "translations-dialog": {
+          "title": "Translations dialog",
+          "body": "One card per language for any field with translations. Translate them all at once with a model, or write your own wording — each language saves on its own, so fixing two of ten does not touch the rest. An untouched card shows the source text, so it is clear what is being translated. Voice input in each card speaks that card's language. Refusals are named plainly and link to where they are fixed."
         }
       },
       "helpLabel": "How tools reach your project",
@@ -1524,6 +1528,10 @@
       "development-mode": {
         "title": "Development mode",
         "hint": "How work on this project is run: classic, steps, or use cases."
+      },
+      "tool-translations-dialog": {
+        "title": "Translations dialog",
+        "hint": "Translate a field into every language of the project."
       }
     },
     "breadcrumbHome": "Panel",
@@ -3268,6 +3276,23 @@
       "pageNoCases": "no case — a service page",
       "rootStepsTitle": "Built by these steps",
       "rootStepsNaming": "A step is named by a number, a dash and six to eight words: shorter says nothing about what was done, longer stops being read and the step gets known by its number instead."
+    },
+    "translationsTool": {
+      "title": "Translations",
+      "intro": "One card per language. Translate them all at once, or write your own wording — each language saves on its own.",
+      "translateTab": "Translate",
+      "translateAllTabs": "Translate all fields",
+      "translating": "Translating…",
+      "saveOne": "Save",
+      "saving": "Saving…",
+      "saved": "Saved",
+      "savedMark": "saved",
+      "close": "Close",
+      "hint": "The base language is the value itself; the other languages are its translations. A card you have not touched shows the base text so you can see what is being translated.",
+      "noKey": "No OpenAI key on this server, so nothing can translate the text. You can still write every language by hand.",
+      "badKey": "The OpenAI key was refused. Check it, or write the languages by hand.",
+      "upstream": "The translation service did not answer. Try again, or write the languages by hand.",
+      "keyLink": "Open the OpenAI key page"
     }
   },
   "ru": {
@@ -4135,6 +4160,10 @@
         "code-view": {
           "title": "Просмотр кода",
           "body": "Исходный код с настоящей подсветкой синтаксиса — той, что понимает язык, а не угадывает его: вложенный CSS внутри HTML, дженерики в TypeScript, ключи и строки в JSON окрашиваются верно. Язык определяется по расширению файла и покрывает то, на чём пишут фронтенд: html, css, scss, ts, tsx, js, jsx, json, md, yaml, sql, bash и другие. Светлые и тёмные цвета лежат в одной разметке, поэтому смена темы перекрашивает мгновенно, без повторного разбора."
+        },
+        "translations-dialog": {
+          "title": "Диалог переводов",
+          "body": "По карточке на каждый язык для любого поля с переводами. Переведите все разом моделью или впишите свою формулировку — каждый язык сохраняется отдельно, поэтому правка двух языков из десяти не трогает остальные. В нетронутой карточке стоит исходный текст, чтобы было видно, что переводится. Голосовой ввод в карточке говорит на её языке. Отказы названы прямо и ведут туда, где их лечат."
         }
       },
       "helpLabel": "Как инструменты попадают в ваш проект",
@@ -4795,6 +4824,10 @@
       "development-mode": {
         "title": "Режим разработки",
         "hint": "Как ведётся работа над проектом: классический стиль, шаги или кейсы."
+      },
+      "tool-translations-dialog": {
+        "title": "Диалог переводов",
+        "hint": "Перевести поле на все языки проекта."
       }
     },
     "breadcrumbHome": "Панель",
@@ -6539,6 +6572,23 @@
       "pageNoCases": "без кейса — служебная страница",
       "rootStepsTitle": "Чем это построено",
       "rootStepsNaming": "Имя шага — число, тире и шесть-восемь слов: короче — не говорит, что сделано; длиннее — его перестают читать, и шаг узнают по номеру, то есть имя перестаёт работать."
+    },
+    "translationsTool": {
+      "title": "Переводы",
+      "intro": "По карточке на каждый язык. Переведите все разом или впишите свою формулировку — каждый язык сохраняется отдельно.",
+      "translateTab": "Перевести",
+      "translateAllTabs": "Перевести все поля",
+      "translating": "Перевожу…",
+      "saveOne": "Сохранить",
+      "saving": "Сохраняю…",
+      "saved": "Сохранено",
+      "savedMark": "сохранено",
+      "close": "Закрыть",
+      "hint": "Базовый язык — это само значение, остальные языки — его переводы. В нетронутой карточке стоит исходный текст, чтобы было видно, что именно переводится.",
+      "noKey": "На этом сервере нет ключа OpenAI, поэтому перевести текст нечем. Все языки можно вписать руками.",
+      "badKey": "Ключ OpenAI отклонён. Проверьте его или впишите языки руками.",
+      "upstream": "Служба перевода не ответила. Попробуйте ещё раз или впишите языки руками.",
+      "keyLink": "Открыть страницу ключа OpenAI"
     }
   },
   "es": {

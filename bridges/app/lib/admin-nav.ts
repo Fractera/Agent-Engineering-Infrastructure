@@ -91,6 +91,7 @@ export const NAV = [
   { slug: "tool-video-trim", group: "tools" },
   { slug: "tool-voice-input", group: "tools" },
   { slug: "tool-code-view",  group: "tools" },
+  { slug: "tool-translations-dialog", group: "tools" },
   { slug: "add-tool",        group: "tools" },
 
   { slug: "map-backup",       group: "backup" },

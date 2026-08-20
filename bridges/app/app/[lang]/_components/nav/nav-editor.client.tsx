@@ -11,6 +11,8 @@ import type { NavItem, NavState, NavSlot, RouteNode } from "@/lib/nav-editor/typ
 import { LangStrip } from "./lang-strip.client";
 import { RouteTree } from "./route-tree.client";
 import { readDraggedRoute, hasDraggedRoute } from "./dnd";
+import { TranslationsDialog } from "@/_tools/translations-dialog/client/translations-dialog.client";
+import type { Drafts, TranslationsUi } from "@/_tools/translations-dialog/types/translations";
 
 // Островок настройки МЕНЮ — общий для верхней полосы и подвала (2026-08-12).
 //
@@ -40,6 +42,8 @@ export type Labels = {
   deleteTitle: string; deleteDialogTitle: string; deleteDialogBody: string;
   deleteConfirm: string; deleteRebuild: string; deleteDone: string; deleteFailed: string;
   cancel: string;
+  /** Слова ИНСТРУМЕНТА переводов — он общий, и словарь у него свой. */
+  translations: TranslationsUi;
 };
 
 const rid = () => Math.random().toString(36).slice(2, 8);
@@ -79,6 +83,8 @@ export function NavEditor(
   const [hiding, setHiding] = useState<{ index: number; id: string; child: boolean; label: string; href: string } | null>(null);
   /** Пункт, страницу которого собираются УДАЛИТЬ из проекта. */
   const [deleting, setDeleting] = useState<{ index: number; id: string; label: string; href: string } | null>(null);
+  /** Пункт, для которого открыт ИНСТРУМЕНТ переводов. */
+  const [translating, setTranslating] = useState<{ id: string; label: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [editLang, setEditLang] = useState(base);
@@ -273,34 +279,36 @@ export function NavEditor(
    * которые владелец правит сам: не понравилось — переписал, и его слово
    * побеждает. Поэтому кнопка не блокирует поле и ничего не «запирает».
    */
-  async function translate(id: string, sourceLabel: string) {
-    const targets = langs.filter((l) => l !== base);
-    if (!targets.length || !sourceLabel.trim()) return;
-    setBusyId(id); setNote(null);
+  /**
+   * Сохранить переводы ОДНОГО языка, пришедшие из инструмента.
+   *
+   * 🔒 ЗДЕСЬ ОСТАЛОСЬ ТОЛЬКО ХРАНИЛИЩЕ. Сам перевод — работа общего инструмента
+   * (`_tools/translations-dialog`): карточки языков, автоперевод, правка руками.
+   * Раньше на этом месте стояла самоделка, которая звала дверь и печатала
+   * строчку текста, — интерфейса не было вовсе, хотя инструмент существовал.
+   */
+  async function saveTranslations(id: string, drafts: Drafts): Promise<boolean> {
+    let next = i18n;
+    for (const [lang, fields] of Object.entries(drafts)) {
+      const v = fields[id];
+      if (typeof v === "string" && v.trim()) next = setTranslation(next, key(slot, id), lang, v.trim());
+    }
+    setI18n(next);
+    // Пишем сразу: словарь и список едут одной дверью, и разделять их значит
+    // получить сохранённый перевод при несохранённом пункте.
     try {
-      const r = await fetch("/api/config/nav/translate", {
+      const r = await fetch("/api/config/nav", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ texts: { [id]: sourceLabel }, from: base, to: targets }),
+        body: JSON.stringify({ slot, nav: { items, authSide }, i18n: next }),
       });
-      const j = (await r.json()) as { translations?: Record<string, Record<string, string>>; error?: string };
-      if (!r.ok || !j.translations) {
-        // Причина названа, а не спрятана за «не удалось»: без ключа человеку
-        // нужно идти в настройки, а при перегрузке — просто повторить.
-        setNote(j.error === "no-key" || j.error === "bad-key" ? labels.trNoKey : labels.trFailed);
-        return;
-      }
-      let next = i18n;
-      for (const [lang, fields] of Object.entries(j.translations)) {
-        const v = fields[id];
-        if (typeof v === "string" && v.trim()) next = setTranslation(next, key(slot, id), lang, v.trim());
-      }
-      setI18n(next);
+      const j = (await r.json()) as { ok?: boolean };
+      if (!j?.ok) { setNote(labels.trFailed); return false; }
       setNote(labels.trDone);
+      return true;
     } catch {
       setNote(labels.trFailed);
-    } finally {
-      setBusyId(null);
+      return false;
     }
   }
 
@@ -451,7 +459,7 @@ export function NavEditor(
               <Button
                 size="sm" variant="ghost" className="h-6 px-1" title={labels.translateOne}
                 disabled={busyId === item.id || langs.length < 2}
-                onClick={() => translate(item.id, child ? item.label : items[index].label)}
+                onClick={() => setTranslating({ id: item.id, label: child ? item.label : items[index].label })}
               >
                 {busyId === item.id
                   ? <Loader2 className="size-3.5 animate-spin" />
@@ -554,6 +562,25 @@ export function NavEditor(
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* 🔒 ИНСТРУМЕНТ, А НЕ САМОДЕЛКА (шаг 529). Здесь кнопка перевода звала
+          дверь напрямую и печатала строчку текста: ни выбора языка, ни правки
+          руками, ни сохранения по одному языку. Общий инструмент всё это уже
+          умел — его просто негде было найти. */}
+      {translating && (
+        <TranslationsDialog
+          open
+          onOpenChange={(o) => { if (!o) setTranslating(null); }}
+          baseLang={base}
+          uiLang={base}
+          langs={langs}
+          fields={[{ key: translating.id, label: translating.label, value: translating.label }]}
+          ui={labels.translations}
+          apiUrl="/api/config/nav/translate"
+          openAiHref="../openai"
+          onSave={(drafts) => saveTranslations(translating.id, drafts)}
+        />
+      )}
 
       <Dialog open={deleting !== null} onOpenChange={(o) => !o && setDeleting(null)}>
         <DialogContent className="max-w-md">

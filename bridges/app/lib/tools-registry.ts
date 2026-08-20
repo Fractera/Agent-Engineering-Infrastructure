@@ -18,7 +18,7 @@
 // рантайме. Панель можно выключить — установленный инструмент продолжит
 // работать.
 
-export type ToolId = "image-crop" | "video-trim" | "voice-input" | "code-view";
+export type ToolId = "image-crop" | "video-trim" | "voice-input" | "code-view" | "translations-dialog";
 
 export type ToolNeed = "browser" | "openai-key" | "https" | "ffmpeg";
 
@@ -88,6 +88,19 @@ export const TOOLS: Tool[] = [
     // языков, и подсветку без них не сделать. В панели он уже стоит; в проекте
     // владельца его придётся поставить, и страница говорит об этом до установки.
     npmDeps: ["shiki"],
+  },
+  {
+    id: "translations-dialog",
+    dir: "_tools/translations-dialog",
+    files: [
+      "client/translations-dialog.client.tsx",
+      "client/translation-cell.client.tsx",
+      "client/use-translations.ts",
+      "types/translations.ts",
+    ],
+    needs: ["browser", "openai-key"],
+    usedBy: ["top-menu", "footer-pages"],
+    npmDeps: [],
   },
 ];
 

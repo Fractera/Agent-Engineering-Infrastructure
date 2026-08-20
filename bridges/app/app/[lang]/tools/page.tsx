@@ -14,7 +14,7 @@
 // Динамическая: состояние установки живое.
 
 import Link from "next/link";
-import { Crop, Scissors, Mic, Code2, PackagePlus, ChevronRight, type LucideIcon } from "lucide-react";
+import { Crop, Scissors, Mic, Code2, Languages, PackagePlus, ChevronRight, type LucideIcon } from "lucide-react";
 import { getAdminStrings } from "@/lib/i18n/admin-strings";
 import { PageShell } from "../_components/page-shell";
 import { HelpDetails } from "../_components/help-details";
@@ -28,6 +28,7 @@ const ICONS: Record<ToolId, LucideIcon> = {
   "video-trim": Scissors,
   "voice-input": Mic,
   "code-view": Code2,
+  "translations-dialog": Languages,
 };
 
 export default async function ToolsPage({ params }: { params: Promise<{ lang: string }> }) {

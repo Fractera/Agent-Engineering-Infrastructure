@@ -825,6 +825,17 @@ export type AdminStrings = {
     buildTitle: string; buildBody: string;
     buildToGithub: string; buildToEnv: string;
   };
+  // Слова ОБЩЕГО инструмента переводов (`_tools/translations-dialog`, шаг 529).
+  // Живут отдельной веткой, а не внутри `topMenu`: инструмент подключается любой
+  // сущностью с переводимыми полями, и держать его словарь внутри одного раздела
+  // значило бы заставить следующего вызывающего импортировать чужие слова.
+  translationsTool: {
+    title: string; intro: string;
+    translateTab: string; translateAllTabs: string; translating: string;
+    saveOne: string; saving: string; saved: string; savedMark: string;
+    close: string; hint: string;
+    noKey: string; badKey: string; upstream: string; keyLink: string;
+  };
   topMenu: {
     // Скрыть из меню и удалить страницу — разные судьбы, разные слова (шаг 527).
     hideTitle: string; hideDialogTitle: string; hideDialogBody: string; hideConfirm: string;
@@ -910,7 +921,7 @@ export type AdminStrings = {
     docParam: string; docType: string; docRequired: string; docAbout: string;
     docYes: string; docNo: string; docReturns: string;
     needs: Record<"browser" | "openai-key" | "https" | "ffmpeg", string>;
-    items: Record<"image-crop" | "video-trim" | "voice-input" | "code-view", { title: string; body: string }>;
+    items: Record<"image-crop" | "video-trim" | "voice-input" | "code-view" | "translations-dialog", { title: string; body: string }>;
     helpLabel: string;
     helpCopyTitle: string; helpCopy: string;
     helpWhereTitle: string; helpWhere: string;

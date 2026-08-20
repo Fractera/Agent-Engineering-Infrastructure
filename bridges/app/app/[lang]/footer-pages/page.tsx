@@ -109,6 +109,7 @@ export default async function FooterPagesPage({ params }: { params: Promise<{ la
           deleteDialogBody: s.topMenu.deleteDialogBody, deleteConfirm: s.topMenu.deleteConfirm,
           deleteRebuild: s.topMenu.deleteRebuild, deleteDone: s.topMenu.deleteDone,
           deleteFailed: s.topMenu.deleteFailed, cancel: s.topMenu.cancel,
+          translations: s.translationsTool,
         }}
       />
     </PageShell>

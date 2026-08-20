@@ -64,6 +64,7 @@ const ICONS: Record<AdminPageSlug, LucideIcon> = {
   "tool-image-crop": Crop,
   "tool-video-trim": Scissors,
   "tool-voice-input": Mic,
+  "tool-translations-dialog": Languages,
   "tool-code-view": Code2,
   "add-tool": PackagePlus,
   export: Download,

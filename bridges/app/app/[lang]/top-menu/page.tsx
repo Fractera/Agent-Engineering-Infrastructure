@@ -65,6 +65,7 @@ export default async function TopMenuPage({ params }: { params: Promise<{ lang: 
           deleteDialogBody: t.deleteDialogBody, deleteConfirm: t.deleteConfirm,
           deleteRebuild: t.deleteRebuild, deleteDone: t.deleteDone,
           deleteFailed: t.deleteFailed, cancel: t.cancel,
+          translations: s.translationsTool,
         }}
       />
     </PageShell>
