@@ -342,9 +342,14 @@ export function NavEditor(
           На узком экране колонки становятся одна под другой: дерево первым,
           потому что с него работа и начинается. */}
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        <section className="rounded-lg border border-border p-2">
+        {/* 🔒 ЛЕВАЯ КОЛОНКА НЕ ТЯНЕТСЯ ЗА СЕТКОЙ (владелец, шаг 527). Без
+            `self-start` она растягивалась до высоты правой и оставляла под
+            списком пустое поле в пол-экрана — правая колонка уезжала вниз, и до
+            кнопок было не добраться. Потолок 400 пикселей с прокруткой: список
+            страниц растёт, а разметка раздела от этого меняться не должна. */}
+        <section className="max-h-[400px] self-start overflow-hidden rounded-lg border border-border p-2">
           <p className="mb-1 px-1 text-[10px] uppercase tracking-wide text-muted-foreground">{labels.candidates}</p>
-          <div className="max-h-[26rem] overflow-y-auto">
+          <div className="max-h-[360px] overflow-y-auto">
             <RouteTree
               nodes={available}
               used={used}
