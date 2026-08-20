@@ -33,13 +33,26 @@ export type LegacySocial = {
 };
 
 /**
+ * Значение внутри адреса: кодируем ТОЛЬКО то, что действительно опасно.
+ *
+ * 🔒 `encodeURIComponent` ЛОМАЕТ НОМЕРА ТЕЛЕФОНОВ (найдено замером 2026-08-21).
+ * Она считает небезопасным `+`, хотя в пути он законен, и превращает его в
+ * `%2B`: номер `+79161234567` становился адресом `wa.me/%2B79161234567` —
+ * ссылка выглядит правильной и не работает. Пострадала бы любая сеть, где
+ * значение это номер, а не псевдоним.
+ */
+function encodeValue(v: string): string {
+  return encodeURIComponent(v).replace(/%2B/g, "+").replace(/%40/g, "@");
+}
+
+/**
  * Готовый адрес записи. ОБЯЗАН совпадать с `socialHref` слота дословно: здесь он
  * рисует предпросмотр, а по нему владелец решает, та ли это ссылка.
  */
 export function socialHref(link: SocialLink): string {
   const v = (link.value ?? "").trim().replace(/^@/, "");
   if (!link.urlTemplate?.includes("{value}")) return link.urlTemplate ?? "";
-  return link.urlTemplate.replace("{value}", encodeURIComponent(v));
+  return link.urlTemplate.replace("{value}", encodeValue(v));
 }
 
 /**

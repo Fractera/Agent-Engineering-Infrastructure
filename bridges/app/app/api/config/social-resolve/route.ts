@@ -44,6 +44,19 @@ function classify(code: number | null): Outcome {
   return "closed";
 }
 
+/**
+ * Значение внутри адреса: кодируем ТОЛЬКО то, что действительно опасно.
+ *
+ * 🔒 `encodeURIComponent` ЛОМАЕТ НОМЕРА ТЕЛЕФОНОВ (найдено замером 2026-08-21).
+ * Она считает небезопасным `+`, хотя в пути он законен, и превращает его в
+ * `%2B`: номер `+79161234567` становился адресом `wa.me/%2B79161234567` —
+ * ссылка выглядит правильной и не работает. Пострадала бы любая сеть, где
+ * значение это номер, а не псевдоним.
+ */
+function encodeValue(v: string): string {
+  return encodeURIComponent(v).replace(/%2B/g, "+").replace(/%40/g, "@");
+}
+
 async function probe(url: string): Promise<Candidate["code"]> {
   try {
     const res = await fetch(url, {
@@ -128,12 +141,20 @@ export async function POST(req: NextRequest) {
 
   // Кандидаты проверяются ПАРАЛЛЕЛЬНО и с потолком: пять адресов по шесть секунд
   // последовательно — это полминуты ожидания у человека, который сказал одну фразу.
-  const raw = Array.isArray(proposal.candidates) ? proposal.candidates.slice(0, 5) : [];
+  // 🔒 ДУБЛИ УБИРАЮТСЯ ДО ПРОВЕРКИ (замер 2026-08-21). Модель на номере телефона
+  // вернула `79161234567` дважды: пять «вариантов написания» превратились в четыре,
+  // и человек читал один и тот же адрес в двух строках, ища между ними разницу.
+  // Заодно это экономит лишний поход в сеть.
+  const raw = [...new Set(
+    (Array.isArray(proposal.candidates) ? proposal.candidates : [])
+      .map((v) => String(v).trim().replace(/^@/, ""))
+      .filter(Boolean),
+  )].slice(0, 5);
   const candidates: Candidate[] = await Promise.all(
     raw.map(async (value) => {
-      const v = String(value).trim().replace(/^@/, "");
+      const v = value;
       const url = proposal.urlTemplate.includes("{value}")
-        ? proposal.urlTemplate.replace("{value}", encodeURIComponent(v))
+        ? proposal.urlTemplate.replace("{value}", encodeValue(v))
         : proposal.urlTemplate;
       const code = await probe(url);
       return { value: v, url, outcome: classify(code), code };
