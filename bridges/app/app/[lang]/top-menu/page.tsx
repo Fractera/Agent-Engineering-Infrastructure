@@ -15,7 +15,7 @@
 import { getAdminStrings } from "@/lib/i18n/admin-strings";
 import { PageShell } from "../_components/page-shell";
 import { NavEditor } from "../_components/nav/nav-editor.client";
-import { readNav, readNavI18n, publicRouteTree } from "@/lib/nav-editor/server";
+import { readNav, readNavI18n, publicRouteTree, slotTopDefaults } from "@/lib/nav-editor/server";
 import { slotLanguages } from "@/lib/slot-languages";
 
 export const dynamic = "force-dynamic";
@@ -27,6 +27,13 @@ export default async function TopMenuPage({ params }: { params: Promise<{ lang: 
   const t = s.topMenu;
   const slot = slotLanguages();
 
+  // 🔒 ПАНЕЛЬ ПОКАЗЫВАЕТ ШАПКУ, КОТОРУЮ ВИДИТ ПОСЕТИТЕЛЬ (шаг 528). Ветки
+  // `nav.top` нет — значит меню собирают манифесты групп проекта, и на сайте
+  // сейчас стоят «Продукты» и «Блог». Панель до этого показывала пустой список и
+  // предлагала управлять пустотой — тот же дефект, что был у подвала.
+  const nav = readNav("top");
+  const initial = nav.configured ? nav : { ...nav, items: slotTopDefaults(slot.base) };
+
   return (
     <PageShell lang={lang} slug="top-menu" s={s} title={page.title} hint={page.hint}>
       <div className="mb-3 rounded-lg border border-blue-500/30 bg-blue-500/5 p-3 text-[11px] leading-relaxed text-blue-700 dark:text-blue-300">
@@ -37,7 +44,7 @@ export default async function TopMenuPage({ params }: { params: Promise<{ lang: 
       <NavEditor
         slot="top"
         showAuthSide
-        initial={readNav("top")}
+        initial={initial}
         tree={publicRouteTree()}
         langs={slot.langs}
         base={slot.base}

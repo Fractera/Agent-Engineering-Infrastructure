@@ -148,6 +148,67 @@ function titleFrom(dirPath: string, segment: string): string {
 }
 
 /**
+ * Умолчания ВЕРХНЕГО меню — то, что показывает шапка сайта, пока владелец не
+ * высказался.
+ *
+ * 🔒 У ДВУХ СЛОТОВ РАЗНЫЕ ИСТОЧНИКИ УМОЛЧАНИЙ, и это не небрежность. Подвал
+ * держит список в одном месте (`DEFAULT_FOOTER`), а верхнее меню собирается из
+ * МАНИФЕСТОВ ГРУПП: каждая группа сама объявляет, идёт ли она в шапку и с каким
+ * порядком (`_data/group.ts` → `menus.top.enabled/order`). Спрашивать про
+ * верхнее меню там же, где про подвал, значит получить пустоту и решить, что
+ * меню пусто, — ровно та ошибка, из-за которой панель показывала «ссылок нет»
+ * при живом меню на сайте.
+ *
+ * 🔒 ГЛУБИНА НЕ УГАДЫВАЕТСЯ. Манифесты лежат внутри слоёв — например
+ * `app/[lang]/(publicLayer)/products/_data/group.ts`. Поиск по фиксированной
+ * глубине уже дважды за день давал «ничего не найдено» там, где всё на месте.
+ */
+export function slotTopDefaults(lang: string): NavItem[] {
+  const found: { slug: string; dir: string; order: number }[] = [];
+
+  const scan = (dir: string, depth: number): void => {
+    if (depth > 4) return;
+    let entries: fs.Dirent[];
+    try {
+      entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const e of entries) {
+      if (!e.isDirectory() || e.name.startsWith(".")) continue;
+      if (e.name.includes("protected")) continue;
+      const child = path.join(dir, e.name);
+      const manifest = path.join(child, "_data", "group.ts");
+      if (fs.existsSync(manifest)) {
+        const src = (() => { try { return fs.readFileSync(manifest, "utf-8"); } catch { return ""; } })();
+        const slug = src.match(/slug:\s*['"]([^'"]+)['"]/)?.[1] ?? e.name;
+        const top = src.match(/top:\s*\{\s*enabled:\s*(true|false)\s*,\s*order:\s*(\d+)/);
+        if (top?.[1] === "true") found.push({ slug, dir: child, order: Number(top[2]) });
+      }
+      if (e.name.startsWith("_")) continue; // служебные папки внутрь не ведут
+      scan(child, depth + 1);
+    }
+  };
+  scan(LANG_ROOT, 0);
+
+  // Подпись — та же, что рисует сайт: `eyebrow` языковой ячейки, затем
+  // английской, затем сам слаг человеческим написанием.
+  const labelOf = (dir: string, slug: string): string => {
+    for (const l of [lang, "en"]) {
+      try {
+        const m = fs.readFileSync(path.join(dir, "_data", `${l}.ts`), "utf-8").match(/eyebrow:\s*['"]([^'"]+)['"]/);
+        if (m?.[1]) return m[1];
+      } catch { /* ячейки нет — идём дальше */ }
+    }
+    return slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  };
+
+  return found
+    .sort((a, b) => a.order - b.order || a.slug.localeCompare(b.slug))
+    .map((g, i) => ({ id: g.slug, href: `/${g.slug}`, order: (i + 1) * 10, label: labelOf(g.dir, g.slug) }));
+}
+
+/**
  * Собрать ДЕРЕВО маршрутов, повторяющее структуру папок.
  *
  * 🔒 ДЕРЕВО, А НЕ ПЛОСКИЙ СПИСОК (решение владельца 2026-08-12). Плоский
