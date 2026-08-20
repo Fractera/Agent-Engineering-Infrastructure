@@ -19,6 +19,8 @@
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { getAdminStrings, isAdminLanguage, adminLanguages } from "@/lib/i18n/admin-strings";
+import { headers } from "next/headers";
+import { sessionUser } from "@/lib/require-auth";
 import { collectWarnings } from "@/lib/admin-warnings";
 import { AdminHeader } from "./_components/admin-header";
 import { AdminFooter } from "./_components/admin-footer";
@@ -80,6 +82,43 @@ export default async function AdminLangLayout(
   // одновременно, иначе одно из них врёт.
   const warnings = collectWarnings();
 
+  // 🔒 КТО СЕЙЧАС В ПАНЕЛИ — ЭТО ОБЯЗАН ВИДЕТЬ ВЛАДЕЛЕЦ (шаг 520, 2026-08-20).
+  //
+  // У ящика панели не было подвала с личностью, и это стоило дорого: обход
+  // авторизации нашли на гостевом сайте, где ящик показывает, кто ты, а в самой
+  // панели смотреть было НЕ НА ЧТО — владелец не мог ответить на вопрос «под кем
+  // я здесь». Слова для подвала (`signOut`, `registerAccount`) лежали в словаре
+  // с пометкой «account footer of the settings drawer» и не читались ни одним
+  // компонентом: подвал был задуман и не построен.
+  //
+  // Считается ЗДЕСЬ и уезжает пропсом — тем же приёмом, что предупреждения:
+  // шапка остаётся синхронной, а личность резолвится один раз на страницу.
+  // Отказ не имеет права уронить панель: не узнали — покажем «войти».
+  //
+  // Адреса входа и выхода собираются ЗДЕСЬ по той же причине, по которой их
+  // собирает прокси гостевого приложения: слой авторизации живёт на другом
+  // источнике (в защищённом режиме — на своём поддомене) и не может вывести наш
+  // адрес сам. Поэтому обратный адрес прикладывается явно и считается из
+  // заголовков запроса, а не из конфига: сервер отвечает на том адресе, на
+  // котором его спросили.
+  let account: { email?: string; roles?: string[] } | null = null;
+  let signOutHref = "";
+  let signInHref = "";
+  try {
+    const h = await headers();
+    account = await sessionUser(h.get("cookie") ?? "");
+    const host = h.get("x-forwarded-host") ?? h.get("host") ?? "";
+    const proto = h.get("x-forwarded-proto") ?? "https";
+    const authUrl = process.env.AUTH_SERVICE_URL ?? process.env.NEXT_PUBLIC_AUTH_URL ?? "";
+    if (authUrl && host) {
+      const back = encodeURIComponent(`${proto}://${host}/${lang}`);
+      signOutHref = `${authUrl}/logout?redirectUrl=${back}`;
+      signInHref = `${authUrl}/login?redirectUrl=${back}`;
+    }
+  } catch {
+    account = null;
+  }
+
   return (
     <div className="flex h-full flex-col bg-background text-foreground">
       {/* Тема ставится ДО первой отрисовки, иначе тёмная панель мигнёт белым на
@@ -117,7 +156,7 @@ export default async function AdminLangLayout(
             "sbw();window.addEventListener('resize',sbw);window.addEventListener('load',sbw);})();",
         }}
       />
-      <AdminHeader lang={lang} s={s} warnings={warnings} />
+      <AdminHeader lang={lang} s={s} warnings={warnings} account={account} signOutHref={signOutHref} signInHref={signInHref} />
       {/* Прокручивается содержимое, а не страница: тело документа держит
           h-screen overflow-hidden, поэтому подвал остаётся на месте. */}
       <main className="min-h-0 flex-1 overflow-y-auto">{children}</main>

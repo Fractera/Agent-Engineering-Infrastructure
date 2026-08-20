@@ -17,7 +17,7 @@
 
 import Link from "next/link";
 import {
-  Menu, Globe, X as XIcon, Palette, Languages, Columns3, SlidersHorizontal, PanelTop, PanelBottom,
+  Menu, Globe, X as XIcon, LogOut, Palette, Languages, Columns3, SlidersHorizontal, PanelTop, PanelBottom,
   Cookie, Users, ImagePlus, Database, BrainCircuit, Brain, Map as MapIcon, Download, Upload,
   Link2, KeyRound, MessagesSquare, Sparkles, GitBranch, Info, History, Settings, BookOpen,
   HelpCircle, PackagePlus, FileText, Target, Boxes, Wrench, Network, BookMarked, GraduationCap,
@@ -110,7 +110,15 @@ const ICONS: Record<AdminPageSlug, LucideIcon> = {
 const MENU_ID = "admin-menu-toggle";
 
 export function AdminHeader(
-  { lang, s, warnings }: { lang: string; s: AdminStrings; warnings: AdminWarning[] },
+  { lang, s, warnings, account, signOutHref, signInHref }: {
+    lang: string;
+    s: AdminStrings;
+    warnings: AdminWarning[];
+    /** Кто сейчас в панели. Считает макет — см. комментарий там (шаг 520). */
+    account?: { email?: string; roles?: string[] } | null;
+    signOutHref?: string;
+    signInHref?: string;
+  },
 ) {
   // 🔴 ЦВЕТ ДОХОДИТ ДО САМОГО ПУНКТА (владелец 2026-08-15).
   //
@@ -319,6 +327,51 @@ export function AdminHeader(
               </div>
             </div>
           ))}
+        </div>
+
+        {/* 🔒 ПОДВАЛ ЯЩИКА — КТО ТЫ И КАК ВЫЙТИ (шаг 520, 2026-08-20).
+            Дыру с обходом авторизации нашли на гостевом сайте именно потому, что
+            там ящик показывает личность. В панели показывать было нечего, и
+            владелец не мог ответить на вопрос «под кем я здесь».
+
+            Ни строчки JS: адрес — текст, выход — обычная ссылка. Ящик работает на
+            CSS-переключателях, и клиентский островок сломал бы его без JS.
+
+            `<a>`, а не `next/link`: адрес ведёт на ДРУГОЙ источник — слой
+            авторизации. У гостя предзагрузка такой ссылки давала девять ошибок
+            CORS на страницу, и лечилось это `prefetch={false}`; здесь предзагрузки
+            нет вовсе, потому что обычная ссылка её и не делает. */}
+        <div className="shrink-0 border-t border-border px-3 py-2">
+          {account?.email ? (
+            <>
+              <div
+                className="flex items-center gap-2 pb-1.5"
+                title={account.roles?.length ? account.roles.join(", ") : undefined}
+              >
+                <UserRound size={12} className="shrink-0 text-muted-foreground" />
+                <span className="truncate text-[11px] text-foreground">{account.email}</span>
+              </div>
+              {signOutHref && (
+                <a
+                  href={signOutHref}
+                  className="flex items-center gap-2 rounded px-2 py-1.5 text-[11px] text-muted-foreground hover:bg-muted hover:text-foreground"
+                >
+                  <LogOut size={12} className="shrink-0" />
+                  <span className="truncate">{s.signOut}</span>
+                </a>
+              )}
+            </>
+          ) : (
+            signInHref && (
+              <a
+                href={signInHref}
+                className="flex items-center gap-2 rounded px-2 py-1.5 text-[11px] text-muted-foreground hover:bg-muted hover:text-foreground"
+              >
+                <UserRound size={12} className="shrink-0" />
+                <span className="truncate">{s.signIn}</span>
+              </a>
+            )
+          )}
         </div>
       </nav>
 

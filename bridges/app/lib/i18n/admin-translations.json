@@ -808,7 +808,8 @@
         "context-state": "An unfinished session is recorded — read it before building, or clear it",
         "dev-browser": "The agent cannot see the result of its work: console errors, behaviour without JS and the service worker are invisible in source.",
         "dev-claude-code": "Claude Code is not marked as installed — there is nobody to write the code this panel configures.",
-        "dev-editor": "No editor is marked as installed — you have nowhere to see your project as a whole."
+        "dev-editor": "No editor is marked as installed — you have nowhere to see your project as a whole.",
+        "auth-bypass": "Auth bypass is live in secure mode — site, panel and data are open to anyone"
       }
     },
     "contextState": {
@@ -1181,7 +1182,8 @@
         "context-state": "Read the unfinished session",
         "dev-browser": "Give the agent eyes in the browser",
         "dev-claude-code": "Install Claude Code on your machine",
-        "dev-editor": "Install Visual Studio Code on your machine"
+        "dev-editor": "Install Visual Studio Code on your machine",
+        "auth-bypass": "Close the auth bypass"
       },
       "howToBuild": "How to build this project",
       "stateUnknown": "project state",
@@ -4031,7 +4033,8 @@
         "context-state": "Записана незавершённая сессия — прочитайте её перед работой или очистите",
         "dev-browser": "Агент не видит результат своей работы: ошибки в консоли, поведение без JS и сервис-воркер в исходниках не видны.",
         "dev-claude-code": "Claude Code не отмечен как установленный — писать код, который настраивает эта панель, некому.",
-        "dev-editor": "Редактор не отмечен как установленный — вам негде увидеть проект целиком."
+        "dev-editor": "Редактор не отмечен как установленный — вам негде увидеть проект целиком.",
+        "auth-bypass": "Обход авторизации активен в защищённом режиме — сайт, панель и данные открыты любому"
       }
     },
     "contextState": {
@@ -4404,7 +4407,8 @@
         "context-state": "Прочитайте незавершённую сессию",
         "dev-browser": "Дайте агенту глаза в браузере",
         "dev-claude-code": "Поставьте Claude Code на свою машину",
-        "dev-editor": "Поставьте Visual Studio Code на свою машину"
+        "dev-editor": "Поставьте Visual Studio Code на свою машину",
+        "auth-bypass": "Закройте обход авторизации"
       },
       "howToBuild": "Как построить этот проект",
       "stateUnknown": "состояние проекта",

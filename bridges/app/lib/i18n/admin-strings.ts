@@ -69,6 +69,8 @@ export type AdminStrings = {
      */
     warnCta: {
       languages: string; github: string; "env-local": string; mode: string; products: string; openai: string; domain: string;
+      /** Обход авторизации жив при защищённом режиме — открытая дверь, а не незаконченная настройка (шаг 520). */
+      "auth-bypass": string;
  "dev-browser": string;
       "dev-claude-code": string; "dev-editor": string;
     };
@@ -534,6 +536,8 @@ export type AdminStrings = {
     title: string;
     items: {
       languages: string; github: string; "env-local": string; mode: string; products: string; openai: string; domain: string;
+      /** Обход авторизации жив при защищённом режиме — открытая дверь, а не незаконченная настройка (шаг 520). */
+      "auth-bypass": string;
  "dev-browser": string;
       "dev-claude-code": string; "dev-editor": string;
     };

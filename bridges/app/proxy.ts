@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { shouldBypassAuth } from "@/lib/auth-bypass";
+import { shouldBypassAuthEdge } from "@/lib/auth-bypass.edge";
 
 const AUTH_SERVICE = process.env.AUTH_SERVICE_URL ?? "http://localhost:3001";
 
@@ -32,7 +32,7 @@ function publicCallbackUrl(req: NextRequest): string {
 }
 
 export async function proxy(req: NextRequest) {
-  if (shouldBypassAuth()) {
+  if (shouldBypassAuthEdge()) {
     return NextResponse.next();
   }
 

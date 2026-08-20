@@ -8,7 +8,7 @@ import { readEnvFile, writeEnvFile } from "@/lib/env-file";
 import { writeNginxForDomain, readStoredCertExpiry } from "../route";
 import { lockdownFirewall } from "@/lib/firewall";
 import { rewriteAppAddresses } from "@/lib/public-app-url";
-import { RESTART_AUTH_AND_DATA } from "@/lib/pm2-restart";
+import { restartAuthAndData } from "@/lib/pm2-restart";
 
 const SECRETS_FILE = "/etc/fractera/secrets.env";
 // Stable custom host (not *.vercel.app): lets L1 migrate off Vercel by
@@ -136,7 +136,7 @@ function pm2ReloadAllDetached(delayMs = 800): void {
   setTimeout(() => {
     const child = spawn(
       "sh",
-      ["-c", `${RESTART_AUTH_AND_DATA}; pm2 reload all`],
+      ["-c", `${restartAuthAndData()}; pm2 reload all`],
       { detached: true, stdio: "ignore" },
     );
     child.unref();

@@ -34,6 +34,9 @@ export type WarningLevel = "blocking" | "advised";
 export type AdminWarning = {
   id:
     | "languages" | "github" | "env-local" | "mode" | "products" | "openai" | "domain"
+    // Обход авторизации жив при защищённом режиме — единственная запись,
+    // говорящая не о незаконченной настройке, а об открытой двери.
+    | "auth-bypass"
     // Инструменты разработки — по одному на каждый, в порядке владельца
     // (2026-08-14): сначала то, без чего обойтись можно, последним — то, без
     // чего нельзя.
@@ -42,6 +45,83 @@ export type AdminWarning = {
   /** Куда ведёт запись — то самое «основное место» настройки. */
   slug: AdminPageSlug;
 };
+
+// 🔒 ОБХОД АВТОРИЗАЦИИ ЖИВ, ХОТЯ РЕЖИМ ЗАЩИЩЁННЫЙ (шаг 520, 2026-08-20).
+//
+// ЗАЧЕМ ЭТА ЗАПИСЬ. 2026-08-20 на живом сервере весь контур был открыт интернету:
+// `auth /api/session` без единой куки отдавал `demo@local` с ролью `architect`,
+// `data /db/tables` — таблицы. Файлы окружения на диске при этом честно
+// содержали `false`, панель была зелёной, брандмауэр закрыт. Единственный, кто
+// знал правду, — сам процесс: `pm2 restart --update-env` записал в него старое
+// значение, унаследованное от панели.
+//
+// ПОЭТОМУ ПРОВЕРЯЕТСЯ ПРОЦЕСС, А НЕ ФАЙЛ. Сравнивать файл с файлом бессмысленно:
+// в тот день оба говорили правильное. Смотрим в ДРУГУЮ плоскость — в окружение
+// живых служб через `/proc/<pid>/environ`.
+//
+// Синхронно и молча терпит отказ — как все проверки этого файла. Настоящая
+// проверка поведением (запрос к службе без куки) была бы сильнее, но она
+// асинхронная, а шапка панели зовёт всё это на КАЖДОЙ странице.
+//
+// Результат живёт полминуты: обход не появляется сам по себе, а обход процессов
+// стоит дороже чтения файла.
+const BYPASS_LEAK_TTL_MS = 30_000;
+let bypassLeakCache: { at: number; value: boolean } = { at: 0, value: false };
+
+function fileSaysSecure(): boolean {
+  try {
+    const m = fs.readFileSync(APP_ENV, "utf-8").match(/^FRACTERA_IP_NODOMAIN_MODE=(.*)$/m);
+    return m ? m[1].trim().replace(/^["']|["']$/g, "") !== "true" : false;
+  } catch {
+    return false;
+  }
+}
+
+function processSaysBypass(pid: string): boolean {
+  try {
+    const line = fs
+      .readFileSync(`/proc/${pid}/environ`, "utf-8")
+      .split("\0")
+      .find((v) => v.startsWith("FRACTERA_IP_NODOMAIN_MODE="));
+    return line ? line.slice("FRACTERA_IP_NODOMAIN_MODE=".length) === "true" : false;
+  } catch {
+    return false;
+  }
+}
+
+function authBypassLeaking(): boolean {
+  const now = Date.now();
+  if (now - bypassLeakCache.at < BYPASS_LEAK_TTL_MS) return bypassLeakCache.value;
+
+  let value = false;
+  try {
+    if (fileSaysSecure()) {
+      // Службы опознаются по рабочему каталогу, а не по строке запуска: у службы
+      // авторизации это `next-server`, у слоя данных `node server.js` — общего в
+      // командах нет, а каталог называет службу однозначно.
+      const WATCHED = ["/opt/fractera/services/auth", "/opt/fractera/services/data"];
+      for (const pid of fs.readdirSync("/proc")) {
+        if (!/^\d+$/.test(pid)) continue;
+        let cwd: string;
+        try {
+          cwd = fs.readlinkSync(`/proc/${pid}/cwd`);
+        } catch {
+          continue;
+        }
+        if (!WATCHED.includes(cwd)) continue;
+        if (processSaysBypass(pid)) {
+          value = true;
+          break;
+        }
+      }
+    }
+  } catch {
+    value = false; // не смогли посмотреть — молчим, а не пугаем
+  }
+
+  bypassLeakCache = { at: now, value };
+  return value;
+}
 
 function envHas(file: string, key: string): boolean {
   try {
@@ -107,6 +187,15 @@ export function warningsBySlug(warnings: AdminWarning[]): Map<AdminPageSlug, Slu
 
 export function collectWarnings(): AdminWarning[] {
   const out: AdminWarning[] = [];
+
+  // 🔒 ПЕРВОЙ — ОТКРЫТАЯ ДВЕРЬ, А НЕ НЕЗАКОНЧЕННАЯ НАСТРОЙКА (шаг 520).
+  //
+  // Все остальные записи говорят «ты ещё не сделал»; эта — «твой сервер сейчас
+  // открыт постороннему». Она обязана стоять выше любой настройки, потому что
+  // пока она горит, всё остальное делается на виду у всего интернета.
+  if (authBypassLeaking()) {
+    out.push({ id: "auth-bypass", level: "blocking", slug: "domain" });
+  }
 
   // Красные — без них разработка не начинается.
   //

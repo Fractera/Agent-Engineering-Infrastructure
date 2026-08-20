@@ -5,6 +5,7 @@ import { spawn } from "child_process";
 import { requireAuth } from "@/lib/require-auth";
 import { readEnvFile, writeEnvFile } from "@/lib/env-file";
 import { openFirewall } from "@/lib/firewall";
+import { restartAuthAndData } from "@/lib/pm2-restart";
 
 // Reverse of /activate — switch the project back to IP / demo mode.
 // Prefer restoring the exact pre-activation env snapshot the activate flow
@@ -91,8 +92,16 @@ export async function POST(req: NextRequest) {
   }
 
   // Detached: this reload restarts fractera-admin (this process) too.
+  //
+  // 🔒 ОБРАТНЫЙ ПЕРЕХОД ЛЕЧИТСЯ ТЕМ ЖЕ, ЧЕМ ПРЯМОЙ (шаг 520, 2026-08-20). Здесь
+  // стоял только `pm2 reload all`, и после возврата в IP-режим службы продолжали
+  // жить с прежним `false` в памяти: `dotenv` не переписывает то, что уже есть в
+  // `process.env`. Ошибка зеркальная к дыре, ради которой заведён шаг, — не пускает
+  // там, где онбординг обязан пускать. Сегодня решение принимает файл, поэтому
+  // строка ниже уже не единственная защита, но окружение процесса обязано совпадать
+  // с файлом: расхождение однажды снова станет чьим-то расследованием на полдня.
   setTimeout(() => {
-    spawn("sh", ["-c", "pm2 reload all"], { detached: true, stdio: "ignore" }).unref();
+    spawn("sh", ["-c", `${restartAuthAndData()}; pm2 reload all`], { detached: true, stdio: "ignore" }).unref();
   }, 500);
 
   return NextResponse.json({ ok: true, restoredFrom: backupDir ?? "in-place", reloading: true });
