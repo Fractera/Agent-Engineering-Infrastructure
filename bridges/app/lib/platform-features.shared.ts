@@ -60,7 +60,7 @@ export const FEATURE_DEFAULTS: Record<FeatureKey, boolean> = {
   footerPages: true,
   cookieBanner: false,
   offlineCache: true,
-  auth: false,
+  auth: true,
   breadcrumbs: false,
   faq: false,
   themeToggle: true,
