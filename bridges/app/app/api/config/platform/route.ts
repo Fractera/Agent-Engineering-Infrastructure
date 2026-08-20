@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import { requireAuth } from "@/lib/require-auth";
+import { revalidateShell } from "@/lib/revalidate-shell";
 
 // Read/write the Shell's live PLATFORM config (parallel routing / languages / theme). The
 // config is a JSON file on disk in the Shell's working dir
@@ -39,6 +40,13 @@ export async function POST(req: NextRequest) {
     }
     fs.mkdirSync(path.dirname(CONFIG_PATH), { recursive: true });
     fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2), "utf-8");
+
+    // 🔒 БЕЗ ЭТОЙ СТРОКИ ВЫКЛЮЧАТЕЛЬ ВЫГЛЯДИТ СЛОМАННЫМ (шаг 522, 2026-08-20).
+    // Запись легла на диск, приложение читает конфиг в рантайме — но публичные
+    // страницы статические с ISR, и до истечения окна отдают прежний HTML.
+    // Владелец щёлкает, смотрит и видит, что ничего не изменилось. Замер: панель
+    // записала `auth: false` в 19:20, страница отдавала вход ещё в 19:23.
+    revalidateShell("app-features-panel");
 
     // Выключатели ИНСТРУКЦИЙ живут в своём маршруте (`/api/config/instructions`):
     // одно их переключение делает три вещи разом — флаг, управляемая область в

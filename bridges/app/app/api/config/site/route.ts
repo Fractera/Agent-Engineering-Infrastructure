@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 import { requireAuth } from "@/lib/require-auth";
 import { applyDerivedAddresses } from "@/lib/public-app-url";
+import { revalidateShell } from "@/lib/revalidate-shell";
 
 // Read/write the Shell's live site config (branding / SEO / PWA / images). The config is a
 // JSON file on disk in the Shell's working dir (/opt/fractera/app/APP-CONFIG/app-config.json),
@@ -17,20 +18,7 @@ const CONFIG_PATH =
 // the next page load instead of waiting out revalidate=600. Same trigger the App Settings
 // MCP fires — both write paths behave identically. Fire-and-forget: never fail/delay the
 // save. The Shell pages stay static; this only purges cache. → step 134 part C.
-function revalidateShell() {
-  const url = process.env.SHELL_REVALIDATE_URL ?? "http://127.0.0.1:3000/api/revalidate";
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-    "x-agent-identity": "app-settings-panel",
-  };
-  const sec = process.env.REVALIDATE_SECRET;
-  if (sec) headers.Authorization = `Bearer ${sec}`;
-  try {
-    void fetch(url, { method: "POST", headers, body: "{}" }).catch(() => {});
-  } catch {
-    /* ignore */
-  }
-}
+
 
 export async function GET(req: NextRequest) {
   const ok = await requireAuth(req.headers.get("cookie") ?? "");
@@ -113,7 +101,7 @@ export async function POST(req: NextRequest) {
     const withAddresses = applyDerivedAddresses(preserved);
     fs.mkdirSync(path.dirname(CONFIG_PATH), { recursive: true });
     fs.writeFileSync(CONFIG_PATH, JSON.stringify(withAddresses, null, 2), "utf-8");
-    revalidateShell(); // purge the Shell's ISR cache → change shows on next load
+    revalidateShell("app-settings-panel"); // purge the Shell's ISR cache → change shows on next load
     return NextResponse.json({ ok: true });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });

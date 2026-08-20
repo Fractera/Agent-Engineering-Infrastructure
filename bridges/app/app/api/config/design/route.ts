@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import { requireAuth } from "@/lib/require-auth";
+import { revalidateShell } from "@/lib/revalidate-shell";
 
 // Живое ОФОРМЛЕНИЕ гостевого приложения: цвета, шрифты, шкала текста, формы.
 //
@@ -31,20 +32,6 @@ const CONFIG_PATH =
  * Ошибка отправки намеренно не роняет сохранение: настройка уже на диске, и
  * худшее, что случится, — она появится в свой срок, а не сейчас.
  */
-function revalidateShell() {
-  const url = process.env.SHELL_REVALIDATE_URL ?? "http://127.0.0.1:3000/api/revalidate";
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-    "x-agent-identity": "design-panel",
-  };
-  const sec = process.env.REVALIDATE_SECRET;
-  if (sec) headers.Authorization = `Bearer ${sec}`;
-  try {
-    void fetch(url, { method: "POST", headers, body: "{}" }).catch(() => {});
-  } catch {
-    /* ignore */
-  }
-}
 
 /** Убрать пустые значения и пустые ветки — см. закон выше. */
 function prune(value: unknown): unknown {
@@ -109,7 +96,7 @@ export async function POST(req: NextRequest) {
 
     fs.mkdirSync(path.dirname(CONFIG_PATH), { recursive: true });
     fs.writeFileSync(CONFIG_PATH, JSON.stringify(next, null, 2) + "\n", "utf-8");
-    revalidateShell(); // сбросить кэш гостя → изменение видно на следующей загрузке
+    revalidateShell("design-panel"); // сбросить кэш гостя → изменение видно на следующей загрузке
 
     return NextResponse.json({ ok: true, config: next });
   } catch (e) {
