@@ -469,7 +469,11 @@ export function NavEditor(
               <Button
                 size="sm" variant="ghost" className="group/eye h-6 px-1" title={labels.hideTitle}
                 aria-label={`${labels.hideTitle}: ${shown(item)}`}
-                onClick={() => setHiding({ index, id: item.id, child, label: shown(item), href: item.href ?? "" })}
+                // Второй диалог закрывается: два вопроса разом человек читает
+                // как один и отвечает наугад. Подложка мешает открыть их мышью,
+                // но полагаться на неё нельзя — состояние обязано быть верным
+                // само по себе.
+                onClick={() => { setDeleting(null); setHiding({ index, id: item.id, child, label: shown(item), href: item.href ?? "" }); }}
               >
                 <Eye className="size-3.5 group-hover/eye:hidden" />
                 <EyeOff className="hidden size-3.5 group-hover/eye:block" />
@@ -483,7 +487,7 @@ export function NavEditor(
                   size="sm" variant="ghost" className="h-6 px-1 text-destructive hover:text-destructive"
                   title={labels.deleteTitle}
                   aria-label={`${labels.deleteTitle}: ${shown(item)}`}
-                  onClick={() => setDeleting({ index, id: item.id, label: shown(item), href: item.href ?? "" })}
+                  onClick={() => { setHiding(null); setDeleting({ index, id: item.id, label: shown(item), href: item.href ?? "" }); }}
                 >
                   <Trash2 className="size-3.5" />
                 </Button>
