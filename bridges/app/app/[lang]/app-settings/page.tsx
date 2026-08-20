@@ -47,11 +47,15 @@ export default async function AppSettingsPage({ params }: { params: Promise<{ la
           initial={state.config}
           slotLangs={state.slotLangs}
           slotDefault={state.slotDefault}
+          lang={lang}
           labels={{
             save: a.save, saving: a.saving, saved: a.saved,
             failed: a.failed, nothingToSave: a.nothingToSave,
             perLangHint: a.perLangHint, translated: a.translated,
             notTranslated: a.notTranslated, baseLang: a.baseLang,
+            // Словарь резолвится ЗДЕСЬ, на сервере, и уезжает островку пропсами:
+            // 82 языка × ~600 ключей в браузер не отправляются никогда.
+            socials: a.socials,
           }}
         />
       </div>

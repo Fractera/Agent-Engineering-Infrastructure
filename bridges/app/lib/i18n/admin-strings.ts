@@ -1126,6 +1126,18 @@ export type AdminStrings = {
     helpNoDeployTitle: string; helpNoDeploy: string;
     helpLangTitle: string; helpLang: string;
     helpAgentTitle: string; helpAgent: string;
+    // Конструктор соцсетей (шаг 523). Слова живут ЗДЕСЬ, а не в компоненте:
+    // компонент клиентский, а словарь на 82 языка в браузер не уезжает никогда.
+    socials: {
+      phraseLabel: string; phrasePlaceholder: string; phraseHint: string;
+      recognize: string; recognizing: string;
+      noKey: string; unknownNetwork: string; modelFailed: string;
+      candidates: string; ownValue: string; add: string;
+      outcomeExists: string; outcomeAbsent: string; outcomeClosed: string; outcomeHint: string;
+      empty: string; remove: string; valueLabel: string;
+      manualTitle: string; manualName: string; manualTemplate: string; manualValue: string;
+      iconFailed: string; legacyNotice: string;
+    };
   };
   database: {
     noTables: string; empty: string; unavailable: string; rowsShown: string; noIdColumn: string;

@@ -29,7 +29,9 @@ export type FieldType =
   | "switch"
   | "select"
   | "image"
-  | "icons";
+  | "icons"
+  /** Конструктор соцсетей: список записей, а не поле ввода (шаг 523). */
+  | "socials";
 
 export type Field = {
   /** Значение зависит от языка (шаг 501). Остальные поля — общие для всех языков. */
@@ -130,14 +132,19 @@ export const SECTIONS: Section[] = [
       { path: "author.facebook", label: "Facebook", type: "text" },
     ],
   },
+  // 🔒 ЧЕТЫРЕ ПОЛЯ ВВОДА ЗАМЕНЕНЫ КОНСТРУКТОРОМ (шаг 523). Здесь стояли
+  // `seo.social.{twitter,github,linkedin,facebook}` — закрытый набор, в который
+  // пятая сеть не добавлялась вовсе, и свободное поле не знало правила сборки
+  // адреса: владелец вводил псевдоним и получал нерабочую ссылку молча.
+  //
+  // Сами ключи `seo.social` НЕ УДАЛЕНЫ и не чистятся при сохранении: их читает
+  // карточка Twitter слота (`construct-metadata.ts`), и они же остаются
+  // источником для проектов, где конструктор ещё не открывали.
   {
     title: "Social profiles",
     description: "Linked from OG/Twitter cards and Organization sameAs.",
     fields: [
-      { path: "seo.social.twitter", label: "Twitter", type: "text", placeholder: "@handle or URL" },
-      { path: "seo.social.github", label: "GitHub", type: "text" },
-      { path: "seo.social.linkedin", label: "LinkedIn", type: "text" },
-      { path: "seo.social.facebook", label: "Facebook", type: "text" },
+      { path: "seo.socialLinks", label: "Social networks", type: "socials" },
     ],
   },
   {

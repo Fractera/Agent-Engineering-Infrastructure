@@ -23,18 +23,23 @@ import { Button } from "@/components/ui/button";
 import { SECTIONS, getAt, setAt, dropRemovedFields, type Field } from "../_lib/fields";
 import { valueForLang, hasTranslation, setTranslation, type I18nMap } from "@/lib/per-lang";
 import { FieldRow } from "./field-row.client";
+import { SocialsField, type SocialsLabels } from "./socials-field.client";
+import type { SocialLink, LegacySocial } from "../_lib/socials";
 import type { AppConfig } from "../_lib/settings";
 
 export type EditorLabels = {
   save: string; saving: string; saved: string; failed: string; nothingToSave: string;
   perLangHint: string; translated: string; notTranslated: string; baseLang: string;
+  socials: SocialsLabels;
 };
 
 export function SettingsEditor(
-  { initial, slotLangs, slotDefault, labels }: {
+  { initial, slotLangs, slotDefault, lang, labels }: {
     initial: AppConfig;
     slotLangs: string[];
     slotDefault: string;
+    /** Язык ПАНЕЛИ — на нём говорит владелец, и на нём же он диктует фразу. */
+    lang: string;
     labels: EditorLabels;
   },
 ) {
@@ -92,6 +97,27 @@ export function SettingsEditor(
   }
 
   function renderField(field: Field) {
+    // 🔒 КОНСТРУКТОР СОЦСЕТЕЙ ВИДИТ БОЛЬШЕ ОДНОГО ПОЛЯ, и поэтому он здесь, а не
+    // в `FieldRow`. Ему нужны ДВА места конфига разом: открытый список
+    // `seo.socialLinks` и четыре исторических ключа `seo.social`. Без второго он
+    // показал бы пустой список при четырёх живых ссылках в подвале — то есть
+    // соврал бы владельцу ровно в тот момент, когда тот пришёл их править.
+    if (field.type === "socials") {
+      const seo = (config.seo ?? {}) as { social?: LegacySocial; socialLinks?: SocialLink[] };
+      return (
+        <div key={field.path} className="flex flex-col gap-1.5">
+          <span className="text-[11px] text-foreground">{field.label}</span>
+          <SocialsField
+            links={seo.socialLinks}
+            legacy={seo.social}
+            lang={lang}
+            labels={labels.socials}
+            onChange={(next) => update(field.path, next)}
+          />
+        </div>
+      );
+    }
+
     if (!field.perLang) {
       return (
         <FieldRow
