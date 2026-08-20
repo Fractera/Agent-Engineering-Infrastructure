@@ -7,6 +7,7 @@ import { valueForLang, hasTranslation, setTranslation, type I18nMap } from "@/li
 import type { NavItem, NavState, NavSlot, RouteNode } from "@/lib/nav-editor/types";
 import { LangStrip } from "./lang-strip.client";
 import { RouteTree } from "./route-tree.client";
+import { readDraggedRoute, hasDraggedRoute } from "./dnd";
 
 // Островок настройки МЕНЮ — общий для верхней полосы и подвала (2026-08-12).
 //
@@ -55,6 +56,8 @@ export function NavEditor(
   const [items, setItems] = useState<NavItem[]>(initial.items);
   const [authSide, setAuthSide] = useState<"left" | "right">(initial.authSide);
   const [drag, setDrag] = useState<number | null>(null);
+  /** Тащат страницу НАД правой колонкой — подсвечиваем цель. */
+  const [over, setOver] = useState(false);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [editLang, setEditLang] = useState(base);
@@ -93,13 +96,47 @@ export function NavEditor(
     commit([...items, { id: rid(), href, order: 0, label: title }]);
   }
 
-  function drop(to: number) {
+  /** Вставить страницу из левой колонки на конкретное место. */
+  function addAt(to: number, href: string, title: string) {
+    // Повтор молча игнорируется: галочка в левой колонке уже сказала, что
+    // страница добавлена, и второй такой же пункт был бы просто дублем.
+    if (used.has(href)) return;
+    const next = [...items];
+    next.splice(Math.max(0, Math.min(to, items.length)), 0, { id: rid(), href, order: 0, label: title });
+    commit(next);
+  }
+
+  /**
+   * Отпустили на пункте с номером `to`.
+   *
+   * 🔒 ДВА РАЗНЫХ ПЕРЕТАСКИВАНИЯ, И РАЗЛИЧАЕТ ИХ НАГРУЗКА, А НЕ СОСТОЯНИЕ
+   * (шаг 525). Слева едет НОВАЯ страница — она приходит в `dataTransfer` под
+   * своим типом. Внутри колонки едет уже стоящий пункт — у него нагрузки нет,
+   * есть только запомненный номер. Спрашиваем нагрузку первой: перетаскивание
+   * извне может случиться и тогда, когда `drag` остался от прошлого раза.
+   */
+  function drop(to: number, dt?: DataTransfer) {
+    const incoming = dt ? readDraggedRoute(dt) : null;
+    if (incoming) {
+      setDrag(null);
+      addAt(to, incoming.href, incoming.title);
+      return;
+    }
     if (drag === null || drag === to) return;
     const next = [...items];
     const [moved] = next.splice(drag, 1);
     next.splice(to, 0, moved);
     setDrag(null);
     commit(next);
+  }
+
+  /** Отпустили мимо пунктов — страница встаёт в конец списка. */
+  function dropAtEnd(dt: DataTransfer) {
+    const incoming = readDraggedRoute(dt);
+    setOver(false);
+    if (!incoming) return;
+    setDrag(null);
+    addAt(items.length, incoming.href, incoming.title);
   }
 
   // Пункт становится ребёнком предыдущего — так вкладка превращается в группу.
@@ -234,7 +271,29 @@ export function NavEditor(
         {editLang !== base && <p className="text-[10px] text-amber-600 dark:text-amber-400">{labels.langHint}</p>}
       </div>
 
-      <div>
+      {/* 🔒 ПРИНИМАЕТ ВСЯ КОЛОНКА, А НЕ ТОЛЬКО СТРОКИ (шаг 525). Человек тащит
+          страницу «в подвал», а не «между второй и третьей кнопкой»: требовать
+          попадания в узкую строку — значит сделать перетаскивание игрой на
+          точность. Отпустил мимо пунктов — страница встаёт в конец.
+
+          `onDragOver` с `preventDefault` обязателен: без него браузер считает
+          цель непринимающей и события `drop` не будет вовсе — перетаскивание
+          выглядит сломанным, хотя обработчик написан. */}
+      <div
+        onDragOver={(e) => {
+          if (!hasDraggedRoute(e.dataTransfer)) return;
+          e.preventDefault();
+          e.dataTransfer.dropEffect = "copy";
+          setOver(true);
+        }}
+        onDragLeave={(e) => {
+          // Уход к ребёнку — не уход из колонки: без этой проверки подсветка
+          // мигает на каждой строке, через которую проносят страницу.
+          if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setOver(false);
+        }}
+        onDrop={(e) => { e.preventDefault(); dropAtEnd(e.dataTransfer); }}
+        className={`rounded-lg transition-colors ${over ? "bg-primary/5 outline outline-2 outline-dashed outline-primary/40" : ""}`}
+      >
         <p className="text-[10px] text-muted-foreground mb-1">{labels.dragHint}</p>
         {flat.length === 0 && (
           <div className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-xs text-muted-foreground">
@@ -248,7 +307,15 @@ export function NavEditor(
               draggable={!child}
               onDragStart={() => !child && setDrag(index)}
               onDragOver={(e) => e.preventDefault()}
-              onDrop={() => !child && drop(index)}
+              // Строка ловит отпускание раньше колонки, поэтому здесь и решается
+              // МЕСТО вставки. `stopPropagation` — чтобы колонка не добавила ту
+              // же страницу второй раз, уже в конец.
+              onDrop={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setOver(false);
+                if (!child) drop(index, e.dataTransfer);
+              }}
               className={`flex items-center gap-2 rounded-lg border border-border bg-card px-2 py-1.5 ${child ? "ml-8" : ""}`}
             >
               {child ? <CornerDownRight className="size-3.5 text-muted-foreground shrink-0" />

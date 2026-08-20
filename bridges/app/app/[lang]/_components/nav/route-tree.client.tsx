@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ChevronRight, Plus, Check, FileText, Folder } from "lucide-react";
 import type { RouteNode } from "@/lib/nav-editor/types";
+import { DND_ROUTE } from "./dnd";
 
 // Дерево публичных маршрутов — карта сайта, по которой собирают меню.
 //
@@ -53,9 +54,26 @@ function TreeRow(
   const hasChildren = node.children.length > 0;
   const added = node.href !== null && used.has(node.href);
 
+  // 🔒 ТАЩИТЬ МОЖНО ТОЛЬКО НАСТОЯЩУЮ И ЕЩЁ НЕ ДОБАВЛЕННУЮ СТРАНИЦУ (шаг 525).
+  // Папка без своей страницы адреса не имеет — пункт меню из неё вёл бы в никуда.
+  // Уже добавленная не тащится, потому что дважды одна страница в меню не стоит:
+  // иначе человек перетащил бы её второй раз и увидел бы, что ничего не
+  // произошло, — молчаливый отказ вместо запрета.
+  const canDrag = node.href !== null && !added;
+
   return (
     <li>
-      <div className="group flex items-center gap-1 rounded px-1 py-0.5 hover:bg-muted/60">
+      <div
+        draggable={canDrag}
+        onDragStart={(e) => {
+          if (!canDrag) return;
+          e.dataTransfer.setData(DND_ROUTE, JSON.stringify({ href: node.href, title: node.title }));
+          // Копирование, а не перемещение: страница остаётся в списке доступных
+          // и после добавления — она никуда из проекта не делась.
+          e.dataTransfer.effectAllowed = "copy";
+        }}
+        className={`group flex items-center gap-1 rounded px-1 py-0.5 hover:bg-muted/60 ${canDrag ? "cursor-grab active:cursor-grabbing" : ""}`}
+      >
         {hasChildren ? (
           <button
             type="button"
