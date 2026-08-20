@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { modeFlagForChildProcess } from "@/lib/auth-bypass";
 
 // Как панель перезапускает СОСЕДНИЕ службы (найдено живьём 2026-08-19).
@@ -40,10 +41,57 @@ import { modeFlagForChildProcess } from "@/lib/auth-bypass";
 // Функция, а не константа: значение вычисляется в момент вызова. Константа здесь
 // означала бы снимок, сделанный при загрузке модуля, — ровно тот класс ошибки,
 // который мы и лечим.
+// 🔒 ОКРУЖЕНИЕ ПАНЕЛИ НЕ ИМЕЕТ ПРАВА ЕХАТЬ В СОСЕДНЮЮ СЛУЖБУ (2026-08-20, куплено
+// вторым подряд провалом входа на свежем сервере).
+//
+// ЧТО ПРОИСХОДИЛО. Владелец привязывал домен, панель честно писала
+// `AUTH_TRUST_HOST=true` в `services/auth/.env.local` — и вход отвечал «Server
+// error. There is a problem with the server configuration». В журнале —
+// `UntrustedHost`, то есть NextAuth этой переменной НЕ ВИДЕЛ.
+//
+// Причина: `--update-env` берёт окружение зовущего, а зовёт процесс ПАНЕЛИ. Панель
+// — приложение Next, и в её окружении стоит сентинел `@next/env`
+// `__NEXT_PROCESSED_ENV=true`. Он уезжает в службу авторизации, та стартует, видит
+// сентинел и РЕШАЕТ, ЧТО ОКРУЖЕНИЕ УЖЕ РАЗОБРАНО, — свой `.env.local` не читает
+// вовсе. Проверено на живом сервере: в `/proc/<pid>/environ` службы авторизации
+// стоял и сентинел, и `PWD=/opt/fractera/bridges/app`, и ещё восемь переменных
+// панели, а `AUTH_TRUST_HOST` отсутствовал.
+//
+// Это ТОТ ЖЕ класс, что шаг 143 (сборка слота запекала пустые значения), и
+// лечится тем же приёмом — `slotBuildEnv()` в `api/deploy/route.ts`: снять
+// сентинел и вычистить ключи, которые цель объявляет сама.
+//
+// 🔒 ПОЧЕМУ И `env -u`, И ЯВНОЕ ПУСТОЕ ЗНАЧЕНИЕ. `env -u` убирает переменную у
+// того, кто зовёт pm2, — этого хватает для свежей машины. Но pm2 ХРАНИТ окружение
+// процесса и при `--update-env` дополняет его, а не заменяет: однажды записанный
+// сентинел пережил бы такой перезапуск. Явное `__NEXT_PROCESSED_ENV=` пишет пустую
+// строку — она ложна, и `@next/env` читает файл заново. Тот же довод, что у `PORT`
+// абзацем выше: помогает только явное значение.
+function cleanRestart(proc: string, port: number, envFile: string, mode: string): string {
+  // Ключи, которые служба объявляет сама, — их значения обязаны прийти из ЕЁ файла,
+  // а не из окружения панели.
+  let unsets = "";
+  try {
+    const declared = new Set<string>();
+    for (const line of readFileSync(envFile, "utf8").split("\n")) {
+      const m = /^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=/.exec(line);
+      if (m) declared.add(m[1]);
+    }
+    unsets = [...declared].map((k) => `-u ${k}`).join(" ");
+  } catch {
+    // Файла нет — служба поднимется на умолчаниях, это не повод не перезапускать.
+  }
+  return (
+    `env ${unsets} -u __NEXT_PROCESSED_ENV -u PWD ` +
+    `__NEXT_PROCESSED_ENV= FRACTERA_IP_NODOMAIN_MODE=${mode} PORT=${port} ` +
+    `pm2 restart ${proc} --update-env`
+  );
+}
+
 export function restartAuthAndData(): string {
   const mode = modeFlagForChildProcess();
   return (
-    `FRACTERA_IP_NODOMAIN_MODE=${mode} PORT=3300 pm2 restart fractera-data --update-env; ` +
-    `FRACTERA_IP_NODOMAIN_MODE=${mode} PORT=3001 pm2 restart fractera-auth --update-env`
+    `${cleanRestart("fractera-data", 3300, "/opt/fractera/services/data/.env", mode)}; ` +
+    `${cleanRestart("fractera-auth", 3001, "/opt/fractera/services/auth/.env.local", mode)}`
   );
 }
