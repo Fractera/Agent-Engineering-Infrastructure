@@ -19,7 +19,8 @@ export type FeatureKey =
   | "topMenu"
   | "footerPages"
   | "cookieBanner"
-  | "offlineCache";
+  | "offlineCache"
+  | "socials";
 
 // 🔒 «Передача сессии» ЗДЕСЬ НЕ ЖИВЁТ (владелец, 2026-08-10). Эта страница — про
 // то, что приложение предлагает ПОСЕТИТЕЛЮ; передача контекста к посетителю
@@ -51,7 +52,7 @@ export type EditableFeatureKey = Exclude<FeatureKey, "offlineCache">;
 /** Порядок = порядок на странице. Управляющие возможности идут первыми. */
 export const FEATURE_ORDER: EditableFeatureKey[] = [
   "topMenu", "footerPages", "cookieBanner",
-  "auth", "breadcrumbs", "faq", "themeToggle", "widthToggle", "languageSwitcher",
+  "auth", "breadcrumbs", "faq", "themeToggle", "widthToggle", "languageSwitcher", "socials",
 ];
 
 /** Состояние проекта, который ещё ни разу не настраивали. */
@@ -66,6 +67,9 @@ export const FEATURE_DEFAULTS: Record<FeatureKey, boolean> = {
   themeToggle: true,
   widthToggle: true,
   languageSwitcher: true,
+  // Одиннадцатый (шаг 523). Видимость блока соцсетей — вопрос НАЛИЧИЯ возможности
+  // и живёт здесь; какие сети и адреса — вопрос APP-CONFIG.
+  socials: true,
 };
 
 /**

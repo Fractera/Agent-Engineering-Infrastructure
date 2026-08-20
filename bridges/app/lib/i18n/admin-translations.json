@@ -783,6 +783,10 @@
         "languageSwitcher": {
           "label": "Language switcher in the footer",
           "description": "Lets a visitor pick the language themselves instead of taking the browser's guess — and keeps it on every page that follows."
+        },
+        "socials": {
+          "label": "Social links in the footer",
+          "description": "The row of social icons at the bottom of the site. Which networks and which profiles is a separate setting — App settings; here you decide whether the row exists at all."
         }
       },
       "helpLabel": "Why configure from here at all",
@@ -4008,6 +4012,10 @@
         "languageSwitcher": {
           "label": "Переключатель языка в подвале",
           "description": "Позволяет посетителю выбрать язык самому, а не принимать догадку браузера, и сохраняет выбор на всех следующих страницах."
+        },
+        "socials": {
+          "label": "Соцсети в подвале",
+          "description": "Ряд значков соцсетей внизу сайта. Какие это сети и какие профили — отдельная настройка, «Настройки приложения»; здесь решается, есть ли этот ряд вообще."
         }
       },
       "helpLabel": "Зачем вообще настраивать отсюда",

@@ -438,7 +438,7 @@ export type AdminStrings = {
     // переезда, пережил бы сам переезд и позвал бы следующего вернуть пункт.
     items: Record<
       "auth" | "breadcrumbs" | "faq" | "themeToggle" | "widthToggle" | "languageSwitcher"
-      | "topMenu" | "footerPages" | "cookieBanner",
+      | "topMenu" | "footerPages" | "cookieBanner" | "socials",
       { label: string; description: string }
     >;
     helpLabel: string;
