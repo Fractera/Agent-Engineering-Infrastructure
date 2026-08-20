@@ -19,7 +19,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { getAdminStrings } from "@/lib/i18n/admin-strings";
 import { PageShell } from "../_components/page-shell";
 import { NavEditor } from "../_components/nav/nav-editor.client";
-import { readNav, readNavI18n, groupRouteTree } from "@/lib/nav-editor/server";
+import { readNav, readNavI18n, groupRouteTree, slotFooterDefaults } from "@/lib/nav-editor/server";
 import { slotLanguages } from "@/lib/slot-languages";
 
 export const dynamic = "force-dynamic";
@@ -30,6 +30,15 @@ export default async function FooterPagesPage({ params }: { params: Promise<{ la
   const page = s.pages["footer-pages"];
   const t = s.footerPages;
   const slot = slotLanguages();
+
+  // 🔒 ПАНЕЛЬ ПОКАЗЫВАЕТ ТО, ЧТО ВИДИТ ПОСЕТИТЕЛЬ, А НЕ СВОЙ КОНФИГ (шаг 526).
+  // Владелец конструктора не открывал — ветки `nav.footer` нет, и сайт рисует
+  // умолчания шаблона. Панель до этого показывала «Ссылок пока нет» при живых
+  // ссылках внизу сайта: раздел предлагал управлять пустотой и терял смысл.
+  // Теперь правая колонка начинается с того же списка и в том же порядке;
+  // первое же сохранение делает его собственным списком владельца.
+  const nav = readNav("footer");
+  const initial = nav.configured ? nav : { ...nav, items: slotFooterDefaults() };
 
   return (
     <PageShell lang={lang} slug="footer-pages" s={s} title={page.title} hint={page.hint}>
@@ -76,7 +85,7 @@ export default async function FooterPagesPage({ params }: { params: Promise<{ la
 
       <NavEditor
         slot="footer"
-        initial={readNav("footer")}
+        initial={initial}
         tree={groupRouteTree("footerPages")}
         langs={slot.langs}
         base={slot.base}

@@ -51,6 +51,8 @@ function TreeRow(
   // Первый уровень раскрыт сразу: закрытое дерево на входе прячет ровно ту
   // карту, ради которой человек сюда пришёл.
   const [open, setOpen] = useState(depth === 0);
+  /** Эту строку сейчас тащат — она обязана оставаться заметной всю дорогу. */
+  const [dragging, setDragging] = useState(false);
   const hasChildren = node.children.length > 0;
   const added = node.href !== null && used.has(node.href);
 
@@ -71,8 +73,21 @@ function TreeRow(
           // Копирование, а не перемещение: страница остаётся в списке доступных
           // и после добавления — она никуда из проекта не делась.
           e.dataTransfer.effectAllowed = "copy";
+          setDragging(true);
         }}
-        className={`group flex items-center gap-1 rounded px-1 py-0.5 hover:bg-muted/60 ${canDrag ? "cursor-grab active:cursor-grabbing" : ""}`}
+        onDragEnd={() => setDragging(false)}
+        // 🔒 ЗАХВАЧЕННАЯ СТРОКА ВИДНА ОДНОЗНАЧНО (владелец, шаг 526). Наведение
+        // давало лишь чуть более серый фон, и на белом это неотличимо от
+        // ничего: человек не понимал, взял он страницу или промахнулся. Теперь
+        // при наведении строка получает рамку и ручку захвата, а во время
+        // перетаскивания — полный цвет, чтобы взгляд не терял её на пути.
+        className={`group flex items-center gap-1 rounded border px-1 py-0.5 transition-all ${
+          dragging
+            ? "border-primary bg-primary/20 opacity-60"
+            : canDrag
+              ? "cursor-grab border-transparent hover:border-primary/60 hover:bg-primary/10 active:cursor-grabbing"
+              : "border-transparent hover:bg-muted/60"
+        }`}
       >
         {hasChildren ? (
           <button

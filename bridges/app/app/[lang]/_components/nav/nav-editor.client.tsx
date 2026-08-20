@@ -83,13 +83,40 @@ export function NavEditor(
     return editLang === base ? item.label : valueForLang("", i18n, key(slot, item.id), editLang);
   }
 
+  /**
+   * Левая колонка — то, что ЕЩЁ НЕ стоит в меню.
+   *
+   * 🔒 ПОСТАВЛЕННАЯ СТРАНИЦА ИЗ ЛЕВОЙ КОЛОНКИ УХОДИТ (владелец, шаг 526). Раньше
+   * она оставалась там с галочкой, и две колонки показывали одно и то же:
+   * человек искал глазами, что ещё можно добавить, среди уже добавленного.
+   * Колонки отвечают на разные вопросы — «что доступно» и «что стоит», — и
+   * пересекаться их содержимое не должно.
+   *
+   * Папка остаётся, пока внутри есть хоть одна недобавленная страница: убрать
+   * её вместе с последним ребёнком значит спрятать ветку карты сайта.
+   */
+  function prune(nodes: RouteNode[]): RouteNode[] {
+    const out: RouteNode[] = [];
+    for (const n of nodes) {
+      const children = prune(n.children);
+      const taken = n.href !== null && used.has(n.href);
+      if (taken && children.length === 0) continue;
+      out.push(taken ? { ...n, href: null, children } : { ...n, children });
+    }
+    return out;
+  }
+  const available = prune(tree);
+
   const flat = items.flatMap((it, i) => [
     { item: it, index: i, child: false },
     ...(it.children ?? []).map((c) => ({ item: c as NavItem, index: i, child: true })),
   ]);
 
-  function commit(next: NavItem[]) {
-    setItems(next.map((it, i) => ({ ...it, order: (i + 1) * 10 })));
+  function commit(next: NavItem[], opts?: { persist?: boolean }) {
+    const ordered = next.map((it, i) => ({ ...it, order: (i + 1) * 10 }));
+    setItems(ordered);
+    // Записываем УЖЕ пересчитанный список: у состояния он появится позже.
+    if (opts?.persist) void persist(ordered);
   }
 
   function add(href: string, title: string) {
@@ -127,7 +154,12 @@ export function NavEditor(
     const [moved] = next.splice(drag, 1);
     next.splice(to, 0, moved);
     setDrag(null);
-    commit(next);
+    // 🔒 ПЕРЕСТАНОВКА СОХРАНЯЕТСЯ САМА (владелец, шаг 526). Порядок — это то,
+    // что человек проверяет глазами на сайте, и заставлять его после каждого
+    // перетаскивания искать кнопку значит превращать проверку в обряд. Кнопка
+    // остаётся для добавления: перенос страницы слева направо — решение, а не
+    // подгонка, и подтвердить его правильно.
+    commit(next, { persist: true });
   }
 
   /** Отпустили мимо пунктов — страница встаёт в конец списка. */
@@ -223,12 +255,24 @@ export function NavEditor(
   }
 
   async function save() {
+    await persist(items);
+  }
+
+  /**
+   * Записать КОНКРЕТНЫЙ список, а не то, что лежит в состоянии.
+   *
+   * 🔒 СПИСОК ПРИХОДИТ АРГУМЕНТОМ (шаг 526). `setItems` применяется не сразу, и
+   * автосохранение сразу после перестановки записало бы ПРЕДЫДУЩИЙ порядок —
+   * то есть отменило бы ровно то движение, которое человек только что сделал.
+   * Ошибка выглядела бы как «перетащил, отпустил, вернулось обратно».
+   */
+  async function persist(list: NavItem[]) {
     setBusy(true); setNote(null);
     try {
       const r = await fetch("/api/config/nav", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slot, nav: { items, authSide }, i18n }),
+        body: JSON.stringify({ slot, nav: { items: list, authSide }, i18n }),
       });
       const j = (await r.json()) as { ok?: boolean; revalidated?: boolean };
       // Честное различие: записано и уже видно / записано и появится в течение
@@ -252,7 +296,7 @@ export function NavEditor(
           <p className="mb-1 px-1 text-[10px] uppercase tracking-wide text-muted-foreground">{labels.candidates}</p>
           <div className="max-h-[26rem] overflow-y-auto">
             <RouteTree
-              nodes={tree}
+              nodes={available}
               used={used}
               onAdd={add}
               labels={{ add: labels.add, already: labels.already, folderOnly: labels.folderOnly }}
@@ -292,7 +336,17 @@ export function NavEditor(
           if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setOver(false);
         }}
         onDrop={(e) => { e.preventDefault(); dropAtEnd(e.dataTransfer); }}
-        className={`rounded-lg transition-colors ${over ? "bg-primary/5 outline outline-2 outline-dashed outline-primary/40" : ""}`}
+        // 🔒 ЦЕЛЬ ПОДСВЕЧИВАЕТСЯ КОНТРАСТНО, А НЕ НАМЁКОМ (владелец, шаг 526).
+        // Здесь была заливка `primary/5` и пунктир `primary/40` — на белом фоне
+        // это чуть более серый прямоугольник. Человек, тащащий страницу, не
+        // понимал, захватил ли он её и куда она упадёт, и отпускал наугад.
+        // Подсказка о попадании обязана читаться в движении, боковым зрением:
+        // сплошная рамка в полный цвет, заметная заливка и приподнятая тень.
+        className={`rounded-lg p-1 transition-all ${
+          over
+            ? "bg-primary/15 ring-2 ring-primary shadow-lg shadow-primary/20"
+            : "ring-2 ring-transparent"
+        }`}
       >
         <p className="text-[10px] text-muted-foreground mb-1">{labels.dragHint}</p>
         {flat.length === 0 && (

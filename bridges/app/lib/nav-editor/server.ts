@@ -28,10 +28,45 @@ function readConfig(): Record<string, unknown> {
 export function readNav(slot: NavSlot): NavState {
   const nav = (readConfig().nav ?? {}) as Record<string, unknown>;
   const side = nav.authSide;
+  const list = nav[slot];
   return {
-    items: Array.isArray(nav[slot]) ? (nav[slot] as NavItem[]) : [],
+    items: Array.isArray(list) ? (list as NavItem[]) : [],
     authSide: side === "left" || side === "right" ? side : "right",
+    configured: Array.isArray(list),
   };
+}
+
+/**
+ * Умолчания подвала — ТЕ ЖЕ, что показывает сайт, пока владелец не высказался.
+ *
+ * 🔒 ЧИТАЮТСЯ ИЗ ИСХОДНИКА СЛОТА, А НЕ ХРАНЯТСЯ КОПИЕЙ. Список живёт в
+ * `lib/menu/nav-config.ts` гостевого приложения. Копия здесь разошлась бы с ним
+ * молча — при первом же изменении шаблона панель начала бы показывать один
+ * подвал, а посетитель видеть другой. Разбор текстом — тот же приём, которым
+ * панель уже достаёт заголовки страниц, и по той же причине: код слота нам не
+ * принадлежит и может не собираться.
+ *
+ * 🔒 ЗАЧЕМ ЭТО ВООБЩЕ НУЖНО. Панель обязана показывать ДЕЙСТВИТЕЛЬНОСТЬ. Пока
+ * она показывала только собственный конфиг, на сайте стояли четыре ссылки, а
+ * раздел писал «Ссылок пока нет» — и предлагал владельцу управлять пустотой.
+ *
+ * Порядок в файле = порядок на сайте, поэтому он сохраняется как есть.
+ */
+export function slotFooterDefaults(): NavItem[] {
+  const src = (() => {
+    try {
+      return fs.readFileSync(path.join(APP_DIR, "lib", "menu", "nav-config.ts"), "utf-8");
+    } catch {
+      return "";
+    }
+  })();
+
+  const block = src.match(/DEFAULT_FOOTER[^=]*=\s*\[([\s\S]*?)\]/)?.[1] ?? "";
+  const items: NavItem[] = [];
+  for (const m of block.matchAll(/\{[^}]*?id:\s*["']([^"']+)["'][^}]*?href:\s*["']([^"']+)["'][^}]*?label:\s*["']([^"']*)["'][^}]*?\}/g)) {
+    items.push({ id: m[1], href: m[2], order: (items.length + 1) * 10, label: m[3] });
+  }
+  return items;
 }
 
 /**
@@ -53,7 +88,16 @@ export function readNavI18n(): I18nMap {
  * 🔒 Читаем-правим-пишем целиком: файл общий с разделом настроек приложения, и
  * запись одной ветки поверх всего файла стёрла бы имя сайта, SEO и переводы.
  */
-export function writeNav(slot: NavSlot, next: NavState, i18n?: I18nMap): void {
+// 🔒 ЗАПИСЬ ПРИНИМАЕТ МЕНЬШЕ, ЧЕМ ОТДАЁТ ЧТЕНИЕ (шаг 526). `NavState` несёт ещё и
+// `configured` — «высказывался ли владелец». Это ФАКТ О ФАЙЛЕ, вывод чтения, и
+// записывать его нельзя: он появляется сам, ровно в тот момент, когда ветка
+// слота оказывается в файле. Принимать его аргументом значило бы разрешить
+// вызывающему солгать о состоянии диска.
+export function writeNav(
+  slot: NavSlot,
+  next: Pick<NavState, "items" | "authSide">,
+  i18n?: I18nMap,
+): void {
   const config = readConfig();
   config.nav = { ...(config.nav as object ?? {}), [slot]: next.items, authSide: next.authSide };
 
