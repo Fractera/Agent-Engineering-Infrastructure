@@ -6448,5 +6448,965 @@
       "rootStepsTitle": "Чем это построено",
       "rootStepsNaming": "Имя шага — число, тире и шесть-восемь слов: короче — не говорит, что сделано; длиннее — его перестают читать, и шаг узнают по номеру, то есть имя перестаёт работать."
     }
+  },
+  "es": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "El bypass de autenticación está activo en modo seguro: el sitio, el panel y los datos quedan abiertos a cualquiera"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Cerrar el bypass de autenticación"
+      }
+    }
+  },
+  "fr": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Le contournement d'authentification est actif en mode sécurisé : le site, le panneau et les données sont ouverts à tous"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Fermer le contournement d'authentification"
+      }
+    }
+  },
+  "de": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Auth-Bypass ist im sicheren Modus aktiv – Website, Panel und Daten sind für jeden offen"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Auth-Bypass schließen"
+      }
+    }
+  },
+  "it": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Il bypass di autenticazione è attivo in modalità sicura: sito, pannello e dati sono aperti a chiunque"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Chiudi il bypass di autenticazione"
+      }
+    }
+  },
+  "pt": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "O bypass de autenticação está ativo no modo seguro — site, painel e dados estão abertos a qualquer pessoa"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Fechar o bypass de autenticação"
+      }
+    }
+  },
+  "pl": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Obejście autoryzacji jest aktywne w trybie bezpiecznym — strona, panel i dane są dostępne dla każdego"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Zamknij obejście autoryzacji"
+      }
+    }
+  },
+  "tr": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Güvenli modda kimlik doğrulama atlaması etkin — site, panel ve veriler herkese açık"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Kimlik doğrulama atlamasını kapat"
+      }
+    }
+  },
+  "nl": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Auth-bypass is actief in beveiligde modus — site, paneel en data staan open voor iedereen"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Auth-bypass sluiten"
+      }
+    }
+  },
+  "sv": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Kringgåendet av autentisering är aktivt i säkert läge – webbplatsen, panelen och data är öppna för alla"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Stäng kringgåendet av autentisering"
+      }
+    }
+  },
+  "no": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Autentiseringsomgåelsen er aktiv i sikker modus – nettstedet, panelet og dataene er åpne for alle"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Lukk autentiseringsomgåelsen"
+      }
+    }
+  },
+  "da": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Godkendelsesomgåelsen er aktiv i sikker tilstand – webstedet, panelet og data er åbne for alle"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Luk godkendelsesomgåelsen"
+      }
+    }
+  },
+  "fi": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Todennuksen ohitus on käytössä suojatussa tilassa – sivusto, hallintapaneeli ja data ovat avoinna kaikille"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Sulje todennuksen ohitus"
+      }
+    }
+  },
+  "is": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Auðkenningarsniðgangan er virk í öruggri stillingu — vefsíðan, stjórnborðið og gögnin eru opin öllum"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Loka auðkenningarsniðgöngunni"
+      }
+    }
+  },
+  "el": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Η παράκαμψη ελέγχου ταυτότητας είναι ενεργή σε ασφαλή λειτουργία — ο ιστότοπος, ο πίνακας και τα δεδομένα είναι ανοιχτά σε όλους"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Κλείσιμο παράκαμψης ελέγχου ταυτότητας"
+      }
+    }
+  },
+  "cs": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Obcházení ověřování je aktivní v zabezpečeném režimu — web, panel i data jsou otevřené komukoli"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Zavřít obcházení ověřování"
+      }
+    }
+  },
+  "sk": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Obchádzanie overovania je aktívne v zabezpečenom režime — web, panel aj dáta sú otvorené komukoľvek"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Zavrieť obchádzanie overovania"
+      }
+    }
+  },
+  "hu": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "A hitelesítés megkerülése aktív biztonságos módban — az oldal, a panel és az adatok bárki számára nyitva állnak"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Hitelesítés megkerülésének lezárása"
+      }
+    }
+  },
+  "ro": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Ocolirea autentificării este activă în modul securizat — site-ul, panoul și datele sunt deschise oricui"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Închide ocolirea autentificării"
+      }
+    }
+  },
+  "hr": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Zaobilaženje autentifikacije aktivno je u sigurnom načinu rada — stranica, panel i podaci otvoreni su svima"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Zatvori zaobilaženje autentifikacije"
+      }
+    }
+  },
+  "sl": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Obhod avtentikacije je aktiven v varnem načinu — stran, plošča in podatki so odprti vsem"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Zapri obhod avtentikacije"
+      }
+    }
+  },
+  "et": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Autentimise vahelejätmine on turvarežiimis aktiivne — sait, paneel ja andmed on kõigile avatud"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Sulge autentimise vahelejätmine"
+      }
+    }
+  },
+  "lv": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Autentifikācijas apiešana ir aktīva drošajā režīmā — vietne, panelis un dati ir pieejami ikvienam"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Aizvērt autentifikācijas apiešanu"
+      }
+    }
+  },
+  "lt": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Autentifikavimo apėjimas aktyvus saugiu režimu — svetainė, valdymo skydas ir duomenys atviri visiems"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Uždaryti autentifikavimo apėjimą"
+      }
+    }
+  },
+  "mt": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "L-evitar tal-awtentikazzjoni huwa attiv fil-modalità sigura — is-sit, il-pannell u d-dejta huma miftuħa għal kulħadd"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Agħlaq l-evitar tal-awtentikazzjoni"
+      }
+    }
+  },
+  "ca": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "El bypass d'autenticació està actiu en mode segur: el lloc, el tauler i les dades estan oberts a tothom"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Tanca el bypass d'autenticació"
+      }
+    }
+  },
+  "gl": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "O bypass de autenticación está activo en modo seguro: o sitio, o panel e os datos están abertos a calquera"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Pechar o bypass de autenticación"
+      }
+    }
+  },
+  "cy": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Mae osgoi dilysu yn fyw yn y modd diogel — mae'r wefan, y panel a'r data yn agored i unrhyw un"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Cau'r osgoi dilysu"
+      }
+    }
+  },
+  "ga": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Tá seachaint fíordheimhnithe beo sa mhodh slán — tá an suíomh, an painéal agus na sonraí oscailte do chách"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Dún an seachaint fíordheimhnithe"
+      }
+    }
+  },
+  "eu": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Autentifikazioa saihesteko modua aktibo dago modu seguruan — gunea, panela eta datuak edonorentzat irekita daude"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Itxi autentifikazioa saihesteko modua"
+      }
+    }
+  },
+  "uk": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Обхід автентифікації активний у безпечному режимі — сайт, панель і дані відкриті для всіх"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Закрити обхід автентифікації"
+      }
+    }
+  },
+  "be": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Абыход аўтэнтыфікацыі актыўны ў бяспечным рэжыме — сайт, панэль і даныя адкрыты для ўсіх"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Закрыць абыход аўтэнтыфікацыі"
+      }
+    }
+  },
+  "bg": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Заобикалянето на удостоверяването е активно в защитен режим — сайтът, панелът и данните са отворени за всеки"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Затвори заобикалянето на удостоверяването"
+      }
+    }
+  },
+  "sr": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Заобилажење аутентификације је активно у безбедном режиму — сајт, панел и подаци су отворени за све"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Затвори заобилажење аутентификације"
+      }
+    }
+  },
+  "bs": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Zaobilaženje autentifikacije je aktivno u sigurnom režimu — sajt, panel i podaci su otvoreni za sve"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Zatvori zaobilaženje autentifikacije"
+      }
+    }
+  },
+  "mk": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Заобиколувањето на автентикацијата е активно во безбеден режим — сајтот, панелот и податоците се отворени за секого"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Затвори го заобиколувањето на автентикацијата"
+      }
+    }
+  },
+  "sq": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Anashkalimi i vërtetimit është aktiv në modalitetin e sigurt — faqja, paneli dhe të dhënat janë të hapura për këdo"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Mbyll anashkalimin e vërtetimit"
+      }
+    }
+  },
+  "kk": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Аутентификацияны айналып өту қауіпсіз режимде іске қосулы — сайт, панель және деректер кез келгенге ашық"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Аутентификацияны айналып өтуді жабу"
+      }
+    }
+  },
+  "uz": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Autentifikatsiyani chetlab o'tish xavfsiz rejimda faol — sayt, panel va ma'lumotlar hamma uchun ochiq"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Autentifikatsiyani chetlab o'tishni yopish"
+      }
+    }
+  },
+  "ky": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Аутентификацияны айланып өтүү коопсуз режимде күйүк — сайт, панель жана маалыматтар бардыгына ачык"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Аутентификацияны айланып өтүүнү жабуу"
+      }
+    }
+  },
+  "tg": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Гузариш аз аутентификатсия дар реҷаи бехатар фаъол аст — сайт, панел ва додаҳо барои ҳама кушода ҳастанд"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Пӯшидани гузариш аз аутентификатсия"
+      }
+    }
+  },
+  "tk": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Autentifikasiýany dolanmak howpsuz rejimde işjeň — sahypa, panel we maglumatlar hemme kişä açyk"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Autentifikasiýany dolanmagy ýapmak"
+      }
+    }
+  },
+  "az": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Autentifikasiyanın yan keçilməsi təhlükəsiz rejimdə aktivdir — sayt, panel və məlumatlar hər kəsə açıqdır"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Autentifikasiyanın yan keçilməsini bağla"
+      }
+    }
+  },
+  "hy": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Նույնականացման շրջանցումը ակտիվ է անվտանգ ռեժիմում — կայքը, վահանակը և տվյալները բաց են բոլորի համար"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Փակել նույնականացման շրջանցումը"
+      }
+    }
+  },
+  "ka": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "ავთენტიფიკაციის გვერდის ავლა აქტიურია დაცულ რეჟიმში — საიტი, პანელი და მონაცემები ღიაა ყველასთვის"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "ავთენტიფიკაციის გვერდის ავლის დახურვა"
+      }
+    }
+  },
+  "mn": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Нэвтрэлтийг тойрч гарах нь аюулгүй горимд идэвхтэй байна — сайт, удирдлагын самбар, өгөгдөл хэн бүхэнд нээлттэй"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Нэвтрэлтийг тойрч гарахыг хаах"
+      }
+    }
+  },
+  "ar": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "تجاوز المصادقة نشط في الوضع الآمن — الموقع واللوحة والبيانات مفتوحة للجميع"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "إغلاق تجاوز المصادقة"
+      }
+    }
+  },
+  "he": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "עקיפת האימות פעילה במצב מאובטח — האתר, הפאנל והנתונים פתוחים לכל אחד"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "סגור את עקיפת האימות"
+      }
+    }
+  },
+  "fa": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "دور زدن احراز هویت در حالت امن فعال است — سایت، پنل و داده‌ها برای همه باز است"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "بستن دور زدن احراز هویت"
+      }
+    }
+  },
+  "ku": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Derbaskirina rastandinê di moda ewle de çalak e — malper, panel û daneyên ji bo her kesî vekirî ne"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Derbaskirina rastandinê bigire"
+      }
+    }
+  },
+  "af": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Verifikasie-omseiling is aktief in veilige modus — die werf, paneel en data is oop vir enigiemand"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Sluit die verifikasie-omseiling"
+      }
+    }
+  },
+  "sw": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Kupita uthibitishaji kunatumika katika hali salama — tovuti, paneli na data viko wazi kwa mtu yeyote"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Funga kupita uthibitishaji"
+      }
+    }
+  },
+  "ha": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Ƙetare tantancewa yana aiki a yanayin tsaro — shafin, panel da bayanai a buɗe suke ga kowa"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Rufe ƙetare tantancewa"
+      }
+    }
+  },
+  "yo": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Yíyera fún ìfọwọ́sí ń ṣiṣẹ́ ní ipò aabo — ojúewé, pátákò àti dátà wà ní ṣíṣí fún ẹnikẹ́ni"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Ti yíyera fún ìfọwọ́sí"
+      }
+    }
+  },
+  "ig": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Ịgafe nyocha ọ na-arụ ọrụ na ọnọdụ nchekwa — saịtị, panel na data mepere emepe nye onye ọ bụla"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Mechie ịgafe nyocha"
+      }
+    }
+  },
+  "am": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "የማረጋገጫ ማለፊያ በደህንነት ሁነታ ንቁ ነው — ድረ ገጹ፣ ፓነሉ እና ውሂቡ ለሁሉም ክፍት ናቸው"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "የማረጋገጫ ማለፊያውን ዝጋ"
+      }
+    }
+  },
+  "zu": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Ukweqa ukuqinisekiswa kuyasebenza kumodi evikelekile — isayithi, ipheneli nedatha kuvulekele wonke umuntu"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Vala ukweqa ukuqinisekiswa"
+      }
+    }
+  },
+  "xh": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Ukutshipha kokuqinisekiswa kuyasebenza kwimowudi ekhuselekileyo — iwebhusayithi, iphaneli nedatha kuvulekele wonke umntu"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Vala ukutshipha kokuqinisekiswa"
+      }
+    }
+  },
+  "rw": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Kwirenga kwemeza kwakoreshejwe mu buryo bwizewe — urubuga, ikibaho n'amakuru byugukiye buri wese"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Funga kwirenga kwemeza"
+      }
+    }
+  },
+  "so": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Ka gudbidda xaqiijinta ayaa firfircoon habka ammaanka ah — mareegta, gudinta iyo xogta waxay u furan yihiin qof kasta"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Xir ka gudbidda xaqiijinta"
+      }
+    }
+  },
+  "zh": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "身份验证绕过在安全模式下处于启用状态——网站、面板和数据对任何人开放"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "关闭身份验证绕过"
+      }
+    }
+  },
+  "ja": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "セキュアモードで認証バイパスが有効です — サイト、パネル、データが誰にでも公開されています"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "認証バイパスを閉じる"
+      }
+    }
+  },
+  "ko": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "보안 모드에서 인증 우회가 활성화되어 있습니다 — 사이트, 패널, 데이터가 누구에게나 열려 있습니다"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "인증 우회 닫기"
+      }
+    }
+  },
+  "hi": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "सुरक्षित मोड में प्रमाणीकरण बायपास सक्रिय है — साइट, पैनल और डेटा किसी के लिए भी खुले हैं"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "प्रमाणीकरण बायपास बंद करें"
+      }
+    }
+  },
+  "ur": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "محفوظ موڈ میں توثیق بائی پاس فعال ہے — سائٹ، پینل اور ڈیٹا ہر کسی کے لیے کھلے ہیں"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "توثیق بائی پاس بند کریں"
+      }
+    }
+  },
+  "bn": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "নিরাপদ মোডে অথেন্টিকেশন বাইপাস সক্রিয় আছে — সাইট, প্যানেল এবং ডেটা সবার জন্য উন্মুক্ত"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "অথেন্টিকেশন বাইপাস বন্ধ করুন"
+      }
+    }
+  },
+  "te": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "సురక్షిత మోడ్‌లో ప్రామాణీకరణ బైపాస్ యాక్టివ్‌గా ఉంది — సైట్, ప్యానెల్ మరియు డేటా అందరికీ తెరిచి ఉన్నాయి"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "ప్రామాణీకరణ బైపాస్‌ను మూసివేయండి"
+      }
+    }
+  },
+  "mr": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "सुरक्षित मोडमध्ये प्रमाणीकरण बायपास सक्रिय आहे — साइट, पॅनेल आणि डेटा सर्वांसाठी खुले आहेत"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "प्रमाणीकरण बायपास बंद करा"
+      }
+    }
+  },
+  "kn": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "ಸುರಕ್ಷಿತ ಮೋಡ್‌ನಲ್ಲಿ ದೃಢೀಕರಣ ಬೈಪಾಸ್ ಸಕ್ರಿಯವಾಗಿದೆ — ಸೈಟ್, ಪ್ಯಾನೆಲ್ ಮತ್ತು ಡೇಟಾ ಎಲ್ಲರಿಗೂ ತೆರೆದಿವೆ"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "ದೃಢೀಕರಣ ಬೈಪಾಸ್ ಮುಚ್ಚಿ"
+      }
+    }
+  },
+  "gu": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "સુરક્ષિત મોડમાં ઓથેન્ટિકેશન બાયપાસ સક્રિય છે — સાઇટ, પેનલ અને ડેટા દરેક માટે ખુલ્લા છે"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "ઓથેન્ટિકેશન બાયપાસ બંધ કરો"
+      }
+    }
+  },
+  "ml": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "സുരക്ഷിത മോഡിൽ ഓതന്റിക്കേഷൻ ബൈപാസ് സജീവമാണ് — സൈറ്റ്, പാനൽ, ഡാറ്റ എന്നിവ ആർക്കും തുറന്നിരിക്കുന്നു"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "ഓതന്റിക്കേഷൻ ബൈപാസ് അടയ്ക്കുക"
+      }
+    }
+  },
+  "ta": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "பாதுகாப்பான பயன்முறையில் அங்கீகார தவிர்ப்பு செயலில் உள்ளது — தளம், பலகை மற்றும் தரவு அனைவருக்கும் திறந்திருக்கின்றன"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "அங்கீகார தவிர்ப்பை மூடு"
+      }
+    }
+  },
+  "ne": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "सुरक्षित मोडमा प्रमाणीकरण बाइपास सक्रिय छ — साइट, प्यानल र डेटा सबैका लागि खुला छन्"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "प्रमाणीकरण बाइपास बन्द गर्नुहोस्"
+      }
+    }
+  },
+  "vi": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Chế độ bỏ qua xác thực đang bật ở chế độ an toàn — trang web, bảng điều khiển và dữ liệu đang mở cho bất kỳ ai"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Đóng chế độ bỏ qua xác thực"
+      }
+    }
+  },
+  "th": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "การข้ามการยืนยันตัวตนเปิดใช้งานอยู่ในโหมดปลอดภัย — เว็บไซต์ แผงควบคุม และข้อมูลเปิดให้ทุกคนเข้าถึงได้"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "ปิดการข้ามการยืนยันตัวตน"
+      }
+    }
+  },
+  "id": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Bypass autentikasi aktif dalam mode aman — situs, panel, dan data terbuka untuk siapa saja"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Tutup bypass autentikasi"
+      }
+    }
+  },
+  "ms": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Pintasan pengesahan aktif dalam mod selamat — laman, panel dan data terbuka kepada sesiapa sahaja"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Tutup pintasan pengesahan"
+      }
+    }
+  },
+  "tl": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "Aktibo ang pag-bypass sa pagpapatunay sa secure mode — bukas sa kahit sino ang site, panel, at data"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "Isara ang bypass sa pagpapatunay"
+      }
+    }
+  },
+  "my": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "လုံခြုံသောမုဒ်တွင် အထောက်အထားစိစစ်ခြင်းကျော်ဖြတ်မှု ဖွင့်ထားသည် — ဆိုက်၊ ပန်နယ်နှင့် ဒေတာများသည် မည်သူ့ကိုမဆို ဖွင့်ထားသည်"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "အထောက်အထားစိစစ်ခြင်းကျော်ဖြတ်မှုကို ပိတ်ရန်"
+      }
+    }
+  },
+  "km": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "ការឆ្លងកាត់ការផ្ទៀងផ្ទាត់អត្តសញ្ញាណកំពុងដំណើរការនៅក្នុងម៉ូដសុវត្ថិភាព — គេហទំព័រ បន្ទះគ្រប់គ្រង និងទិន្នន័យបើកចំហសម្រាប់អ្នកគ្រប់គ្នា"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "បិទការឆ្លងកាត់ការផ្ទៀងផ្ទាត់អត្តសញ្ញាណ"
+      }
+    }
+  },
+  "lo": {
+    "warnings": {
+      "items": {
+        "auth-bypass": "ການຂ້າມການພິສູດຢືນຢັນຕົວຕົນເປີດໃຊ້ຢູ່ໃນໂໝດປອດໄພ — ເວັບໄຊທ໌, ແຜງຄວບຄຸມ ແລະ ຂໍ້ມູນເປີດໃຫ້ທຸກຄົນ"
+      }
+    },
+    "footer": {
+      "warnCta": {
+        "auth-bypass": "ປິດການຂ້າມການພິສູດຢືນຢັນຕົວຕົນ"
+      }
+    }
   }
 }
