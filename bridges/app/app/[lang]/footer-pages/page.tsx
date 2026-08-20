@@ -87,6 +87,7 @@ export default async function FooterPagesPage({ params }: { params: Promise<{ la
         slot="footer"
         initial={initial}
         tree={groupRouteTree("footerPages")}
+        canDeletePages
         langs={slot.langs}
         base={slot.base}
         initialI18n={readNavI18n()}
@@ -102,6 +103,12 @@ export default async function FooterPagesPage({ params }: { params: Promise<{ la
           authSide: s.topMenu.authSide, authLeft: s.topMenu.authLeft, authRight: s.topMenu.authRight,
           baseLang: s.topMenu.baseLang, translated: s.topMenu.translated,
           notTranslated: s.topMenu.notTranslated, langHint: s.topMenu.langHint,
+          hideTitle: s.topMenu.hideTitle, hideDialogTitle: s.topMenu.hideDialogTitle,
+          hideDialogBody: s.topMenu.hideDialogBody, hideConfirm: s.topMenu.hideConfirm,
+          deleteTitle: s.topMenu.deleteTitle, deleteDialogTitle: s.topMenu.deleteDialogTitle,
+          deleteDialogBody: s.topMenu.deleteDialogBody, deleteConfirm: s.topMenu.deleteConfirm,
+          deleteRebuild: s.topMenu.deleteRebuild, deleteDone: s.topMenu.deleteDone,
+          deleteFailed: s.topMenu.deleteFailed, cancel: s.topMenu.cancel,
         }}
       />
     </PageShell>

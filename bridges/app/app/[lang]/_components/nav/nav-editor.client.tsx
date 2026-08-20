@@ -1,8 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { GripVertical, Trash2, CornerDownRight, ArrowUpLeft, Loader2, Languages } from "lucide-react";
+import { GripVertical, Trash2, CornerDownRight, ArrowUpLeft, Loader2, Languages, Eye, EyeOff, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription,
+} from "@/components/ui/dialog";
 import { valueForLang, hasTranslation, setTranslation, type I18nMap } from "@/lib/per-lang";
 import type { NavItem, NavState, NavSlot, RouteNode } from "@/lib/nav-editor/types";
 import { LangStrip } from "./lang-strip.client";
@@ -32,6 +35,11 @@ export type Labels = {
   labelLimit: string; translateOne: string; trDone: string; trFailed: string; trNoKey: string;
   authSide: string; authLeft: string; authRight: string;
   baseLang: string; translated: string; notTranslated: string; langHint: string;
+  // Скрыть из меню и удалить страницу — РАЗНЫЕ судьбы, поэтому и слова разные.
+  hideTitle: string; hideDialogTitle: string; hideDialogBody: string; hideConfirm: string;
+  deleteTitle: string; deleteDialogTitle: string; deleteDialogBody: string;
+  deleteConfirm: string; deleteRebuild: string; deleteDone: string; deleteFailed: string;
+  cancel: string;
 };
 
 const rid = () => Math.random().toString(36).slice(2, 8);
@@ -44,13 +52,22 @@ const key = (slot: NavSlot, id: string) => `nav.${slot}.${id}.label`;
 const LABEL_MAX = 12;
 
 export function NavEditor(
-  { slot, initial, tree, labels, langs, base, initialI18n, showAuthSide = false }:
+  { slot, initial, tree, labels, langs, base, initialI18n, showAuthSide = false, canDeletePages = false }:
   {
     slot: NavSlot;
     initial: NavState; tree: RouteNode[]; labels: Labels;
     langs: string[]; base: string; initialI18n: I18nMap;
     /** Сторона ящика — общая настройка, показывается только у верхнего меню. */
     showAuthSide?: boolean;
+    /**
+     * Можно ли удалять САМИ страницы, а не только ссылки на них.
+     *
+     * 🔒 Только у подвала: там за пунктом стоит папка страницы, и панель умеет
+     * убрать её вместе с тремя регистрациями. За пунктом верхнего меню может
+     * стоять что угодно — каталог, пост, чужой маршрут, — и стирать это отсюда
+     * значит дать кнопке власть, которой у неё нет.
+     */
+    canDeletePages?: boolean;
   },
 ) {
   const [items, setItems] = useState<NavItem[]>(initial.items);
@@ -58,6 +75,10 @@ export function NavEditor(
   const [drag, setDrag] = useState<number | null>(null);
   /** Тащат страницу НАД правой колонкой — подсвечиваем цель. */
   const [over, setOver] = useState(false);
+  /** Пункт, который собираются скрыть из меню (ссылка уйдёт, файлы останутся). */
+  const [hiding, setHiding] = useState<{ index: number; id: string; child: boolean; label: string; href: string } | null>(null);
+  /** Пункт, страницу которого собираются УДАЛИТЬ из проекта. */
+  const [deleting, setDeleting] = useState<{ index: number; id: string; label: string; href: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [editLang, setEditLang] = useState(base);
@@ -193,6 +214,35 @@ export function NavEditor(
     parent.children = (parent.children ?? []).filter((c) => c.id !== id);
     next.splice(parentIndex + 1, 0, { id: child.id, href: child.href, order: 0, label: child.label });
     commit(next);
+  }
+
+  /**
+   * Удалить САМУ страницу из проекта, а не только ссылку на неё.
+   *
+   * 🔒 СНАЧАЛА ФАЙЛЫ, ПОТОМ ССЫЛКА. Уберём ссылку первой и упадём на файлах —
+   * страница останется в проекте, но исчезнет из подвала, и владелец решит, что
+   * удаление прошло. Порядок выбран так, чтобы неудача оставляла ВИДИМЫЙ след:
+   * ссылка на месте, значит дело не сделано.
+   */
+  async function deletePage(target: { index: number; id: string; href: string }) {
+    setBusy(true); setNote(null);
+    try {
+      const r = await fetch("/api/config/footer-page", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ href: target.href }),
+      });
+      const j = (await r.json()) as { ok?: boolean; reason?: string };
+      if (!j?.ok) { setNote(labels.deleteFailed); return; }
+      const next = items.filter((_, i) => i !== target.index);
+      commit(next, { persist: true });
+      setNote(labels.deleteDone);
+    } catch {
+      setNote(labels.deleteFailed);
+    } finally {
+      setBusy(false);
+      setDeleting(null);
+    }
   }
 
   function remove(parentIndex: number, id: string, child: boolean) {
@@ -409,8 +459,35 @@ export function NavEditor(
                 <Button size="sm" variant="ghost" className="h-6 px-1" title={labels.makeChild}
                   onClick={() => nest(index)} disabled={index === 0}><CornerDownRight className="size-3.5" /></Button>
               )}
-              <Button size="sm" variant="ghost" className="h-6 px-1" title={labels.remove}
-                onClick={() => remove(index, item.id, child)}><Trash2 className="size-3.5" /></Button>
+              {/* 🔒 ДВЕ РАЗНЫЕ СУДЬБЫ — ДВЕ РАЗНЫЕ КНОПКИ (владелец, шаг 527).
+                  Здесь стояла ОДНА корзина, и она лгала: нажатие не удаляло
+                  страницу, а лишь убирало ссылку — страница оставалась в
+                  проекте. Значок обещал необратимое там, где действие обратимо,
+                  и человек не решался нажать. Теперь глаз означает «скрыть из
+                  подвала, файлы остаются», корзина — «удалить страницу из
+                  проекта», и каждая объясняется своим диалогом перед делом. */}
+              <Button
+                size="sm" variant="ghost" className="group/eye h-6 px-1" title={labels.hideTitle}
+                aria-label={`${labels.hideTitle}: ${shown(item)}`}
+                onClick={() => setHiding({ index, id: item.id, child, label: shown(item), href: item.href ?? "" })}
+              >
+                <Eye className="size-3.5 group-hover/eye:hidden" />
+                <EyeOff className="hidden size-3.5 group-hover/eye:block" />
+              </Button>
+              {/* Удаление предлагается только там, где панель умеет довести его
+                  до конца: у страницы подвала со своей папкой. У пункта верхнего
+                  меню за ссылкой может стоять что угодно — каталог, пост, чужой
+                  маршрут, — и стирать его отсюда нельзя. */}
+              {canDeletePages && !child && item.href && (
+                <Button
+                  size="sm" variant="ghost" className="h-6 px-1 text-destructive hover:text-destructive"
+                  title={labels.deleteTitle}
+                  aria-label={`${labels.deleteTitle}: ${shown(item)}`}
+                  onClick={() => setDeleting({ index, id: item.id, label: shown(item), href: item.href ?? "" })}
+                >
+                  <Trash2 className="size-3.5" />
+                </Button>
+              )}
             </li>
           ))}
         </ul>
@@ -434,6 +511,74 @@ export function NavEditor(
         </Button>
         {note && <span className="text-[11px] text-muted-foreground">{note}</span>}
       </div>
+
+      {/* 🔒 ДИАЛОГ ОБЪЯСНЯЕТ ПОСЛЕДСТВИЕ, А НЕ СПРАШИВАЕТ «ВЫ УВЕРЕНЫ?»
+          (владелец, шаг 527). «Уверены?» не добавляет человеку ни одного факта:
+          он нажимает «да», потому что уже нажал кнопку. Здесь сказано, ЧТО
+          именно произойдёт и как это отменить, — и тогда согласие осмысленно. */}
+      <Dialog open={hiding !== null} onOpenChange={(o) => !o && setHiding(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-[13px]">
+              <EyeOff className="size-4 shrink-0" />
+              {labels.hideDialogTitle}
+            </DialogTitle>
+            <DialogDescription className="text-[11px] leading-relaxed">
+              {labels.hideDialogBody}
+            </DialogDescription>
+          </DialogHeader>
+          {hiding && (
+            <p className="rounded-md border border-border bg-muted px-2 py-1.5 font-mono text-[11px]">
+              {hiding.label} <span className="text-muted-foreground">{hiding.href}</span>
+            </p>
+          )}
+          <DialogFooter className="gap-2">
+            <Button size="sm" variant="outline" className="text-[11px]" onClick={() => setHiding(null)}>
+              {labels.cancel}
+            </Button>
+            <Button
+              size="sm" className="text-[11px]"
+              onClick={() => { if (hiding) remove(hiding.index, hiding.id, hiding.child); setHiding(null); }}
+            >
+              <EyeOff className="size-3.5" />{labels.hideConfirm}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={deleting !== null} onOpenChange={(o) => !o && setDeleting(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-[13px] text-destructive">
+              <AlertTriangle className="size-4 shrink-0" />
+              {labels.deleteDialogTitle}
+            </DialogTitle>
+            <DialogDescription className="text-[11px] leading-relaxed">
+              {labels.deleteDialogBody}
+            </DialogDescription>
+          </DialogHeader>
+          {deleting && (
+            <p className="rounded-md border border-destructive/40 bg-destructive/5 px-2 py-1.5 font-mono text-[11px]">
+              {deleting.label} <span className="text-muted-foreground">{deleting.href}</span>
+            </p>
+          )}
+          {/* Пересборка названа ЗДЕСЬ, до нажатия: страницы отдаёт собранный
+              `.next`, и до неё удалённый адрес продолжает отвечать. */}
+          <p className="text-[10px] leading-relaxed text-amber-700 dark:text-amber-300">{labels.deleteRebuild}</p>
+          <DialogFooter className="gap-2">
+            <Button size="sm" variant="outline" className="text-[11px]" onClick={() => setDeleting(null)}>
+              {labels.cancel}
+            </Button>
+            <Button
+              size="sm" variant="destructive" className="text-[11px]" disabled={busy}
+              onClick={() => { if (deleting) void deletePage(deleting); }}
+            >
+              {busy ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
+              {labels.deleteConfirm}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

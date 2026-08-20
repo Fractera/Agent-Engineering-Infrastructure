@@ -826,6 +826,11 @@ export type AdminStrings = {
     buildToGithub: string; buildToEnv: string;
   };
   topMenu: {
+    // Скрыть из меню и удалить страницу — разные судьбы, разные слова (шаг 527).
+    hideTitle: string; hideDialogTitle: string; hideDialogBody: string; hideConfirm: string;
+    deleteTitle: string; deleteDialogTitle: string; deleteDialogBody: string;
+    deleteConfirm: string; deleteRebuild: string; deleteDone: string; deleteFailed: string;
+    cancel: string;
     whyTitle: string; why: string;
     liveTitle: string; live: string;
     candidates: string; add: string; empty: string; dragHint: string;

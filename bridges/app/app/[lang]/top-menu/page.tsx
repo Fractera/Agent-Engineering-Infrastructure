@@ -52,6 +52,12 @@ export default async function TopMenuPage({ params }: { params: Promise<{ lang: 
           authSide: t.authSide, authLeft: t.authLeft, authRight: t.authRight,
           baseLang: t.baseLang, translated: t.translated, notTranslated: t.notTranslated,
           langHint: t.langHint,
+          hideTitle: t.hideTitle, hideDialogTitle: t.hideDialogTitle,
+          hideDialogBody: t.hideDialogBody, hideConfirm: t.hideConfirm,
+          deleteTitle: t.deleteTitle, deleteDialogTitle: t.deleteDialogTitle,
+          deleteDialogBody: t.deleteDialogBody, deleteConfirm: t.deleteConfirm,
+          deleteRebuild: t.deleteRebuild, deleteDone: t.deleteDone,
+          deleteFailed: t.deleteFailed, cancel: t.cancel,
         }}
       />
     </PageShell>
