@@ -177,7 +177,47 @@ export function publicRouteTree(): RouteNode[] {
  * (`/privacy`), как и на сайте.
  */
 export function groupRouteTree(group: string): RouteNode[] {
-  return walk(path.join(LANG_ROOT, `(${group})`), "", 0);
+  const dir = findGroupDir(LANG_ROOT, group, 0);
+  return dir ? walk(dir, "", 0) : [];
+}
+
+/**
+ * Найти папку группы `(<group>)` где угодно под `app/[lang]`.
+ *
+ * 🔒 ПОЧЕМУ ПОИСК, А НЕ ОДИН ПУТЬ (шаг 524, найдено на живом сервере). Здесь
+ * стояло `path.join(LANG_ROOT, "(footerPages)")` — то есть предполагалось, что
+ * группа лежит непосредственно под `[lang]`. В шаблоне слота она вложена:
+ * `app/[lang]/(publicLayer)/(footerPages)`. Папки по искомому пути нет,
+ * `readdirSync` бросает, `walk` возвращает пустой список — и раздел «Страницы
+ * подвала» открывался ПУСТЫМ при пяти готовых страницах в проекте. Ошибки не
+ * было нигде: ни исключения, ни строки в логе, ни красного гейта. Владелец
+ * просто не мог поставить в подвал ни одной страницы.
+ *
+ * Спускаемся только в папки-группы: обычный сегмент сайта группой маршрутов не
+ * является, и заходить в него значит искать `(footerPages)` внутри `/blog`.
+ * Глубина ограничена: вложенность групп в проекте измеряется единицами, а
+ * неограниченный обход дерева на каждый показ страницы — плата ни за что.
+ */
+function findGroupDir(dir: string, group: string, depth: number): string | null {
+  if (depth > 3) return null;
+  const target = `(${group})`;
+  let entries: fs.Dirent[];
+  try {
+    entries = fs.readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return null;
+  }
+  for (const e of entries) {
+    if (!e.isDirectory()) continue;
+    const name = e.name;
+    if (name === target) return path.join(dir, name);
+    // Та же граница, что и внутри `walk`: защищённые страницы посетителю
+    // недоступны, и предлагать их для подвала нельзя.
+    if (!name.startsWith("(") || !name.endsWith(")") || name.includes("protected")) continue;
+    const found = findGroupDir(path.join(dir, name), group, depth + 1);
+    if (found) return found;
+  }
+  return null;
 }
 
 /** Плоский перечень — нужен, чтобы отличить уже добавленные адреса от новых. */

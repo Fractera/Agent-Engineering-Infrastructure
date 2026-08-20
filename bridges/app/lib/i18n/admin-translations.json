@@ -2746,9 +2746,13 @@
       "whyTitle": "What this section controls.",
       "why": "The links at the bottom of your application on :3000 — which pages they point at, in what order, and what each is called. Only pages inside the footer-pages group are offered: the footer carries site pages, not the whole catalogue.",
       "contentTitle": "Where the text of a page lives.",
-      "content": "In the project itself, beside the page — the same way a blog post works. Three pages ship as a working pattern with placeholder text; a fourth is made by copying one of them. The pages are fully static and indexable, so they carry a title, a description and structured data exactly as an article does.",
+      "content": "Inside the project, next to the page — the same way a blog post works. Five pages ship as a worked example with placeholder text; a sixth is made by copying any of them. The pages are fully static and indexable: they carry a title, a description and structured data, like an article.",
       "candidates": "Pages available for the footer",
-      "empty": "No links yet. The footer still renders — this is a valid state, not an error."
+      "empty": "No links yet. The footer still renders — this is a valid state, not an error.",
+      "buildTitle": "A new footer page is built by the agent",
+      "buildBody": "This section arranges the links; it cannot create a page, and deliberately so — page text lives in the project, next to the page. Open the project on your own machine and tell the agent what you want to build: it has the skill for it. Send the project to GitHub, download .env.local so your copy reads this server's live data, then clone or pull and open the folder in Claude Code — or any coding agent.",
+      "buildToGithub": "Connect GitHub",
+      "buildToEnv": "Environment variables"
     },
     "cookieBanner": {
       "whyTitle": "What this switch does.",
@@ -6001,9 +6005,13 @@
       "whyTitle": "Чем управляет этот раздел.",
       "why": "Ссылки внизу вашего приложения на :3000 — на какие страницы они ведут, в каком порядке стоят и как называются. Предлагаются только страницы из группы подвала: внизу сайта живут страницы сайта, а не весь каталог.",
       "contentTitle": "Где лежит текст страницы.",
-      "content": "В самом проекте, рядом со страницей, — так же, как у поста блога. Три страницы поставляются готовым образцом с текстом-заглушкой; четвёртая создаётся копированием любой из них. Страницы полностью статические и индексируются: у них есть заголовок, описание и структурированные данные — как у статьи.",
+      "content": "В самом проекте, рядом со страницей, — так же, как у поста блога. Пять страниц поставляются готовым образцом с текстом-заглушкой; шестая создаётся копированием любой из них. Страницы полностью статические и индексируются: у них есть заголовок, описание и структурированные данные — как у статьи.",
       "candidates": "Страницы, доступные для подвала",
-      "empty": "Ссылок пока нет. Подвал всё равно отображается — это законное состояние, а не ошибка."
+      "empty": "Ссылок пока нет. Подвал всё равно отображается — это законное состояние, а не ошибка.",
+      "buildTitle": "Новую страницу подвала строит агент",
+      "buildBody": "Этот раздел расставляет ссылки, но создать страницу не может — и это сделано намеренно: текст страницы живёт в проекте, рядом с ней самой. Откройте проект на своей машине и скажите агенту, что хотите построить: навык у него есть. Отправьте проект в GitHub, скачайте .env.local — с ним локальная копия читает живые данные этого сервера, — затем сделайте клон или «забрать» и откройте папку в Claude Code либо другом агенте-программисте.",
+      "buildToGithub": "Подключить GitHub",
+      "buildToEnv": "Переменные окружения"
     },
     "cookieBanner": {
       "whyTitle": "Что решает этот переключатель.",

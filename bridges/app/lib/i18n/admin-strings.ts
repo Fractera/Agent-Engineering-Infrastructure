@@ -817,6 +817,13 @@ export type AdminStrings = {
     whyTitle: string; why: string;
     contentTitle: string; content: string;
     candidates: string; empty: string;
+    // Оранжевая карточка «новую страницу строит агент» (шаг 524). Панель
+    // настраивает ссылки, но СОЗДАТЬ страницу не может и не должна — граница
+    // продукта, а не недоделка. Поэтому карточка стоит всегда, а не только на
+    // пустом списке: совет, исчезающий после первой ссылки, пропадает ровно
+    // тогда, когда владелец вошёл во вкус.
+    buildTitle: string; buildBody: string;
+    buildToGithub: string; buildToEnv: string;
   };
   topMenu: {
     whyTitle: string; why: string;
