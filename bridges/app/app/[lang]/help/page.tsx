@@ -21,13 +21,21 @@ import { HelpPanel } from "./_components/help-panel";
 // динамической по той же причине.
 export const dynamic = "force-dynamic";
 
+// 🔒 ПОЛОСЫ «ТОЛЬКО ИНТЕРФЕЙС» ЗДЕСЬ БОЛЬШЕ НЕТ (владелец 2026-08-22). Она
+// предупреждала, что логика страницы ещё не переехала, — и была правдой, пока
+// страница была скелетоном. Теперь страница закончена: весь её смысл в одном
+// абзаце, и переезжать сюда больше нечему. Предупреждение о недоделке на
+// доделанной странице — та же ложь, что кнопка без действия.
+//
+// Сама строка `skeletonNotice` остаётся в словаре: ею подписана погашенная
+// кнопка предпросмотра в шапке, и это другой случай.
 export default async function HelpPage({ params }: { params: Promise<{ lang: string }> }) {
   const { lang } = await params;
   const s = getAdminStrings(lang);
   const page = s.pages["help"];
 
   return (
-    <PageShell lang={lang} slug="help" s={s} title={page.title} hint={page.hint} notice={s.skeletonNotice}>
+    <PageShell lang={lang} slug="help" s={s} title={page.title} hint={page.hint}>
       {/* Тело есть только у этой страницы; `?? ""` — не заглушка, а честный
           отказ показывать пустоту, если словарь ещё не догнал: язык без слов
           покажет пустую карточку, а не свалится. */}
