@@ -70,11 +70,14 @@ export default async function DevelopmentModePage({ params }: { params: Promise<
               },
               // Адреса строит сервер: язык знает он, и `adminHref` — та же
               // функция, которой пользуются меню и хлебные крошки.
+              // 🔒 ВТОРОЙ ССЫЛКИ ЗДЕСЬ БОЛЬШЕ НЕТ (владелец 2026-08-22). Она вела на
+              // страницу документа о волнах агентов, а группа «Документы» снесена
+              // целиком: панель документами не управляет. Ссылка в никуда хуже её
+              // отсутствия, поэтому исчезает и подпись — не остаётся кнопки,
+              // которая обещает то, чего нет.
               cases: {
                 productsHref: adminHref(lang, "products"),
                 productsLabel: m.casesToProducts,
-                workflowsHref: adminHref(lang, "doc-dynamic-workflows"),
-                workflowsLabel: m.casesToWorkflows,
                 openHint: m.casesOpenHint,
               },
             }}

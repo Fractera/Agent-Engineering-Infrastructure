@@ -54,7 +54,13 @@ export type AdminStrings = {
   groupMaps: Record<MappedGroup, string>;
   // one entry per page of the panel — keys come from lib/admin-nav.ts, so a new
   // page without words does not compile
-  pages: Record<AdminPageSlug, { title: string; hint: string }>;
+  /**
+   * Заголовок и подсказка есть у КАЖДОЙ страницы; `body` — только там, где вся
+   * страница и есть один абзац. Сегодня такая одна — «Справка» (владелец
+   * 2026-08-22): панель документами не управляет, а на вопросы отвечает
+   * собственный агент разработки владельца, который читает проект целиком.
+   */
+  pages: Record<AdminPageSlug, { title: string; hint: string; body?: string }>;
   // shell chrome
   footer: {
     deploy: string;

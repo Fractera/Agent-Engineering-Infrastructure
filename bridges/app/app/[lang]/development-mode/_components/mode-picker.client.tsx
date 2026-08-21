@@ -35,7 +35,8 @@ export type ModeLabels = {
   /** Двери режима кейсов: адреса приходят с сервера — язык знает он. */
   cases: {
     productsHref: string; productsLabel: string;
-    workflowsHref: string; workflowsLabel: string;
+    /** Ссылка на волны агентов. Нет — нет и кнопки: обещать некуда. */
+    workflowsHref?: string; workflowsLabel?: string;
     openHint: string;
   };
 };
@@ -170,12 +171,14 @@ export function ModePicker(
                     >
                       <Boxes size={11} />{labels.cases.productsLabel}
                     </Link>
-                    <Link
-                      href={labels.cases.workflowsHref}
-                      className="inline-flex h-7 items-center gap-1.5 rounded-md border border-border px-2.5 text-[11px] text-foreground transition-colors hover:bg-muted"
-                    >
-                      <Workflow size={11} />{labels.cases.workflowsLabel}
-                    </Link>
+                    {labels.cases.workflowsHref && (
+                      <Link
+                        href={labels.cases.workflowsHref}
+                        className="inline-flex h-7 items-center gap-1.5 rounded-md border border-border px-2.5 text-[11px] text-foreground transition-colors hover:bg-muted"
+                      >
+                        <Workflow size={11} />{labels.cases.workflowsLabel}
+                      </Link>
+                    )}
                   </div>
                 ) : (
                   <p className="text-[10px] leading-relaxed text-muted-foreground">{labels.cases.openHint}</p>

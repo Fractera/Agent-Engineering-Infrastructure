@@ -1347,75 +1347,8 @@
       },
       "help": {
         "title": "Help",
-        "hint": "What each part of the panel is for."
-      },
-      "doc-instruction": {
-        "title": "Main instruction",
-        "hint": "The rules the agent works by, read at the start of every session."
-      },
-      "doc-use-cases": {
-        "title": "Use cases",
-        "hint": "What a use case is and why nothing is built without a confirmed one. The work itself is in Products."
-      },
-      "doc-platform-tools": {
-        "title": "Platform tools",
-        "hint": "What the platform already gives you: stores, engines, services."
-      },
-      "doc-architecture": {
-        "title": "Architecture",
-        "hint": "How the app is put together and which layer owns what."
-      },
-      "doc-aio": {
-        "title": "AI optimisation",
-        "hint": "What the project publishes for models: the llms.txt map and a markdown twin of every page."
-      },
-      "doc-pwa": {
-        "title": "Installable app",
-        "hint": "The manifest per language, icon generation, and the service-worker strategy that makes a stale page impossible."
-      },
-      "doc-seo": {
-        "title": "Search optimisation",
-        "hint": "The laws every public page obeys: its own canonical, its translations named, addresses built one way."
-      },
-      "doc-glossary": {
-        "title": "Glossary",
-        "hint": "Terms of this project, so the same word means the same thing."
-      },
-      "doc-lessons": {
-        "title": "Lessons",
-        "hint": "Preferences and habits earned from earlier mistakes."
-      },
-      "doc-steps": {
-        "title": "Development steps",
-        "hint": "The queue of work in the database: what is open, what is closed, and which cases it serves."
-      },
-      "doc-antipatterns": {
-        "title": "Anti-patterns",
-        "hint": "Approaches that cost time here and must not be tried again."
-      },
-      "doc-design": {
-        "title": "Design",
-        "hint": "How the pages should look. You describe it; the agent builds to it."
-      },
-      "doc-parallel-routing": {
-        "title": "Parallel routing",
-        "hint": "How the layout of independent areas works in this project."
-      },
-      "doc-coding-standards": {
-        "title": "Coding standards",
-        "hint": "Limits the code must respect: size, static pages, translations."
-      },
-      "doc-troubleshooting": {
-        "title": "Troubleshooting",
-        "hint": "Problems users hit in production, and what actually causes them."
-      },
-      "doc-context-state": {
-        "title": "Context handoff",
-        "hint": "What the previous session was in the middle of, written by the model as its window filled up."
-      },
-      "doc-overview": {
-        "title": "Map of the documents",
-        "hint": "Why there are this many, how they differ, and which one to open first."
+        "hint": "What each part of the panel is for.",
+        "body": "Still have questions? Ask your own development agent. It reads the project’s instructions at the start of every session, sees the code and the settings, and answers about THIS project rather than about the platform in general — from a single detail to a full walkthrough of how everything here is put together."
       },
       "tools": {
         "title": "Tools",
@@ -1461,30 +1394,6 @@
         "title": "Help",
         "hint": "How to build with this panel, and where to ask when something is unclear."
       },
-      "doc-testing": {
-        "title": "Testing",
-        "hint": "How a step is proven finished: two independent proofs, from two different planes."
-      },
-      "doc-single-agent": {
-        "title": "Single agent",
-        "hint": "One context window by default; a second agent needs the owner's command."
-      },
-      "doc-dialogue-format": {
-        "title": "Dialogue format",
-        "hint": "Every answer opens by saying back what was understood — and inviting a correction."
-      },
-      "doc-passport": {
-        "title": "Project passport",
-        "hint": "The entities this product consists of, and how far each one has come."
-      },
-      "doc-content-engine": {
-        "title": "Content engine",
-        "hint": "How a post is built: co-location, two kinds of link, the content gate."
-      },
-      "doc-dynamic-workflows": {
-        "title": "Dynamic workflows",
-        "hint": "Waves of agents instead of one. The most powerful option here — and the most expensive."
-      },
       "visibility": {
         "title": "Done for you",
         "hint": "Search, models, the app on the phone, robots and the sitemap, images — what the project already does without you."
@@ -1492,10 +1401,6 @@
       "dev-tools": {
         "title": "Development tools",
         "hint": "What the project is built with: tools on the developer's machine. They never ship inside the product."
-      },
-      "doc-sections": {
-        "title": "Sections and designs",
-        "hint": "How a section, a design and a project relate: one data contract, a set of renderers per design, one design per project."
       },
       "design-fonts": {
         "title": "Fonts",
@@ -1516,10 +1421,6 @@
       "design-colors": {
         "title": "Colours",
         "hint": "Seven roles in two themes, with a live contrast check."
-      },
-      "doc-case-to-step": {
-        "title": "Case to step",
-        "hint": "How confirmed use cases turn into a queue of development steps."
       },
       "products": {
         "title": "Products",
@@ -4643,75 +4544,8 @@
       },
       "help": {
         "title": "Справка",
-        "hint": "Для чего нужна каждая часть панели."
-      },
-      "doc-instruction": {
-        "title": "Главная инструкция",
-        "hint": "Правила, по которым работает агент; читаются в начале каждой сессии."
-      },
-      "doc-use-cases": {
-        "title": "Пользовательские кейсы",
-        "hint": "Что такое кейс и почему без подтверждённого ничего не строится. Сама работа — в разделе «Продукты»."
-      },
-      "doc-platform-tools": {
-        "title": "Инструменты платформы",
-        "hint": "Что платформа уже даёт: склады, движки, службы."
-      },
-      "doc-architecture": {
-        "title": "Архитектура",
-        "hint": "Как устроено приложение и какой слой чем владеет."
-      },
-      "doc-aio": {
-        "title": "Оптимизация под ИИ",
-        "hint": "Что проект публикует для моделей: карта llms.txt и markdown-версия каждой страницы."
-      },
-      "doc-pwa": {
-        "title": "Устанавливаемое приложение",
-        "hint": "Манифест на язык, нарезка иконок и стратегия воркера, при которой устаревшая страница невозможна."
-      },
-      "doc-seo": {
-        "title": "Поисковая оптимизация",
-        "hint": "Законы, которым подчиняется каждая публичная страница: свой канонический адрес, названные переводы, единый способ строить адреса."
-      },
-      "doc-glossary": {
-        "title": "Глоссарий",
-        "hint": "Термины проекта, чтобы одно слово значило одно и то же."
-      },
-      "doc-lessons": {
-        "title": "Уроки",
-        "hint": "Предпочтения и привычки, добытые собственными ошибками."
-      },
-      "doc-steps": {
-        "title": "Шаги разработки",
-        "hint": "Очередь работ в базе: что открыто, что закрыто и ради каких кейсов."
-      },
-      "doc-antipatterns": {
-        "title": "Антипаттерны",
-        "hint": "Подходы, которые здесь стоили времени и повторять их нельзя."
-      },
-      "doc-design": {
-        "title": "Дизайн",
-        "hint": "Как должны выглядеть страницы. Вы описываете — агент строит по описанию."
-      },
-      "doc-parallel-routing": {
-        "title": "Параллельная маршрутизация",
-        "hint": "Как устроена раскладка из независимых областей."
-      },
-      "doc-coding-standards": {
-        "title": "Стандарты кода",
-        "hint": "Ограничения кода: размер, статические страницы, переводы."
-      },
-      "doc-troubleshooting": {
-        "title": "Разбор затруднений",
-        "hint": "Проблемы, с которыми пользователи сталкиваются на продакшне, и их настоящие причины."
-      },
-      "doc-context-state": {
-        "title": "Передача сессии",
-        "hint": "Что предыдущая сессия делала в момент обрыва — записано моделью, пока её окно заполнялось."
-      },
-      "doc-overview": {
-        "title": "Карта документов",
-        "hint": "Зачем документов столько, чем они друг от друга отличаются и что открывать первым."
+        "hint": "Для чего нужна каждая часть панели.",
+        "body": "Остались вопросы? Задайте их своему агенту разработки. Он читает инструкции проекта в начале каждой сессии, видит код и настройки и отвечает про ЭТОТ проект, а не про платформу вообще — от одной мелочи до полного обучения тому, как здесь всё устроено."
       },
       "tools": {
         "title": "Инструменты",
@@ -4757,30 +4591,6 @@
         "title": "Справка",
         "hint": "Как строить в этой панели и куда спросить, если что-то непонятно."
       },
-      "doc-testing": {
-        "title": "Тестирование",
-        "hint": "Как шаг доказывается законченным: два независимых доказательства из разных плоскостей."
-      },
-      "doc-single-agent": {
-        "title": "Единственный агент",
-        "hint": "По умолчанию одно контекстное окно; второй агент — только по команде владельца."
-      },
-      "doc-dialogue-format": {
-        "title": "Формат диалога",
-        "hint": "Ответ открывается пересказом понятого — и приглашением поправить."
-      },
-      "doc-passport": {
-        "title": "Паспорт проекта",
-        "hint": "Из каких сущностей состоит продукт и насколько готова каждая."
-      },
-      "doc-content-engine": {
-        "title": "Как строится пост",
-        "hint": "Ко-локация, два типа ссылок и проверка, которая отклоняет неверный пост."
-      },
-      "doc-dynamic-workflows": {
-        "title": "Динамические рабочие процессы",
-        "hint": "Волны агентов вместо одного. Самая сильная опция корпуса — и самая дорогая."
-      },
       "visibility": {
         "title": "Сделано за вас",
         "hint": "Поиск, модели, приложение на телефоне, роботы и карта сайта, изображения — что проект уже делает без вас."
@@ -4788,10 +4598,6 @@
       "dev-tools": {
         "title": "Инструменты разработки",
         "hint": "Чем строят проект: инструменты на машине разработчика. В продукт они не попадают."
-      },
-      "doc-sections": {
-        "title": "Секции и дизайны",
-        "hint": "Как связаны секция, дизайн и проект: один контракт данных, свой набор рендереров у каждого дизайна, один дизайн на проект."
       },
       "design-fonts": {
         "title": "Шрифты",
@@ -4812,10 +4618,6 @@
       "design-colors": {
         "title": "Цвета",
         "hint": "Семь ролей в двух темах и живая проверка контраста."
-      },
-      "doc-case-to-step": {
-        "title": "Кейс → шаг",
-        "hint": "Как подтверждённые кейсы превращаются в очередь шагов разработки."
       },
       "products": {
         "title": "Продукты",

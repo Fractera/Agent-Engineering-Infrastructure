@@ -10,7 +10,12 @@
 import fs from "fs";
 import path from "path";
 import { toolById, type ToolId } from "@/lib/tools-registry";
-import { DOC_FILES } from "@/lib/product-docs";
+
+// Путь документа о готовых инструментах В СЛОТЕ. Раньше он приходил из реестра
+// `lib/product-docs.ts`, вместе с которым панель показывала и правила документы;
+// реестр снесён владельцем 2026-08-22, а сам ФАЙЛ остался — его читает агент в
+// приложении клиента, и обновлять его при установке инструмента по-прежнему надо.
+const PLATFORM_TOOLS_DOC = "development-docs/PLATFORM-TOOLS.md";
 
 const APP_DIR = process.env.APP_DIR ?? "/opt/fractera/app";
 /** Корень панели: отсюда берутся исходники инструментов. */
@@ -135,7 +140,7 @@ export function writePlatformToolsDoc(): boolean {
     // ПИСАЛА бы по старому. Ни одна из сторон при этом не ошибается заметно —
     // просто документ перестаёт обновляться, и агент строит второй инструмент
     // рядом с существующим, потому что о существующем не узнал.
-    const target = path.join(APP_DIR, DOC_FILES["doc-platform-tools"]);
+    const target = path.join(APP_DIR, PLATFORM_TOOLS_DOC);
     fs.mkdirSync(path.dirname(target), { recursive: true });
     fs.writeFileSync(target, renderPlatformToolsDoc(), "utf-8");
     return true;

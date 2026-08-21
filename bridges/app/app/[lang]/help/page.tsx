@@ -28,7 +28,10 @@ export default async function HelpPage({ params }: { params: Promise<{ lang: str
 
   return (
     <PageShell lang={lang} slug="help" s={s} title={page.title} hint={page.hint} notice={s.skeletonNotice}>
-      <HelpPanel />
+      {/* Тело есть только у этой страницы; `?? ""` — не заглушка, а честный
+          отказ показывать пустоту, если словарь ещё не догнал: язык без слов
+          покажет пустую карточку, а не свалится. */}
+      <HelpPanel body={page.body ?? ""} />
     </PageShell>
   );
 }

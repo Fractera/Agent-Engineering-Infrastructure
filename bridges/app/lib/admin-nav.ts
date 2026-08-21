@@ -15,7 +15,7 @@
 // панель. Раньше первыми стояли настройки приложения — список работы, которую
 // ещё предстоит сделать. Теперь первым идёт список того, что уже работает без
 // него: до того, как просить о настройке, стоит показать полученную ценность.
-export const NAV_GROUPS = ["visibility", "design", "application", "products", "data", "tools", "backup", "access", "project", "documents", "help"] as const;
+export const NAV_GROUPS = ["visibility", "design", "application", "products", "data", "tools", "backup", "access", "project", "help"] as const;
 export type NavGroup = (typeof NAV_GROUPS)[number];
 
 // Порядок внутри группы = порядок в меню. Он повторяет порядок сегодняшнего
@@ -118,42 +118,6 @@ export const NAV = [
   // развёртываниями — всем, что про разработку и доставку.
   { slug: "dev-tools",       group: "project" },
 
-  // Документы разработки — файлы в КОРНЕ СЛОТА, по которым работает агент в
-  // приложении клиента. До этого слоя владелец мог прочитать свои же правила
-  // только через терминал или локальный клон. Порядок — как их читает агент на
-  // старте сессии: сначала главная инструкция, сразу за ней перечень того, что
-  // платформа уже даёт (без него агент строит второе), потом остальное.
-  // Страница-маршрутизатор группы: ЗАЧЕМ документов столько и как они связаны.
-  // Стоит первой — человек, открывший группу впервые, видит сначала карту, а не
-  // двенадцать одинаковых на вид пунктов.
-  { slug: "doc-overview",         group: "documents" },
-  { slug: "doc-instruction",      group: "documents" },
-  // Сразу за главной инструкцией (решение владельца 2026-08-12): самая
-  // последствная опция корпуса стоит там, где её увидят, а не там, где на неё
-  // наткнутся случайно. Выключена по умолчанию и заперта до кейсов.
-  { slug: "doc-dynamic-workflows", group: "documents" },
-  { slug: "doc-use-cases",        group: "documents" },
-  { slug: "doc-platform-tools",   group: "documents" },
-  { slug: "doc-seo",              group: "documents" },
-  { slug: "doc-aio",              group: "documents" },
-  { slug: "doc-pwa",              group: "documents" },
-  { slug: "doc-glossary",         group: "documents" },
-  { slug: "doc-lessons",          group: "documents" },
-  { slug: "doc-steps",            group: "documents" },
-  { slug: "doc-antipatterns",     group: "documents" },
-  { slug: "doc-design",           group: "documents" },
-  // Рядом с дизайном намеренно: секции — это то, ЧЕМ дизайн выражается, и
-  // читать их порознь бессмысленно.
-  { slug: "doc-sections",         group: "documents" },
-  { slug: "doc-parallel-routing", group: "documents" },
-  { slug: "doc-coding-standards", group: "documents" },
-  { slug: "doc-troubleshooting",  group: "documents" },
-  { slug: "doc-testing",          group: "documents" },
-  { slug: "doc-single-agent",     group: "documents" },
-  { slug: "doc-dialogue-format",  group: "documents" },
-  { slug: "doc-content-engine",   group: "documents" },
-  { slug: "doc-case-to-step",     group: "documents" },
-
   { slug: "map-help",         group: "help" },
   { slug: "how-to-build",    group: "help" },
   { slug: "help",            group: "help" },
@@ -195,7 +159,6 @@ export const GROUP_INDEX = {
   backup: "map-backup",
   access: "map-access",
   project: "map-project",
-  documents: "doc-overview",
   help: "map-help",
 } as const satisfies Record<NavGroup, AdminPageSlug>;
 
