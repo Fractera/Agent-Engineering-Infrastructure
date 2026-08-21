@@ -23,7 +23,19 @@ export const GET = auth(function GET(req) {
   const url = new URL(req.url);
   const q = url.searchParams.get("q")?.trim() ?? "";
   const page = Math.max(1, parseInt(url.searchParams.get("page") ?? "1", 10));
-  const perPage = 100;
+  // 🔒 РАЗМЕР СТРАНИЦЫ ЗАДАЁТ ВЫЗЫВАЮЩИЙ (2026-08-21). Здесь стояло жёсткое
+  // `perPage = 100`, и интерфейс не мог предложить человеку выбор: список из
+  // десяти строк на экране требует одного шага, разбор тысячи учётных записей —
+  // другого.
+  //
+  // Значение берётся из адреса, но не как есть: чужой запрос не имеет права
+  // попросить всю таблицу разом. Разрешён закрытый набор — те же ступени, что у
+  // соседних списков продукта, — а всё остальное молча становится ближайшим
+  // законным. Отказ здесь был бы хуже: интерфейс не должен ломаться из-за
+  // опечатки в адресе.
+  const ALLOWED_PER_PAGE = [10, 20, 50, 100];
+  const asked = parseInt(url.searchParams.get("perPage") ?? "", 10);
+  const perPage = ALLOWED_PER_PAGE.includes(asked) ? asked : 100;
   const offset = (page - 1) * perPage;
 
   const db = getDb();
