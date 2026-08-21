@@ -745,6 +745,31 @@ app.get('/db/tables', (_req, res) => {
 
 // ── GET /db/tables/:table ─────────────────────────────────────────────────────
 
+// 🔒 СЕКРЕТНЫЕ КОЛОНКИ НЕ ПОКИДАЮТ БАЗУ (2026-08-21, найдено живой проверкой).
+//
+// `/db/tables/users?limit=1` отдавал строку ЦЕЛИКОМ, включая `password` — bcrypt-хеш
+// учётной записи. Дверь защищена секретом `DATA_SECRET`, и в этом смысле «утечки»
+// не было; но секрет знает всё приложение и всякий, кто получил его выгрузкой
+// окружения, а хеш пароля не нужен приложению НИКОГДА — ни показать, ни сверить
+// (сверяет служба авторизации, у неё свой путь к базе).
+//
+// Хеш, покинувший базу, дальше живёт в журналах, в ответах, в снимках экрана и в
+// контексте агента — то есть в местах, откуда его уже не изъять. Поэтому дверь
+// вырезает такие колонки на выходе, а не полагается на дисциплину вызывающего.
+//
+// Список ведётся по ИМЕНИ колонки, а не по имени таблицы: завтра `password_reset_token`
+// появится в другой таблице, и правило обязано сработать там само.
+const SECRET_COLUMNS = new Set([
+  'password',
+  'password_hash',
+  'session_token',
+  'refresh_token',
+  'access_token',
+  'id_token',
+  'verification_token',
+  'totp_secret',
+])
+
 app.get('/db/tables/:table', (req, res) => {
   const { table } = req.params
   const validTables = new Set(
@@ -756,17 +781,23 @@ app.get('/db/tables/:table', (req, res) => {
   const limit  = Math.min(parseInt(req.query.limit ?? '500'), 1000)
   const offset = parseInt(req.query.offset ?? '0')
 
-  const columns = appDb.prepare(`PRAGMA table_info("${table}")`).all().map(c => c.name)
+  const allColumns = appDb.prepare(`PRAGMA table_info("${table}")`).all().map(c => c.name)
+  // Колонки-секреты не попадают ни в выборку, ни в перечень: вызывающий не должен
+  // даже узнать их имена — по имени угадывается способ атаки.
+  const columns = allColumns.filter(c => !SECRET_COLUMNS.has(c))
+  const select = columns.length ? columns.map(c => `"${c}"`).join(', ') : '*'
 
   let rows
   if (search.trim()) {
+    // Поиск идёт по тем же видимым колонкам: искать ПО хешу пароля бессмысленно,
+    // а возможность подобрать его посимвольным LIKE — нет.
     const textCols   = columns.filter(c => c !== 'id')
     const conditions = textCols.length ? textCols.map(c => `"${c}" LIKE ?`).join(' OR ') : null
     rows = conditions
-      ? appDb.prepare(`SELECT * FROM "${table}" WHERE ${conditions} LIMIT ? OFFSET ?`).all(...textCols.map(() => `%${search}%`), limit, offset)
-      : appDb.prepare(`SELECT * FROM "${table}" LIMIT ? OFFSET ?`).all(limit, offset)
+      ? appDb.prepare(`SELECT ${select} FROM "${table}" WHERE ${conditions} LIMIT ? OFFSET ?`).all(...textCols.map(() => `%${search}%`), limit, offset)
+      : appDb.prepare(`SELECT ${select} FROM "${table}" LIMIT ? OFFSET ?`).all(limit, offset)
   } else {
-    rows = appDb.prepare(`SELECT * FROM "${table}" LIMIT ? OFFSET ?`).all(limit, offset)
+    rows = appDb.prepare(`SELECT ${select} FROM "${table}" LIMIT ? OFFSET ?`).all(limit, offset)
   }
 
   const total = appDb.prepare(`SELECT COUNT(*) as n FROM "${table}"`).get().n

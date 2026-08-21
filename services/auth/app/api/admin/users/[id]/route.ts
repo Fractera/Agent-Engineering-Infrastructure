@@ -6,7 +6,12 @@ export const PATCH = auth(async function PATCH(req, context) {
   const session = req.auth;
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const roles: string[] = (session.user as { roles?: string[] }).roles ?? [];
-  if (!roles.includes("architect")) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  // 🔒 ПРАВИТЬ ЗАПИСЬ МОГУТ АДМИНИСТРАТОР И АРХИТЕКТОР (владелец 2026-08-21),
+  // но роль архитектора остаётся за архитектором — см. ниже.
+  const callerIsArchitect = roles.includes("architect");
+  if (!callerIsArchitect && !roles.includes("admin")) {
+    return NextResponse.json({ error: "Forbidden", requires: ["admin", "architect"] }, { status: 403 });
+  }
 
   const params = await (context?.params as Promise<{ id: string }>);
   const id = params?.id;
@@ -16,8 +21,13 @@ export const PATCH = auth(async function PATCH(req, context) {
   //   1. A user can NEVER remove the architect role from themselves — we block
   //      editing your own account entirely, which covers it.
   //   2. Only ANOTHER architect can remove architect from another architect —
-  //      the 403 above already requires the caller to be architect, and the
-  //      self-block below guarantees it's a different account.
+  //      the self-block below guarantees it's a different account.
+  //   3. 🔒 АДМИНИСТРАТОР НЕ ТРОГАЕТ РОЛЬ АРХИТЕКТОРА — ни выдаёт, ни снимает.
+  //      Без этого правила расширение доступа до `admin` означало бы, что
+  //      администратор выдаёт `architect` кому угодно, в том числе своему
+  //      второму аккаунту, — то есть повышает себя до полного доступа, и
+  //      разница между двумя ролями исчезает в первый же день. Проверяется
+  //      ниже, когда известны и текущие роли записи, и запрошенные.
   const currentUserId = (session.user as { id?: string }).id;
   if (id === currentUserId) return NextResponse.json({ error: "Cannot modify your own account" }, { status: 400 });
 
@@ -29,8 +39,33 @@ export const PATCH = auth(async function PATCH(req, context) {
   };
 
   const db = getDb();
-  const user = db.prepare("SELECT id, email FROM users WHERE id = ?").get(id) as { id: string; email: string } | undefined;
+  const user = db.prepare("SELECT id, email, roles FROM users WHERE id = ?").get(id) as
+    | { id: string; email: string; roles: string }
+    | undefined;
   if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+
+  // Правило 3: администратор не выдаёт и не снимает роль архитектора.
+  //
+  // Сравниваются ТЕКУЩИЕ роли записи и ЗАПРОШЕННЫЕ: запрет срабатывает лишь
+  // тогда, когда `architect` реально появляется или исчезает. Администратор,
+  // меняющий менеджера на бухгалтера у чужого архитектора, ничего не нарушает и
+  // отказа не получит — правило стережёт одну роль, а не любую правку.
+  if (!callerIsArchitect && body.roles !== undefined) {
+    let had = false;
+    try {
+      const parsed = JSON.parse(user.roles);
+      had = Array.isArray(parsed) && parsed.includes("architect");
+    } catch {
+      had = false;
+    }
+    const wants = body.roles.includes("architect");
+    if (had !== wants) {
+      return NextResponse.json(
+        { error: "Only an architect may grant or remove the architect role", requires: ["architect"] },
+        { status: 403 },
+      );
+    }
+  }
 
   const updates: string[] = [];
   const values: unknown[] = [];

@@ -8,8 +8,16 @@ export const GET = auth(function GET(req) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const roles: string[] = (session.user as { roles?: string[] }).roles ?? [];
-  if (!roles.includes("architect")) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  // 🔒 СПИСОК ВИДЯТ АДМИНИСТРАТОР И АРХИТЕКТОР (решение владельца 2026-08-21).
+  //
+  // Здесь стоял один `architect`, и это делало страницу управления ролями
+  // недоступной той роли, ради которой она существует: администратор — тот, кто
+  // раздаёт права в повседневной работе, архитектор занят другим.
+  //
+  // Смежная правка в соседнем маршруте `[id]` шире по последствиям: там решается,
+  // кому позволено ТРОГАТЬ роль архитектора.
+  if (!roles.some((r) => r === "architect" || r === "admin")) {
+    return NextResponse.json({ error: "Forbidden", requires: ["admin", "architect"] }, { status: 403 });
   }
 
   const url = new URL(req.url);
