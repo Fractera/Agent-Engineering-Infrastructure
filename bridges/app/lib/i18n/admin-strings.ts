@@ -191,6 +191,19 @@ export type AdminStrings = {
     helpLabel: string; helpWhereTitle: string; helpWhere: string;
     helpOrderTitle: string; helpOrder: string;
   };
+  // Страница «Секции» (шаг 541). ПЕРЕВОДИТСЯ, как любая страница панели.
+  // Не переводятся только сами блоки и их превью: имя вида, поля, заметки для
+  // агента и лорем — это словарь архитектора и агента, а не текст для читателя.
+  designSections: {
+    introTitle: string; intro: string[];
+    addTitle: string; addBody: string; addQuote: string; addAfter: string;
+    /** Оговорка над превью: здесь оформление по умолчанию, на сайте — токены владельца. */
+    previewNote: string;
+    typeEmpty: string; pickHint: string; back: string;
+    idLabel: string; fieldsLabel: string; descriptionLabel: string; noDescription: string;
+    usedOnLabel: string; usedNowhere: string; orderLabel: string;
+    emptyTitle: string; emptyBody: string;
+  };
   howToBuild: {
     welcomeTitle: string; welcomeBody: string; missing: string;
     // Запрос на доработку платформы — единственная сегодня дверь для партнёра,

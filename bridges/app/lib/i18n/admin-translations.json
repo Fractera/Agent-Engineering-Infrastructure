@@ -3241,6 +3241,30 @@
       "helpOrder": "The frame goes up first — addresses, tables, sign-in. Then the features, one step at a time, each proved on a live page. Data comes last, on access you give yourself: until that moment a mistake costs almost nothing.",
       "localField": "Path to the folder (optional)",
       "localPlaceholder": "C:Usersyouprojectsyour-project"
+    },
+    "designSections": {
+      "introTitle": "Sections and blocks — the same thing seen from two sides",
+      "intro": [
+        "A page here is a LIST OF BLOCKS, not a laid-out file: the words live as data, and how they look is decided by the section that draws them. A rule added to one kind reaches every page where it appears.",
+        "A section is a kind of block with a purpose. The eleven types below sort them by that purpose — ten are the classic parts of a landing page, the eleventh is the material a page is written from: paragraphs, lists, tables, code."
+      ],
+      "addTitle": "How to add a new section",
+      "addBody": "New sections are written by the agent-programmer, not in this panel. Open the project on your own machine and say, in your own words:",
+      "addQuote": "I want to create a new section in the ⟨Hero⟩ group. Here is what it should do: … You may add a code example.",
+      "addAfter": "When the section is ready, come back to this tab and look at what the design turned out to be. Not right — go back and refine it. The catalogue here is rebuilt with the project, so a new section shows up on its own.",
+      "previewNote": "This is the DEFAULT look. On your site the section is repainted by your own tokens — colour, font, corner radius, density — so it will look different there. What the preview shows faithfully is the structure: what stands where, how many elements, whether there is an image.",
+      "typeEmpty": "No section serves this type yet",
+      "pickHint": "Open a type on the left and pick a section to see what it looks like.",
+      "back": "All sections",
+      "idLabel": "id",
+      "fieldsLabel": "What it carries",
+      "descriptionLabel": "What the agent reads when choosing this section",
+      "noDescription": "No notes yet. They are written the moment something is learned about a section — usually when you correct how it looks and say why.",
+      "usedOnLabel": "Where it stands today",
+      "usedNowhere": "Not used on any page yet",
+      "orderLabel": "position",
+      "emptyTitle": "No section catalogue in the project",
+      "emptyBody": "The panel reads sections/SECTIONS.json from the application. The file appears when the application is built; a guest project without a sections layer does not have one at all, and that is normal."
     }
   },
   "ru": {
@@ -6485,6 +6509,30 @@
       "helpOrder": "Сначала встаёт каркас — адреса, таблицы, вход. Потом возможности, по одной за шаг, и каждая доказывается живой страницей. Данные последними, по доступу, который вы даёте сами: до этого момента ошибка почти ничего не стоит.",
       "localField": "Путь к папке (необязательно)",
       "localPlaceholder": "C:Usersyouprojectsyour-project"
+    },
+    "designSections": {
+      "introTitle": "Секции и блоки — одно и то же с двух сторон",
+      "intro": [
+        "Страница здесь — это СПИСОК БЛОКОВ, а не свёрстанный файл: слова лежат данными, а как они выглядят, решает секция, которая их рисует. Правило, добавленное одному виду, доезжает до каждой страницы, где он встречается.",
+        "Секция — это вид блока с назначением. Одиннадцать типов ниже раскладывают виды по этому назначению: десять — классические части посадочной страницы, одиннадцатый — материал, из которого страница написана: абзацы, списки, таблицы, код."
+      ],
+      "addTitle": "Как добавить новую секцию",
+      "addBody": "Новые секции пишет агент-программист, а не эта панель. Откройте проект на своей машине и скажите своими словами:",
+      "addQuote": "Хочу создать новую секцию в разделе ⟨Герой⟩. Вот что она должна делать: … При необходимости добавьте пример кода.",
+      "addAfter": "Когда секция готова, вернитесь на эту вкладку и посмотрите, каким получился дизайн. Не то — вернитесь и доработайте. Каталог здесь пересобирается вместе с проектом, поэтому новая секция появляется сама.",
+      "previewNote": "Здесь секция показана в оформлении ПО УМОЛЧАНИЮ. На вашем сайте её перекрашивают ваши токены — цвет, шрифт, скругления, плотность, — и выглядеть она будет иначе. Точно превью показывает строение: что где стоит, сколько элементов, есть ли картинка.",
+      "typeEmpty": "Под этот тип нет ни одной секции",
+      "pickHint": "Откройте тип слева и выберите секцию, чтобы увидеть, как она выглядит.",
+      "back": "Все секции",
+      "idLabel": "номер",
+      "fieldsLabel": "Что несёт",
+      "descriptionLabel": "Что читает агент, выбирая эту секцию",
+      "noDescription": "Заметок пока нет. Они появляются, когда о секции что-то узнали — обычно когда вы поправили её вид и объяснили причину.",
+      "usedOnLabel": "Где стоит сегодня",
+      "usedNowhere": "Пока не используется ни на одной странице",
+      "orderLabel": "позиция",
+      "emptyTitle": "В проекте нет каталога секций",
+      "emptyBody": "Панель читает sections/SECTIONS.json из приложения. Файл появляется при сборке приложения; у гостевого проекта без слоя секций его нет вовсе, и это нормально."
     }
   },
   "es": {

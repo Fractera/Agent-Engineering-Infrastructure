@@ -30,6 +30,8 @@ export default async function Page(
   return (
     <PageShell lang={lang} slug="design-sections" s={s} title={page.title} hint={page.hint}>
       <SectionsBrowser
+        lang={lang}
+        s={s}
         catalogue={readSectionsCatalogue()}
         selectedKind={kind}
         baseHref={adminHref(lang, "design-sections")}

@@ -26,10 +26,15 @@ const CATALOGUE_PATH =
 export type SectionType = {
   id: string;
   order: number;
-  /** Английский, и это решение владельца: каталог секций не переводится. */
-  title: string;
-  purpose: string;
-  variants: string;
+  /**
+   * Двуязычно — и это уточнение владельца 2026-08-22, отменяющее прежнее «каталог
+   * секций не переводится». Не переводятся САМИ БЛОКИ и их превью: имя вида, поля,
+   * заметки для агента, лорем. Страница о них — обычная страница панели и говорит
+   * на языке читателя.
+   */
+  title: Record<string, string>;
+  purpose: Record<string, string>;
+  variants: Record<string, string>;
 };
 
 /** Один вид каталога — то, что реально нарисует приложение. */
@@ -54,6 +59,12 @@ export type SectionsCatalogue = {
   types: SectionType[];
   kinds: SectionKind[];
 };
+
+/** Строка на языке панели; нет перевода — английский, а не пусто. */
+export function pick(value: Record<string, string> | undefined, lang: string): string {
+  if (!value) return "";
+  return value[lang] ?? value.en ?? Object.values(value)[0] ?? "";
+}
 
 export function readSectionsCatalogue(): SectionsCatalogue {
   try {

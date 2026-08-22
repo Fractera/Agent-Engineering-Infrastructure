@@ -2,8 +2,8 @@ import Link from "next/link";
 import { Layers, TriangleAlert, Flower2, ChevronRight } from "lucide-react";
 import { TwoPane } from "../../_components/two-pane";
 import { SectionPreview } from "./preview";
-import { SECTIONS_UI as UI } from "./ui";
-import { kindsOfType, type SectionsCatalogue, type SectionKind } from "@/lib/sections-catalogue";
+import { kindsOfType, pick, type SectionsCatalogue, type SectionKind } from "@/lib/sections-catalogue";
+import type { AdminStrings } from "@/lib/i18n/admin-strings";
 
 // КАТАЛОГ СЕКЦИЙ — аккордеон типов слева, превью справа.
 //
@@ -22,7 +22,7 @@ import { kindsOfType, type SectionsCatalogue, type SectionKind } from "@/lib/sec
 // каталог полным, каким он не является.
 
 /** Описание вида — то, что читает агент, выбирая секцию. */
-function KindBody({ kind }: { kind: SectionKind }) {
+function KindBody({ kind, UI }: { kind: SectionKind; UI: AdminStrings["designSections"] }) {
   return (
     <div className="space-y-2 px-2 pb-2 pt-1">
       <div>
@@ -54,7 +54,7 @@ function KindBody({ kind }: { kind: SectionKind }) {
                 <span className="text-foreground">{u.page}</span>
                 {" — "}
                 {UI.orderLabel} {u.order}
-                {u.times > 1 && ` ${UI.usedTimes}${u.times}`}
+                {u.times > 1 && ` ×${u.times}`}
               </li>
             ))}
           </ul>
@@ -65,12 +65,15 @@ function KindBody({ kind }: { kind: SectionKind }) {
 }
 
 export function SectionsBrowser(
-  { catalogue, selectedKind, baseHref }: {
+  { lang, s, catalogue, selectedKind, baseHref }: {
+    lang: string;
+    s: AdminStrings;
     catalogue: SectionsCatalogue;
     selectedKind?: string;
     baseHref: string;
   },
 ) {
+  const UI = s.designSections;
   // Каталога нет — говорим прямо. Слот в покое пуст, гостевое приложение может быть
   // чужим и слоя секций не иметь вовсе: это не поломка панели.
   if (!catalogue.ok) {
@@ -106,9 +109,9 @@ export function SectionsBrowser(
                 className="mt-0.5 shrink-0 text-muted-foreground transition-transform group-open:rotate-90"
               />
               <span className="min-w-0">
-                <span className="text-muted-foreground">{type.order}.</span> {type.title}
+                <span className="text-muted-foreground">{type.order}.</span> {pick(type.title, lang)}
                 <span className="mt-0.5 block text-[10px] font-normal leading-relaxed text-muted-foreground">
-                  {type.purpose}
+                  {pick(type.purpose, lang)}
                 </span>
               </span>
             </summary>
@@ -147,7 +150,7 @@ export function SectionsBrowser(
                           preview
                         </Link>
                       </summary>
-                      <KindBody kind={k} />
+                      <KindBody kind={k} UI={UI} />
                     </details>
                   ))}
                 </div>
@@ -168,7 +171,7 @@ export function SectionsBrowser(
         <code className="font-mono text-[13px] font-semibold text-primary">{selected.kind}</code>
         {selectedType && (
           <span className="rounded-full border border-border px-2 py-0.5 text-[10px] text-muted-foreground">
-            {selectedType.order}. {selectedType.title}
+            {selectedType.order}. {pick(selectedType.title, lang)}
           </span>
         )}
       </div>
@@ -204,11 +207,9 @@ export function SectionsBrowser(
         <p className="flex items-center gap-1.5 text-[11px] font-medium text-orange-900 dark:text-orange-200">
           <Flower2 size={12} />{UI.addTitle}
         </p>
-        {UI.addBody.map(line => (
-          <p key={line} className="mt-1 text-[10px] leading-relaxed text-orange-900/90 dark:text-orange-200/90">
-            {line}
-          </p>
-        ))}
+        <p className="mt-1 text-[10px] leading-relaxed text-orange-900/90 dark:text-orange-200/90">
+          {UI.addBody}
+        </p>
         <p className="mt-1.5 rounded border border-orange-500/30 bg-background/60 px-2 py-1.5 font-mono text-[10px] leading-relaxed text-orange-900 dark:text-orange-100">
           {UI.addQuote}
         </p>
