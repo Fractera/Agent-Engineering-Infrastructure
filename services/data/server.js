@@ -290,15 +290,20 @@ async function embed(text) {
 
 // ── Auth middleware ───────────────────────────────────────────────────────────
 
+// 🔒 ЧЕМ ВОШЛИ — ЭТО ТЕПЕРЬ ФАКТ ЗАПРОСА (`req.authVia`), А НЕ ПОДРОБНОСТЬ.
+// Проверка ниже (`requireCapability`) различает машину и человека, и без этого
+// поля различить их было бы нечем: сессия у обоих выглядит одинаково.
 async function requireAuth(req, res, next) {
   if (shouldBypassAuth()) {
     req.session = { userId: 'demo@local', email: 'demo@local', roles: ['admin'] }
+    req.authVia = 'bypass'
     return next()
   }
   const dataSecret = process.env.DATA_SECRET
   if (dataSecret && req.headers['x-data-secret'] === dataSecret) {
     const agentId = req.headers['x-agent-identity'] ?? 'agent'
     req.session = { userId: `${agentId}@agent`, email: `${agentId}@agent`, roles: ['agent'] }
+    req.authVia = 'secret'
     return next()
   }
   const cookie = req.headers.cookie ?? ''
@@ -306,6 +311,7 @@ async function requireAuth(req, res, next) {
     const r = await fetch(`${AUTH_URL}/api/session`, { headers: { cookie } })
     if (!r.ok) return res.status(401).json({ error: 'Unauthorized' })
     req.session = await r.json()
+    req.authVia = 'cookie'
     next()
   } catch {
     res.status(503).json({ error: 'Auth service unavailable' })
@@ -373,6 +379,64 @@ app.get('/health', (_req, res) => res.json({ ok: true }))
 // ── Apply auth to everything below ───────────────────────────────────────────
 
 app.use(requireAuth)
+app.use(requireCapability)
+
+// ── Что кому позволено ───────────────────────────────────────────────────────
+//
+// 🔒 ЧЕМ ЭТО ОПЛАЧЕНО (найдено 2026-08-22, разбор перед промышленным запуском).
+// Слой данных публикуется отдельным поддоменом `data.<домен>` — он нужен, чтобы
+// разработчик с ноутбука читал живые данные (панель выдаёт `REMOTE_DATA_URL`).
+// При этом `requireAuth` пускал по сессионной куке ЛЮБОГО пользователя, ролей не
+// проверял ни один маршрут, а `COOKIE_DOMAIN=.<домен>` заставляет браузер слать
+// куку на этот поддомен сам. Сложение трёх фактов давало вот что: любой
+// зарегистрированный посетитель сайта, просто будучи залогиненным, мог отправить
+// `POST /db/migrate` с произвольным SQL — прочитать таблицу `users` или уронить
+// её. Анонимно было закрыто (401), а роли не требовалось никакой.
+//
+// 🔒 ДВА КЛАССА, А НЕ ОДИН СПИСОК ПРАВ. Цена ошибки у маршрутов разная:
+//   • СХЕМА (`/db/migrate`, удаление таблицы) — произвольный SQL. Сюда пускаем
+//     ТОЛЬКО машину с секретом: у человека в браузере нет способа предъявить его,
+//     и это ровно то, чего мы хотим. Кука здесь не пропуск НИКОГДА, какой бы
+//     ролью она ни обладала.
+//   • ДАННЫЕ (медиа, настройки панели, строки таблиц, векторы, прокси к службам)
+//     — сюда человек ходит из панели, и это законно: панель грузит значок соцсети
+//     ЧЕРЕЗ куку архитектора. Поэтому кука годится, но лишь у привилегированной
+//     роли; покупателю в слое данных делать нечего.
+//
+// 🔒 ПОЧЕМУ НЕ ЗАКРЫТЬ ПОДДОМЕН ЦЕЛИКОМ. Он и есть канал локальной разработки:
+// `publicDataUrl()` панели отдаёт `https://data.<домен>` на машину владельца.
+// Закрыв его, мы сломали бы разработку; поэтому чиним право, а не адрес.
+const PRIVILEGED_ROLES = new Set(['architect', 'admin', 'agent'])
+
+/** Маршруты, выполняющие произвольный SQL или уничтожающие таблицу. */
+function isSchemaRoute(req) {
+  const p = req.path
+  // Хвостовой слэш снимаем строкой, а не выражением: одна ошибка в escape —
+  // и правило перестаёт срабатывать молча, то есть дверь снова открыта.
+  const clean = p.endsWith('/') && p.length > 1 ? p.slice(0, -1) : p
+  if (req.method === 'POST' && clean === '/db/migrate') return true
+  if (req.method === 'DELETE' && p.startsWith('/db/tables/') && p.split('/').filter(Boolean).length === 3) return true
+  return false
+}
+
+function requireCapability(req, res, next) {
+  const via = req.authVia
+  const roles = Array.isArray(req.session?.roles) ? req.session.roles : []
+
+  if (isSchemaRoute(req)) {
+    // Режим обхода — это онбординг на голом IP, где авторизации нет вовсе.
+    if (via === 'secret' || via === 'bypass') return next()
+    return res.status(403).json({
+      error: 'Schema routes require the data-service secret, not a session',
+    })
+  }
+
+  if (via === 'secret' || via === 'bypass') return next()
+  if (roles.some(r => PRIVILEGED_ROLES.has(r))) return next()
+  return res.status(403).json({ error: 'Forbidden: the data layer is not a customer surface' })
+}
+
+
 
 // ── GET /media ────────────────────────────────────────────────────────────────
 
