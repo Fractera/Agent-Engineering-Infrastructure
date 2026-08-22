@@ -1273,6 +1273,62 @@ app.all(new RegExp('^\\/service\\/geo(\\/.*)?$'), requireAuth, (req, res) =>
 app.all(new RegExp('^\\/service\\/channels(\\/.*)?$'), requireAuth, (req, res) =>
   proxy(INTERNAL.channels, {}, req, res))
 
+
+// ── GET /capabilities — служба описывает СЕБЯ САМА ───────────────────────────
+//
+// 🔒 ЗАЧЕМ ЭТО СУЩЕСТВУЕТ (шаг 544). Агент живёт в гостевом слое и платформы не
+// видит: её код лежит вне его репозитория, а при промышленном запуске будет ещё
+// и закрыт. Сегодня узнать, что умеет слой данных, можно было ровно одним
+// способом — прочитать этот файл. Значит завтра нельзя будет никак, и агент
+// станет честно отвечать «нет доступа» при полном доступе.
+//
+// 🔒 СПИСОК ПОРОЖДАЕТСЯ ИЗ САМОГО ПРИЛОЖЕНИЯ, А НЕ ПИШЕТСЯ РУКАМИ. Перечень,
+// который ведут вручную, устаревает первым: новый маршрут появляется в коде, а в
+// описании его нет — и агент честно им не пользуется. Здесь источник один: то,
+// что express реально зарегистрировал.
+//
+// 🔒 КЛЮЧЕЙ ЗДЕСЬ НЕТ И БЫТЬ НЕ МОЖЕТ. Ответ говорит, КАКОЙ заголовок нужен, и
+// никогда — какое у него значение.
+app.get('/capabilities', (req, res) => {
+  const routes = []
+  for (const layer of (app._router?.stack ?? [])) {
+    if (!layer.route) continue
+    const path = typeof layer.route.path === 'string' ? layer.route.path : String(layer.route.path)
+    const methods = Object.keys(layer.route.methods || {})
+      .filter(m => layer.route.methods[m])
+      .map(m => m.toUpperCase())
+      .sort()
+    routes.push({ path, methods })
+  }
+
+  res.json({
+    service: 'fractera-data',
+    generatedAt: new Date().toISOString(),
+    // Как доказать себя. Значение секрета живёт в `.env.local` слота и в панели.
+    auth: {
+      machine: { header: 'x-data-secret', identity: 'x-agent-identity (optional)' },
+      human: { cookie: true, requiredRoles: [...PRIVILEGED_ROLES] },
+    },
+    // Два класса прав. Схему меняет только машина — кука не пропуск никогда.
+    classes: {
+      schema: {
+        requires: 'machine secret',
+        routes: ['POST /db/migrate', 'DELETE /db/tables/:table'],
+        note: 'arbitrary SQL: DDL, SELECT with params, writes',
+      },
+      data: { requires: 'machine secret or a privileged role', routes: 'everything else below' },
+    },
+    // Общий ход к внутренним службам: любой метод, любой подпуть.
+    proxies: Object.keys(INTERNAL).map(name => ({
+      prefix: `/service/${name}/*`,
+      passes: 'any method, any subpath',
+    })),
+    vectors: { model: EMBED_MODEL, dims: EMBED_DIMS },
+    limits: { uploadBytes: 200 * 1024 * 1024 },
+    routes,
+  })
+})
+
 // ── Start ─────────────────────────────────────────────────────────────────────
 
 // 🔒 ТОЛЬКО ПЕТЛЯ. Служба слушала `*:3300`, то есть все интерфейсы, и снаружи её
