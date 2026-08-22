@@ -270,6 +270,19 @@ export function SectionPreview({ shape }: { shape: string }) {
         </div>
       );
 
+    case "faq":
+      return (
+        <div className="space-y-2">
+          <p className="text-[13px] font-medium text-foreground">{LOREM.short}</p>
+          {LOREM.items.slice(0, 2).map(t => (
+            <Box key={t}>
+              <p className="text-[12px] font-medium text-foreground">{t}?</p>
+              <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">{LOREM.line}</p>
+            </Box>
+          ))}
+        </div>
+      );
+
     // Форма неизвестна — рисуем текст. Вид виден, и это главное.
     case "text":
     default:
