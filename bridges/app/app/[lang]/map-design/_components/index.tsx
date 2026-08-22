@@ -9,7 +9,6 @@ import { isSystemFont } from "@/lib/design/font-catalogue";
 import { readLocalizedContent } from "@/lib/content/localized-content";
 import { GuideProse } from "../../how-to-build/_components/guide-prose";
 import { DocPopup } from "../../_components/doc-popup.client";
-import { CustomDesignSwitch } from "./custom-design-switch.client";
 
 // Документ за зелёной кнопкой. Нет файла — нет и кнопки: пустое окно хуже, чем
 // отсутствующая кнопка, потому что обещает и не даёт.
@@ -52,8 +51,6 @@ type Cfg = {
   type?: { scale?: number; leading?: number };
   shape?: { radius?: string; borderWidth?: string; spaceScale?: number; appWidth?: string };
   colors?: { light?: Record<string, string>; dark?: Record<string, string> };
-  /** Режим дизайна: рекомендованный (пусто/false) или кастомный (шаг 539). */
-  customDesign?: boolean;
 };
 
 function readConfig(): Cfg {
@@ -128,34 +125,6 @@ export function DesignMap({ lang, s }: { lang: string; s: AdminStrings }) {
       <p className="rounded-md border border-blue-500/30 bg-blue-500/5 p-2.5 text-[10px] leading-relaxed text-blue-700 dark:text-blue-300">
         {m.intro}
       </p>
-
-      {/* 🔒 РЕЖИМ ДИЗАЙНА СТОИТ ПЕРВЫМ, ДО СПИСКА РАЗДЕЛОВ (шаг 539). Он решает,
-          действуют ли эти разделы вообще: в кастомном режиме страницы уходят
-          из-под палитры, меню и подвала, и настраивать цвета для них незачем.
-          Ниже — состояние, здесь — рамка, в которой это состояние что-то значит. */}
-      <CustomDesignSwitch
-        config={cfg as Record<string, unknown>}
-        initial={cfg.customDesign === true}
-        labels={{
-          recommendedTitle: m.modeRecommendedTitle,
-          recommendedBody: m.modeRecommendedBody,
-          customTitle: m.modeCustomTitle,
-          customBody: m.modeCustomBody,
-          costTitle: m.modeCostTitle,
-          cost: m.modeCost,
-          responsibility: m.modeResponsibility,
-          turnOn: m.modeTurnOn,
-          turnOff: m.modeTurnOff,
-          confirmTitle: m.modeConfirmTitle,
-          confirmBody: m.modeConfirmBody,
-          confirmYes: m.modeConfirmYes,
-          confirmNo: m.modeConfirmNo,
-          saving: m.modeSaving,
-          savedOn: m.modeSavedOn,
-          savedOff: m.modeSavedOff,
-          failed: m.modeFailed,
-        }}
-      />
 
       {/* Одна честная строка о состоянии в целом — до списка, чтобы ответ на
           вопрос «трогали ли здесь что-нибудь» не приходилось собирать глазами. */}

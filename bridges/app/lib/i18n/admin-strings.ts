@@ -559,16 +559,6 @@ export type AdminStrings = {
   // Карта дизайна: рубрикатор с текущим состоянием четырёх разделов.
   mapDesign: {
     intro: string; allDefault: string; notSet: string; liveNote: string;
-    // Режим дизайна (шаг 539): рекомендованный против кастомного. Слова несут
-    // ЦЕНУ решения — список того, что страница теряет, — потому что предупреждение
-    // без перечня потерь читается как формальность и пролистывается.
-    modeRecommendedTitle: string; modeRecommendedBody: string;
-    modeCustomTitle: string; modeCustomBody: string;
-    modeCostTitle: string; modeCost: string[]; modeResponsibility: string;
-    modeTurnOn: string; modeTurnOff: string;
-    modeConfirmTitle: string; modeConfirmBody: string;
-    modeConfirmYes: string; modeConfirmNo: string;
-    modeSaving: string; modeSavedOn: string; modeSavedOff: string; modeFailed: string;
     systemFont: string; scaleValue: string; schemeNamed: string; colorsCustom: string;
     // Разбор каждого раздела: как устроен, зачем нужен, что даёт.
     // Только у секций есть короткие поля: они стоят строкой в списке разделов,
