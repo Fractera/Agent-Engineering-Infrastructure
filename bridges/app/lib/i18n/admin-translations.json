@@ -3050,7 +3050,30 @@
         "colorsTitle": "Colours: what is already built",
         "sections": "The rule, and what is coming",
         "sectionsTitle": "Sections: how design is built and reused"
-      }
+      },
+      "modeRecommendedTitle": "Recommended mode — the design of the platform",
+      "modeRecommendedBody": "Every page carries the same menu, the same footer and your palette from this panel. Change a colour here and the whole site changes with it, without a rebuild. This is what the settings below are for.",
+      "modeCustomTitle": "Custom mode is on — pages may leave the platform design",
+      "modeCustomBody": "Pages moved into the free layer are no longer repainted from this panel and no longer carry the menu, the footer or the consent banner. Pages left in the platform design keep working exactly as before.",
+      "modeCostTitle": "What a page loses once it moves out:",
+      "modeCost": [
+        "the palette from this panel — you change a colour, that page does not",
+        "the menu and the footer — no navigation unless you draw your own",
+        "the cookie consent banner — consent is not collected on that page",
+        "app install and offline — no prompt, no service worker",
+        "our appearance checks — typography, contrast and size limits stop covering it"
+      ],
+      "modeResponsibility": "From that point the page is maintained by hand, and that work is yours, not the platform’s.",
+      "modeTurnOn": "I need a custom design — show me what it costs",
+      "modeTurnOff": "Return to the recommended mode",
+      "modeConfirmTitle": "This is a one-way door for every page you move",
+      "modeConfirmBody": "Switching the mode on changes nothing by itself: it only opens the free layer. Pages move out one at a time, and each one that does stops being covered by everything below.",
+      "modeConfirmYes": "Open the custom mode",
+      "modeConfirmNo": "Stay on the recommended one",
+      "modeSaving": "Saving…",
+      "modeSavedOn": "Custom mode is open",
+      "modeSavedOff": "Back to the recommended mode",
+      "modeFailed": "Could not save the mode"
     },
     "developmentMode": {
       "lead": "The mode decides one thing: whether a confirmed use case and an open step are required before work begins. Everything else — the technical laws of the project — holds in all four.",
@@ -6290,7 +6313,30 @@
         "colorsTitle": "Цвета: что уже построено",
         "sections": "Правило и что придёт",
         "sectionsTitle": "Секции: как устроен и как переиспользуется дизайн"
-      }
+      },
+      "modeRecommendedTitle": "Рекомендованный режим — дизайн платформы",
+      "modeRecommendedBody": "Все страницы несут одно меню, один подвал и вашу палитру из этой панели. Меняете цвет здесь — меняется весь сайт, без пересборки. Ради этого и существуют настройки ниже.",
+      "modeCustomTitle": "Кастомный режим включён — страницы могут выходить из дизайна платформы",
+      "modeCustomBody": "Страницы, переведённые в свободный слой, больше не перекрашиваются из этой панели и не несут ни меню, ни подвала, ни баннера согласия. Страницы, оставшиеся в дизайне платформы, работают ровно как раньше.",
+      "modeCostTitle": "Что теряет страница, вышедшая из дизайна платформы:",
+      "modeCost": [
+        "палитру из этой панели — вы меняете цвет, а она не меняется",
+        "меню и подвал — навигации нет, пока не нарисуете свою",
+        "баннер согласия на cookie — согласие на этой странице не собирается",
+        "установку приложения и офлайн — ни предложения, ни сервис-воркера",
+        "наши проверки внешности — типографика, контраст и лимиты её больше не покрывают"
+      ],
+      "modeResponsibility": "Дальше такая страница ведётся руками, и эта работа ваша, а не платформы.",
+      "modeTurnOn": "Мне нужен кастомный дизайн — покажите, чем это обернётся",
+      "modeTurnOff": "Вернуться в рекомендованный режим",
+      "modeConfirmTitle": "Для каждой перенесённой страницы это дверь в одну сторону",
+      "modeConfirmBody": "Включение режима само по себе ничего не меняет: оно лишь открывает свободный слой. Страницы переезжают туда по одной, и каждая переехавшая перестаёт быть покрытой всем, что перечислено ниже.",
+      "modeConfirmYes": "Открыть кастомный режим",
+      "modeConfirmNo": "Остаться на рекомендованном",
+      "modeSaving": "Сохраняю…",
+      "modeSavedOn": "Кастомный режим открыт",
+      "modeSavedOff": "Вернулись в рекомендованный режим",
+      "modeFailed": "Не удалось сохранить режим"
     },
     "developmentMode": {
       "lead": "Режим решает одно: обязательны ли подтверждённый кейс и открытый шаг перед началом работы. Всё остальное — технические законы проекта — действует во всех четырёх.",
