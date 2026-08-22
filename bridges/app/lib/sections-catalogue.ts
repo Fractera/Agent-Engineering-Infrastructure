@@ -26,22 +26,27 @@ const CATALOGUE_PATH =
 export type SectionType = {
   id: string;
   order: number;
-  title: Record<string, string>;
-  purpose: Record<string, string>;
-  variants: Record<string, string>;
+  /** Английский, и это решение владельца: каталог секций не переводится. */
+  title: string;
+  purpose: string;
+  variants: string;
 };
 
 /** Один вид каталога — то, что реально нарисует приложение. */
 export type SectionKind = {
+  /** Числовой номер вида — чтобы называть секцию без опечаток («0002»). */
+  id: string | null;
   kind: string;
   type: string;
   /** Как панель рисует превью: код рендерера ей недоступен, схему она знает. */
   shape: string;
   fields: string;
   title: string | null;
-  /** Проза карточки: где применять, что ломается, правила владельца. */
+  /** Проза карточки: что читает агент, выбирая эту секцию. */
   description: string | null;
   hasCard: boolean;
+  /** Где вид стоит сегодня — считается обходом содержимого, не ведётся руками. */
+  usedOn: { page: string; order: number; times: number }[];
 };
 
 export type SectionsCatalogue = {
@@ -49,12 +54,6 @@ export type SectionsCatalogue = {
   types: SectionType[];
   kinds: SectionKind[];
 };
-
-/** Строка на языке панели; нет перевода — английский, а не пусто. */
-export function pick(value: Record<string, string> | undefined, lang: string): string {
-  if (!value) return "";
-  return value[lang] ?? value.en ?? Object.values(value)[0] ?? "";
-}
 
 export function readSectionsCatalogue(): SectionsCatalogue {
   try {
