@@ -1275,8 +1275,17 @@ app.all(new RegExp('^\\/service\\/channels(\\/.*)?$'), requireAuth, (req, res) =
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 
-app.listen(PORT, () => {
-  console.log(`Data service listening on http://localhost:${PORT}`)
+// 🔒 ТОЛЬКО ПЕТЛЯ. Служба слушала `*:3300`, то есть все интерфейсы, и снаружи её
+// держал ровно один слой — правило `ufw`. Наружу она попадает через nginx, а он
+// на этой же машине; соседи по петле (`:3400`, `:3500`) так и устроены с самого
+// начала. Одна ошибка в брандмауэре больше не открывает произвольный SQL миру.
+//
+// Адрес задаётся переменной на случай, когда службу выносят на свою машину:
+// `DATA_BIND=0.0.0.0` — осознанное решение того, кто это делает, а не умолчание.
+const BIND = process.env.DATA_BIND ?? '127.0.0.1'
+
+app.listen(PORT, BIND, () => {
+  console.log(`Data service listening on http://${BIND}:${PORT}`)
   console.log(`Storage: ${STORAGE_DIR}`)
   console.log(`Media DB: ${MEDIA_DB}`)
   console.log(`App DB:   ${APP_DB}`)
