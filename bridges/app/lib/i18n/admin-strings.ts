@@ -191,6 +191,15 @@ export type AdminStrings = {
     helpLabel: string; helpWhereTitle: string; helpWhere: string;
     helpOrderTitle: string; helpOrder: string;
   };
+  // Каталог секций (шаг 541): одиннадцать типов по НАЗНАЧЕНИЮ и превью схемой.
+  designSections: {
+    introTitle: string; intro: string[];
+    /** Оговорка над превью: здесь оформление по умолчанию, на сайте — токены владельца. */
+    previewNote: string;
+    typeEmpty: string; pickHint: string; back: string;
+    fieldsLabel: string; cardLabel: string; noCard: string;
+    emptyTitle: string; emptyBody: string;
+  };
   howToBuild: {
     welcomeTitle: string; welcomeBody: string; missing: string;
     // Запрос на доработку платформы — единственная сегодня дверь для партнёра,

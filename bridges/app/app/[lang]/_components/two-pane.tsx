@@ -26,6 +26,7 @@ export function TwoPane({
   backHref,
   backLabel,
   emptyHint,
+  ratio = "1.6fr",
 }: {
   list: React.ReactNode;
   detail: React.ReactNode;
@@ -36,9 +37,25 @@ export function TwoPane({
   backLabel: string;
   /** Что стоит в правой колонке, пока ничего не выбрано (только на широком экране). */
   emptyHint: string;
+  /**
+   * Доля ПРАВОЙ колонки. Умолчание 1.6 — журналы и документы: список это строки-
+   * заголовки, содержимое шире их по природе.
+   *
+   * 🔒 ПРОПОРЦИЯ — ПРОПС, А НЕ ЧИСЛО В КЛАССЕ (владелец 2026-08-22). У каталога
+   * секций содержимое — превью во всю ширину, и ему нужно 3fr: секция, зажатая в
+   * 60% экрана, показывает не секцию, а её сжатую версию.
+   */
+  ratio?: string;
 }) {
   return (
-    <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)]">
+    // 🔒 ПРОПОРЦИЯ ЕДЕТ ПЕРЕМЕННОЙ CSS, А НЕ КЛАССОМ СО ВСТАВЛЕННЫМ ЗНАЧЕНИЕМ.
+    // Tailwind собирает стили, читая ИСХОДНИК: класс, склеенный в рантайме
+    // (`lg:grid-cols-[…${ratio}…]`), в сборку не попадает, и колонки молча
+    // разъезжаются. Класс здесь статический, меняется только значение переменной.
+    <div
+      className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,var(--pane-ratio))]"
+      style={{ "--pane-ratio": ratio } as React.CSSProperties}
+    >
       {/* Список: на узком экране прячется, когда что-то открыто. */}
       <div className={`${selected ? "hidden lg:block" : "block"} min-w-0`}>{list}</div>
 

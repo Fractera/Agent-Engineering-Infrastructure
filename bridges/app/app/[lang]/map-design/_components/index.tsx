@@ -114,8 +114,10 @@ export function DesignMap({ lang, s }: { lang: string; s: AdminStrings }) {
       state: colorState,
       swatch: light.primary ? [light.background ?? "#ffffff", light.primary, light.accent ?? light.primary] : null,
     },
-    // Пятая — без страницы: механизма ещё нет, и ссылка вела бы в никуда.
-    { key: "sections" as const, slug: null, state: null, swatch: null },
+    // Пятая — каталог секций (шаг 541). До него строка стояла без ссылки: страницы
+    // не было, и вести было некуда. Теперь есть, и метка «скоро» снимается —
+    // обещание, висящее после того, как вещь построена, обесценивает остальные.
+    { key: "sections" as const, slug: "design-sections" as const, state: null, swatch: null },
   ];
 
   const untouched = rows.every(r => !r.state);

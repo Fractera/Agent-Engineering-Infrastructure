@@ -1437,6 +1437,10 @@
       "migration": {
         "title": "Move to Fractera",
         "hint": "Where your existing project comes from — the agent reads it and lays the move out as steps."
+      },
+      "design-sections": {
+        "title": "Sections",
+        "hint": "What pages are built from: eleven types by purpose, and what each one looks like."
       }
     },
     "breadcrumbHome": "Panel",
@@ -3033,7 +3037,7 @@
           "body": [
             "A page is assembled from sections — ready block kinds. A page material is data, not markup: the text lives separately and how it looks is the section decision. So a rule added to one kind reaches every page where that kind appears.",
             "From this follows the point: the look of a project consists of exactly two things — the set of sections and the token values from the neighbouring pages. That is what makes a design portable.",
-            "SOON: importing ready section sets, and a page builder. The foundation already stands — a catalogue of twenty-one kinds, a machine check for specimens, and tokens that apply without a rebuild. No dates: a capability is announced once a check holds it."
+            "The catalogue is open: eleven types by purpose, each with its kinds and a preview. Five of the ten landing types are covered today — the rest are shown empty, and that is a map of what is left to build, not a gap in the panel."
           ],
           "shortTitle": "Sections",
           "hint": "What pages are assembled from, and how a ready design is reused."
@@ -3237,6 +3241,23 @@
       "helpOrder": "The frame goes up first — addresses, tables, sign-in. Then the features, one step at a time, each proved on a live page. Data comes last, on access you give yourself: until that moment a mistake costs almost nothing.",
       "localField": "Path to the folder (optional)",
       "localPlaceholder": "C:Usersyouprojectsyour-project"
+    },
+    "designSections": {
+      "introTitle": "Sections and blocks — the same thing, seen from two sides",
+      "intro": [
+        "A page here is a LIST OF BLOCKS, not a laid-out file: the words live as data, and how they look is decided by the section that draws them. That is why a rule added to one kind reaches every page where it appears.",
+        "A section is a kind of block with a purpose. The eleven types below sort them by that purpose — the first ten are the classic parts of a landing page, the eleventh is the material a page is written from: paragraphs, lists, tables, code.",
+        "The catalogue is closed by construction: a kind exists only if the application has a renderer for it. That is what makes the design portable — the look of a project is its set of sections plus the token values from the pages next door."
+      ],
+      "previewNote": "This is the DEFAULT look. On your site the section is repainted by your own tokens — colour, font, corner radius, density — so it will look different there. What the preview shows faithfully is the structure: what stands where, how many elements, whether there is an image.",
+      "typeEmpty": "No section serves this type yet",
+      "pickHint": "Pick a section on the left to see what it looks like and what it carries.",
+      "back": "All sections",
+      "fieldsLabel": "What it carries",
+      "cardLabel": "Notes and rules for this section",
+      "noCard": "No notes yet. They are written the moment something is learned about a section — usually when the owner corrects how it looks and says why.",
+      "emptyTitle": "No section catalogue in the project",
+      "emptyBody": "The panel reads sections/SECTIONS.json from the application. The file appears when the application is built; a guest project without a sections layer does not have one at all, and that is normal."
     }
   },
   "ru": {
@@ -4677,6 +4698,10 @@
       "migration": {
         "title": "Переезд на Fractera",
         "hint": "Откуда берётся ваш уже существующий проект — агент читает его и раскладывает переезд на шаги."
+      },
+      "design-sections": {
+        "title": "Секции",
+        "hint": "Из чего собираются страницы: одиннадцать типов по назначению и вид каждого."
       }
     },
     "breadcrumbHome": "Панель",
@@ -6273,7 +6298,7 @@
           "body": [
             "Страница собирается из секций — готовых видов блоков. Материал страницы это данные, а не вёрстка: текст лежит отдельно, а как он выглядит, решает секция. Поэтому правило, добавленное в один вид, доезжает до каждой страницы, где он встречается.",
             "Отсюда главное: внешний вид проекта состоит ровно из двух вещей — набора секций и значений токенов с соседних страниц. Это и делает дизайн переносимым.",
-            "СКОРО: загрузка готовых наборов секций и конструктор страниц. Опора уже стоит — каталог из двадцати одного вида, машинная проверка образцов и токены, применяющиеся без пересборки. Даты не называем: возможность объявляется после того, как её держит проверка."
+            "Каталог открыт: одиннадцать типов по назначению, у каждого свои виды и превью. Из десяти лендинговых типов сегодня закрыто пять — остальные показаны пустыми, и это карта того, что предстоит построить, а не пробел в панели."
           ],
           "shortTitle": "Секции",
           "hint": "Из чего собираются страницы и как переиспользовать готовый дизайн."
@@ -6477,6 +6502,23 @@
       "helpOrder": "Сначала встаёт каркас — адреса, таблицы, вход. Потом возможности, по одной за шаг, и каждая доказывается живой страницей. Данные последними, по доступу, который вы даёте сами: до этого момента ошибка почти ничего не стоит.",
       "localField": "Путь к папке (необязательно)",
       "localPlaceholder": "C:Usersyouprojectsyour-project"
+    },
+    "designSections": {
+      "introTitle": "Секции и блоки — одно и то же с двух сторон",
+      "intro": [
+        "Страница здесь — это СПИСОК БЛОКОВ, а не свёрстанный файл: слова лежат данными, а как они выглядят, решает секция, которая их рисует. Поэтому правило, добавленное одному виду, доезжает до каждой страницы, где он встречается.",
+        "Секция — это вид блока с назначением. Одиннадцать типов ниже раскладывают виды по этому назначению: первые десять — классические части лендинга, одиннадцатый — материал, из которого страница написана: абзацы, списки, таблицы, код.",
+        "Каталог закрыт по построению: вид существует, только если в приложении есть его рендерер. Это и делает дизайн переносимым — внешность проекта состоит из набора секций и значений токенов с соседних страниц."
+      ],
+      "previewNote": "Здесь секция показана в оформлении ПО УМОЛЧАНИЮ. На вашем сайте её перекрашивают ваши токены — цвет, шрифт, скругления, плотность, — и выглядеть она будет иначе. Точно превью показывает строение: что где стоит, сколько элементов, есть ли картинка.",
+      "typeEmpty": "Под этот тип нет ни одной секции",
+      "pickHint": "Выберите секцию слева, чтобы увидеть, как она выглядит и что несёт.",
+      "back": "Все секции",
+      "fieldsLabel": "Что несёт",
+      "cardLabel": "Заметки и правила по этой секции",
+      "noCard": "Заметок пока нет. Они появляются, когда о секции что-то узнали — обычно когда владелец поправил её вид и объяснил причину.",
+      "emptyTitle": "В проекте нет каталога секций",
+      "emptyBody": "Панель читает sections/SECTIONS.json из приложения. Файл появляется при сборке приложения; у гостевого проекта без слоя секций его нет вовсе, и это нормально."
     }
   },
   "es": {

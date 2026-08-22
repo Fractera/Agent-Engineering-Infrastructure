@@ -34,6 +34,11 @@ export const NAV = [
   { slug: "design-type",      group: "design" },
   { slug: "design-shape",     group: "design" },
   { slug: "design-colors",    group: "design" },
+  // Каталог секций по назначению. Стоит ПОСЛЕДНИМ в группе не по важности, а по
+  // порядку работы: шрифты, шкала, формы и цвет — то, что владелец крутит сам;
+  // секции — то, из чего страница собирается, и смотрят их, когда оформление уже
+  // выбрано.
+  { slug: "design-sections",  group: "design" },
 
   { slug: "map-application",  group: "application" },
   { slug: "app-settings",    group: "application" },
