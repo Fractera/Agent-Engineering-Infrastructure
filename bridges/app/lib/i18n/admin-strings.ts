@@ -161,6 +161,25 @@ export type AdminStrings = {
     helpLabel: string; helpWhereTitle: string; helpWhere: string;
     helpCostTitle: string; helpCost: string;
   };
+  // Переезд чужого проекта (шаг 533). Отдельная секция, а не ветка режима:
+  // страница живёт своей жизнью и переживёт смену режима — источник, названный
+  // однажды, остаётся верным и после того, как переезд закрыт.
+  migration: {
+    unavailable: string; lead: string;
+    /** Пришли по адресу, а режим не включён: что это значит и где включается. */
+    modeOffTitle: string; modeOffBody: string; modeOffCta: string;
+    save: string; saving: string; savedNotice: string; failed: string;
+    nothingToSave: string; invalidUrl: string;
+    repoLabel: string; repoBody: string;
+    repoField: string; repoPlaceholder: string; repoHint: string;
+    localLabel: string; localBody: string; localHint: string;
+    /** Что владелец делает после того, как источник назван. */
+    nextTitle: string; next: string;
+    /** Граница: чужой код читается, но не исполняется. */
+    boundaryTitle: string; boundary: string;
+    helpLabel: string; helpWhereTitle: string; helpWhere: string;
+    helpOrderTitle: string; helpOrder: string;
+  };
   howToBuild: {
     welcomeTitle: string; welcomeBody: string; missing: string;
     // Запрос на доработку платформы — единственная сегодня дверь для партнёра,

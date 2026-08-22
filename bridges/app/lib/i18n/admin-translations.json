@@ -1433,6 +1433,10 @@
       "tool-translations-dialog": {
         "title": "Translations dialog",
         "hint": "Translate a field into every language of the project."
+      },
+      "migration": {
+        "title": "Move to Fractera",
+        "hint": "Where your existing project comes from — the agent reads it and lays the move out as steps."
       }
     },
     "breadcrumbHome": "Panel",
@@ -3199,6 +3203,36 @@
       "badKey": "The OpenAI key was refused. Check it, or write the languages by hand.",
       "upstream": "The translation service did not answer. Try again, or write the languages by hand.",
       "keyLink": "Open the OpenAI key page"
+    },
+    "migration": {
+      "unavailable": "Cannot read the settings file on the server. This is a deployment problem, not a wording one.",
+      "lead": "Name where your project lives today. The agent reads it as a description of what your project does, and lays the move out as numbered steps. Your data moves last, on access you give separately.",
+      "modeOffTitle": "The migration mode is not switched on",
+      "modeOffBody": "You can name the source now — but until the mode is on, the agent opens every session as if you were building from an empty page.",
+      "modeOffCta": "Choose the development mode",
+      "save": "Save",
+      "saving": "Saving…",
+      "savedNotice": "Source saved",
+      "failed": "Could not save",
+      "nothingToSave": "Nothing changed",
+      "invalidUrl": "That is not an address. It starts with http:// or https://",
+      "repoLabel": "The address of the repository",
+      "repoBody": "Your project lives in git, and the agent reads a clone of it here on your server. Take this when the project is already pushed somewhere and you want the move driven from the panel.",
+      "repoField": "Repository address",
+      "repoPlaceholder": "https://github.com/you/your-project",
+      "repoHint": "Keep the repository open while you are moving. Fractera asks for no token on purpose: a token lying in a settings file is a secret only in appearance. Close the repository again the day the move ends.",
+      "localLabel": "The folder on your own machine",
+      "localBody": "The project stays on your computer and never leaves it. The agent reads it in your own editor, and what arrives here is the tree of what it found and the queue of steps.",
+      "localHint": "Nothing to fill in. Open the project in your editor and tell the agent you are starting the move.",
+      "nextTitle": "What to do next",
+      "next": "Tell the agent, in ordinary words, that the move is starting. It reads the project itself — the architecture, the libraries, what rests on what — builds the tree of what your project becomes here, and lays out the queue of steps. You never have to explain your old code from memory.",
+      "boundaryTitle": "Your old code is read, never run.",
+      "boundary": "Fractera takes the project apart as a description of what it does and builds that meaning again on this architecture. Nothing from the old project is executed on your server, so a broken or hostile dependency cannot ride across with it.",
+      "helpLabel": "How this works",
+      "helpWhereTitle": "Where the choice lives.",
+      "helpWhere": "In PLATFORM-CONFIG on the server, beside the development mode. The agent reads it at the start of a session, so it survives the end of a conversation.",
+      "helpOrderTitle": "The order of the move.",
+      "helpOrder": "The frame goes up first — addresses, tables, sign-in. Then the features, one step at a time, each proved on a live page. Data comes last, on access you give yourself: until that moment a mistake costs almost nothing."
     }
   },
   "ru": {
@@ -4635,6 +4669,10 @@
       "tool-translations-dialog": {
         "title": "Диалог переводов",
         "hint": "Перевести поле на все языки проекта."
+      },
+      "migration": {
+        "title": "Переезд на Fractera",
+        "hint": "Откуда берётся ваш уже существующий проект — агент читает его и раскладывает переезд на шаги."
       }
     },
     "breadcrumbHome": "Панель",
@@ -6401,6 +6439,36 @@
       "badKey": "Ключ OpenAI отклонён. Проверьте его или впишите языки руками.",
       "upstream": "Служба перевода не ответила. Попробуйте ещё раз или впишите языки руками.",
       "keyLink": "Открыть страницу ключа OpenAI"
+    },
+    "migration": {
+      "unavailable": "Файл настроек на сервере не читается. Это дефект развёртывания, а не формулировки.",
+      "lead": "Назовите, где ваш проект живёт сегодня. Агент прочитает его как описание того, что проект умеет, и разложит переезд на нумерованные шаги. Данные переезжают последними и по доступу, который вы даёте отдельно.",
+      "modeOffTitle": "Режим переезда не включён",
+      "modeOffBody": "Источник можно назвать и сейчас, но пока режим не включён, агент открывает каждую сессию так, будто вы строите с пустой страницы.",
+      "modeOffCta": "Выбрать режим разработки",
+      "save": "Сохранить",
+      "saving": "Сохраняю…",
+      "savedNotice": "Источник сохранён",
+      "failed": "Не удалось сохранить",
+      "nothingToSave": "Ничего не изменилось",
+      "invalidUrl": "Это не адрес. Он начинается с http:// или https://",
+      "repoLabel": "Адрес репозитория",
+      "repoBody": "Проект лежит в git, и агент читает его клон здесь, у вас на сервере. Берите, если проект уже отправлен куда-то и вы хотите вести переезд из панели.",
+      "repoField": "Адрес репозитория",
+      "repoPlaceholder": "https://github.com/you/your-project",
+      "repoHint": "Держите репозиторий открытым, пока идёт переезд. Токена Fractera не просит намеренно: токен, лежащий в файле настроек, — секрет только на вид. Закроете репозиторий в тот день, когда переезд закончится.",
+      "localLabel": "Папка на вашей машине",
+      "localBody": "Проект остаётся на вашем компьютере и никуда не уезжает. Агент читает его в вашем редакторе, а сюда приезжают дерево прочитанного и очередь шагов.",
+      "localHint": "Заполнять нечего. Откройте проект в редакторе и скажите агенту, что начинаете переезд.",
+      "nextTitle": "Что делать дальше",
+      "next": "Скажите агенту обычными словами, что переезд начинается. Дальше он читает проект сам — архитектуру, библиотеки, что на чём держится, — строит дерево того, во что ваш проект превращается здесь, и раскладывает очередь шагов. Объяснять старый код по памяти не придётся.",
+      "boundaryTitle": "Ваш старый код читается, но не запускается.",
+      "boundary": "Fractera разбирает проект как описание того, что он делает, и строит этот смысл заново на своей архитектуре. Ничего из старого проекта на вашем сервере не исполняется — значит сломанная или враждебная зависимость переехать вместе с ним не может.",
+      "helpLabel": "Как это устроено",
+      "helpWhereTitle": "Где живёт выбор.",
+      "helpWhere": "В PLATFORM-CONFIG на сервере, рядом с режимом разработки. Агент читает его на старте сессии — поэтому выбор переживает конец разговора.",
+      "helpOrderTitle": "Порядок переезда.",
+      "helpOrder": "Сначала встаёт каркас — адреса, таблицы, вход. Потом возможности, по одной за шаг, и каждая доказывается живой страницей. Данные последними, по доступу, который вы даёте сами: до этого момента ошибка почти ничего не стоит."
     }
   },
   "es": {

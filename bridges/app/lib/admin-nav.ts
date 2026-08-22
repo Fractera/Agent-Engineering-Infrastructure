@@ -44,6 +44,12 @@ export const NAV = [
   // Стоит в «Приложении», потому что это настройка ПРОЕКТА, а не документ о нём;
   // сам режим агент читает из PLATFORM-CONFIG вместе с остальным состоянием.
   { slug: "development-mode", group: "application" },
+  // Переезд чужого проекта (шаг 533). Стоит СРАЗУ за режимом, потому что это его
+  // продолжение: режим объявляет, КАК ведётся работа, а эта страница — ОТКУДА
+  // берётся то, над чем она ведётся. Из меню страница исчезает, пока режим не
+  // "migration" (hiddenSlugs): вкладка о переезде у того, кто никуда не переезжает,
+  // — это шум, а не возможность.
+  { slug: "migration",       group: "application" },
   { slug: "top-menu",        group: "application" },
   { slug: "footer-pages",    group: "application" },
   { slug: "cookie-banner",   group: "application" },

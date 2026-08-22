@@ -17,7 +17,7 @@ import type { AdminPageSlug } from "@/lib/admin-nav";
 import {
   FEATURE_ORDER, FEATURE_DEFAULTS, FEATURE_SECTION, type FeatureKey,
 } from "@/lib/platform-features.shared";
-import { productsDesignOpen } from "@/lib/development-mode";
+import { productsDesignOpen, migrationOpen } from "@/lib/development-mode";
 
 const CONFIG_PATH =
   process.env.PLATFORM_CONFIG_PATH ??
@@ -75,6 +75,7 @@ export function hiddenSlugs(): Set<AdminPageSlug> {
       if (!features[key]) hidden.add(slug);
     }
     if (!productsDesignOpen(config)) hidden.add("products");
+    if (!migrationOpen(config)) hidden.add("migration");
   } catch {
     /* ничего не прячем */
   }
