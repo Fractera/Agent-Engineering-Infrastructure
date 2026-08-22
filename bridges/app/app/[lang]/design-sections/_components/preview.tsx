@@ -20,18 +20,18 @@ import { ImageIcon } from "lucide-react";
 // галерее приложения, где его рисуют настоящие рендереры.
 
 const LOREM = {
-  title: "Заголовок раздела в две строки, чтобы видно было ритм",
-  lead: "Короткое пояснение под заголовком: одна-две строки, которые объясняют, о чём этот раздел и зачем он тут стоит.",
-  line: "Строка текста примерно такой длины, какой она бывает на настоящей странице.",
-  short: "Короткая строка",
-  items: ["Первый пункт", "Второй пункт", "Третий пункт"],
-  steps: ["Шаг первый", "Шаг второй", "Шаг третий"],
+  title: "A section heading in two lines, so the rhythm is visible",
+  lead: "A short line under the heading: one or two sentences saying what this section is about and why it stands here.",
+  line: "A line of text about as long as it tends to be on a real page.",
+  short: "Short line",
+  items: ["First item", "Second item", "Third item"],
+  steps: ["Step one", "Step two", "Step three"],
   numbers: [
-    { value: "10k+", label: "клиентов" },
-    { value: "99,9%", label: "доступность" },
-    { value: "3 €", label: "в месяц" },
+    { value: "10k+", label: "customers" },
+    { value: "99.9%", label: "uptime" },
+    { value: "3 €", label: "per month" },
   ],
-  chips: ["Метка", "Ещё метка", "Третья", "Четвёртая"],
+  chips: ["Label", "Another label", "Third", "Fourth"],
 };
 
 /** Заглушка изображения — рамка с иконкой, без единого внешнего запроса. */
@@ -60,7 +60,7 @@ export function SectionPreview({ shape }: { shape: string }) {
       return (
         <div className="space-y-3 py-4 text-center">
           <span className="inline-block rounded-full border border-border px-2 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">
-            надзаголовок
+            eyebrow
           </span>
           <p className="text-2xl font-semibold leading-tight text-foreground">{LOREM.title}</p>
           <p className="mx-auto max-w-md text-[12px] text-muted-foreground">{LOREM.lead}</p>
@@ -74,7 +74,7 @@ export function SectionPreview({ shape }: { shape: string }) {
             <p className="text-xl font-semibold leading-tight text-foreground">{LOREM.title}</p>
             <p className="text-[12px] text-muted-foreground">{LOREM.lead}</p>
             <span className="inline-flex h-7 items-center rounded-md bg-primary px-3 text-[11px] font-medium text-primary-foreground">
-              Кнопка
+              Button
             </span>
           </div>
           <Fake />
@@ -138,7 +138,7 @@ export function SectionPreview({ shape }: { shape: string }) {
     case "two-columns":
       return (
         <div className="grid gap-2 sm:grid-cols-2">
-          {["Было", "Стало"].map(t => (
+          {["Before", "After"].map(t => (
             <Box key={t}>
               <p className="text-[12px] font-medium text-foreground">{t}</p>
               <div className="mt-2 space-y-1.5">
@@ -160,7 +160,7 @@ export function SectionPreview({ shape }: { shape: string }) {
                 key={i}
                 className="shrink-0 rounded border border-border px-3 py-1.5 text-[11px] text-muted-foreground"
               >
-                логотип
+                logo
               </span>
             ))}
           </div>
@@ -172,8 +172,8 @@ export function SectionPreview({ shape }: { shape: string }) {
         <div className="flex gap-3 border-l-2 border-primary/40 pl-3">
           <div className="size-10 shrink-0 rounded-full border border-dashed border-border" />
           <div>
-            <p className="text-[13px] italic leading-relaxed text-foreground">«{LOREM.line}»</p>
-            <p className="mt-1 text-[11px] text-muted-foreground">Имя, должность</p>
+            <p className="text-[13px] italic leading-relaxed text-foreground">“{LOREM.line}”</p>
+            <p className="mt-1 text-[11px] text-muted-foreground">Name, role</p>
           </div>
         </div>
       );
@@ -202,7 +202,7 @@ export function SectionPreview({ shape }: { shape: string }) {
       return (
         <div className="space-y-1.5">
           <Fake />
-          <p className="text-center text-[11px] text-muted-foreground">Подпись под изображением</p>
+          <p className="text-center text-[11px] text-muted-foreground">Caption under the image</p>
         </div>
       );
 
@@ -225,7 +225,7 @@ export function SectionPreview({ shape }: { shape: string }) {
     case "panel":
       return (
         <Box>
-          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">надзаголовок</p>
+          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">eyebrow</p>
           <p className="mt-0.5 text-[13px] font-medium text-foreground">{LOREM.short}</p>
           <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground">{LOREM.line}</p>
         </Box>
@@ -235,7 +235,7 @@ export function SectionPreview({ shape }: { shape: string }) {
       return (
         <div className="overflow-hidden rounded-lg border border-border">
           <div className="grid grid-cols-3 gap-px bg-border">
-            {["Колонка", "Колонка", "Колонка"].map((h, i) => (
+            {["Column", "Column", "Column"].map((h, i) => (
               <div key={i} className="bg-muted/60 px-2 py-1.5 text-[11px] font-medium text-foreground">
                 {h}
               </div>
@@ -252,10 +252,10 @@ export function SectionPreview({ shape }: { shape: string }) {
     case "docref":
       return (
         <Box>
-          <p className="text-[12px] font-medium text-foreground">Название документа</p>
+          <p className="text-[12px] font-medium text-foreground">Document title</p>
           <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">{LOREM.line}</p>
           <span className="mt-2 inline-flex h-7 items-center rounded-md bg-primary px-2.5 text-[11px] font-medium text-primary-foreground">
-            Скачать
+            Download
           </span>
         </Box>
       );
@@ -265,7 +265,7 @@ export function SectionPreview({ shape }: { shape: string }) {
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border p-3">
           <p className="text-[12px] text-foreground">{LOREM.line}</p>
           <span className="inline-flex h-7 items-center rounded-md bg-primary px-3 text-[11px] font-medium text-primary-foreground">
-            Кнопка
+            Button
           </span>
         </div>
       );
