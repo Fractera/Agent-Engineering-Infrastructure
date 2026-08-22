@@ -83,7 +83,7 @@ export default async function OpenAiPage({ params }: { params: Promise<{ lang: s
         {whyDoc.ok && (
           <div className="mt-2.5">
             <DocPopup label={o.whyDoc} title={o.whyDocTitle}>
-              <GuideProse markdown={whyDoc.text} />
+              <GuideProse markdown={whyDoc.text} stripTitle />
             </DocPopup>
           </div>
         )}

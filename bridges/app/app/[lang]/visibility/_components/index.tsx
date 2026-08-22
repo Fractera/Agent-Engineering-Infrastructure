@@ -33,7 +33,7 @@ function Doc({ name, lang, label, title }: { name: string; lang: string; label: 
   if (!found.ok) return null;
   return (
     <DocPopup label={label} title={title}>
-      <GuideProse markdown={found.text} />
+      <GuideProse markdown={found.text} stripTitle />
     </DocPopup>
   );
 }

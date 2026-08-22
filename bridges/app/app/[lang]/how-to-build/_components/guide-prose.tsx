@@ -30,10 +30,41 @@ const PROSE = [
   "[&_table]:block [&_table]:overflow-x-auto [&_table]:w-full",
 ].join(" ");
 
-export function GuideProse({ markdown }: { markdown: string }) {
+/**
+ * Снять первый заголовок документа.
+ *
+ * 🔒 ЗАЧЕМ (владелец 2026-08-22, увидел в окне «Секции»). Документ начинается с
+ * `# Название`, и окно печатает своё название в шапке — заголовок выходил ДВАЖДЫ,
+ * подряд, одними и теми же словами. Дефект системный: так устроены все тридцать
+ * два документа, и правка каждого руками означала бы тридцать две возможности
+ * разойтись. Снимаем в одном месте — в том, кто рисует.
+ *
+ * Снимается ТОЛЬКО первая строка и только если она заголовок первого уровня:
+ * документ без заголовка не трогается вовсе, а `##` внутри текста остаются.
+ */
+function withoutLeadTitle(markdown: string): string {
+  const lines = markdown.split("\n");
+  let i = 0;
+  while (i < lines.length && lines[i].trim() === "") i += 1;
+  if (!lines[i]?.startsWith("# ")) return markdown;
+  return lines.slice(i + 1).join("\n").replace(/^\s*\n/, "");
+}
+
+export function GuideProse(
+  { markdown, stripTitle = false }:
+  {
+    markdown: string;
+    /**
+     * Заголовок документа уже напечатан снаружи — в шапке окна или страницы.
+     * Умолчание `false`: страница руководства печатает документ целиком, и там
+     * заголовок нужен.
+     */
+    stripTitle?: boolean;
+  },
+) {
   return (
     <div className={PROSE}>
-      <ReactMarkdown>{markdown}</ReactMarkdown>
+      <ReactMarkdown>{stripTitle ? withoutLeadTitle(markdown) : markdown}</ReactMarkdown>
     </div>
   );
 }

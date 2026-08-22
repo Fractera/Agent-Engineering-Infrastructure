@@ -88,7 +88,7 @@ export default async function DevToolsPage({ params }: { params: Promise<{ lang:
           </a>
           {browserDoc.ok && (
             <DocPopup label={t.browserDoc} title={t.browserDocTitle}>
-              <GuideProse markdown={browserDoc.text} />
+              <GuideProse markdown={browserDoc.text} stripTitle />
             </DocPopup>
           )}
         </div>
