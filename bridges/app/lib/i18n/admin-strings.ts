@@ -202,6 +202,11 @@ export type AdminStrings = {
     typeEmpty: string; pickHint: string; back: string;
     idLabel: string; fieldsLabel: string; descriptionLabel: string; noDescription: string;
     usedOnLabel: string; usedNowhere: string; orderLabel: string;
+    // Поле, куда владелец пишет СВОЁ описание секции — второй голос рядом с
+    // заметками агента. Пустое поле стирает запись, а не сохраняет пустоту.
+    ownerNoteLabel: string; ownerNotePlaceholder: string;
+    ownerNoteSave: string; ownerNoteSaving: string; ownerNoteSaved: string;
+    ownerNoteFailed: string; ownerNoteVoiceHint: string;
     emptyTitle: string; emptyBody: string;
   };
   howToBuild: {

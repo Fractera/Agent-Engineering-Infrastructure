@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Layers, TriangleAlert, Flower2, ChevronRight } from "lucide-react";
 import { TwoPane } from "../../_components/two-pane";
 import { SectionPreview } from "./preview";
+import { OwnerNote } from "./owner-note.client";
 import { kindsOfType, pick, type SectionsCatalogue, type SectionKind } from "@/lib/sections-catalogue";
 import type { AdminStrings } from "@/lib/i18n/admin-strings";
 
@@ -22,9 +23,26 @@ import type { AdminStrings } from "@/lib/i18n/admin-strings";
 // каталог полным, каким он не является.
 
 /** Описание вида — то, что читает агент, выбирая секцию. */
-function KindBody({ kind, UI }: { kind: SectionKind; UI: AdminStrings["designSections"] }) {
+function KindBody({ kind, lang, UI }: { kind: SectionKind; lang: string; UI: AdminStrings["designSections"] }) {
   return (
     <div className="space-y-2 px-2 pb-2 pt-1">
+      {/* Слова владельца стоят ПЕРВЫМИ: их он и пришёл сюда писать, а заметки
+          агента ниже — справка, которую он читает, когда захочет. */}
+      <OwnerNote
+        kind={kind.kind}
+        initial={kind.ownerNote ?? ""}
+        lang={lang}
+        labels={{
+          label: UI.ownerNoteLabel,
+          placeholder: UI.ownerNotePlaceholder,
+          save: UI.ownerNoteSave,
+          saving: UI.ownerNoteSaving,
+          saved: UI.ownerNoteSaved,
+          failed: UI.ownerNoteFailed,
+          voiceHint: UI.ownerNoteVoiceHint,
+        }}
+      />
+
       <div>
         <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{UI.descriptionLabel}</p>
         {kind.description ? (
@@ -150,7 +168,7 @@ export function SectionsBrowser(
                           preview
                         </Link>
                       </summary>
-                      <KindBody kind={k} UI={UI} />
+                      <KindBody kind={k} lang={lang} UI={UI} />
                     </details>
                   ))}
                 </div>

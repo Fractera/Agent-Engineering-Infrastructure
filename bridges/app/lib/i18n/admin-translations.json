@@ -3264,7 +3264,14 @@
       "usedNowhere": "Not used on any page yet",
       "orderLabel": "position",
       "emptyTitle": "No section catalogue in the project",
-      "emptyBody": "The panel reads sections/SECTIONS.json from the application. The file appears when the application is built; a guest project without a sections layer does not have one at all, and that is normal."
+      "emptyBody": "The panel reads sections/SECTIONS.json from the application. The file appears when the application is built; a guest project without a sections layer does not have one at all, and that is normal.",
+      "ownerNoteLabel": "Your description of this section",
+      "ownerNotePlaceholder": "Where you want this section used, what it is for, what you expect from it. The agent reads this when it picks a section.",
+      "ownerNoteSave": "Save",
+      "ownerNoteSaving": "Saving…",
+      "ownerNoteSaved": "Description saved",
+      "ownerNoteFailed": "Could not save the description",
+      "ownerNoteVoiceHint": "Dictating is usually longer and more precise than typing — and length helps here."
     }
   },
   "ru": {
@@ -6532,7 +6539,14 @@
       "usedNowhere": "Пока не используется ни на одной странице",
       "orderLabel": "позиция",
       "emptyTitle": "В проекте нет каталога секций",
-      "emptyBody": "Панель читает sections/SECTIONS.json из приложения. Файл появляется при сборке приложения; у гостевого проекта без слоя секций его нет вовсе, и это нормально."
+      "emptyBody": "Панель читает sections/SECTIONS.json из приложения. Файл появляется при сборке приложения; у гостевого проекта без слоя секций его нет вовсе, и это нормально.",
+      "ownerNoteLabel": "Ваше описание этой секции",
+      "ownerNotePlaceholder": "Где эту секцию применять, для чего она и чего вы от неё ждёте. Это читает агент, когда выбирает секцию.",
+      "ownerNoteSave": "Сохранить",
+      "ownerNoteSaving": "Сохраняю…",
+      "ownerNoteSaved": "Описание сохранено",
+      "ownerNoteFailed": "Не удалось сохранить описание",
+      "ownerNoteVoiceHint": "Надиктовать обычно выходит подробнее, чем напечатать, — а подробность здесь и есть польза."
     }
   },
   "es": {
