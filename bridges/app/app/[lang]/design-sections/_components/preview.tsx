@@ -270,6 +270,21 @@ export function SectionPreview({ shape }: { shape: string }) {
         </div>
       );
 
+    case "toc":
+      return (
+        <Box>
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-primary">On this page · 3</p>
+          <ol className="mt-2 space-y-1.5">
+            {LOREM.items.map((t, i) => (
+              <li key={t} className="flex gap-2 text-[12px] text-muted-foreground">
+                <span className="font-mono text-[11px]">{String(i + 1).padStart(2, "0")}</span>
+                {t}
+              </li>
+            ))}
+          </ol>
+        </Box>
+      );
+
     case "faq":
       return (
         <div className="space-y-2">
