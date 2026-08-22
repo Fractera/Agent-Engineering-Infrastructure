@@ -67,6 +67,15 @@ export default async function DevelopmentModePage({ params }: { params: Promise<
                   label: m.casesLabel, description: m.casesBody, when: m.casesWhen,
                   badges: [m.casesBadgeModel, m.casesBadgeWorkflows],
                 },
+                // 🔒 У ПЕРЕЕЗДА БЕЙДЖ ГОВОРИТ НЕ ТОЛЬКО О МОДЕЛИ (шаг 533).
+                // Остальным трём режимам достаточно того, что уже лежит на
+                // сервере; этот без чужого проекта не начинается вовсе, и
+                // молчать об этом до сохранения режима значит обещать работу,
+                // которой владелец не сможет дать хода.
+                migration: {
+                  label: m.migrationLabel, description: m.migrationBody, when: m.migrationWhen,
+                  badges: [m.migrationBadgeModel, m.migrationBadgeAccess],
+                },
               },
               // Адреса строит сервер: язык знает он, и `adminHref` — та же
               // функция, которой пользуются меню и хлебные крошки.

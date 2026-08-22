@@ -135,6 +135,10 @@ export type AdminStrings = {
     classicLabel: string; classicBody: string; classicWhen: string;
     stepsLabel: string; stepsBody: string; stepsWhen: string;
     casesLabel: string; casesBody: string; casesWhen: string;
+    // Переезд чужого проекта (шаг 533). Источник очереди шагов у него внешний —
+    // код, который уже написан, — поэтому у карточки есть своя оговорка о том,
+    // чего режим требует ОТ ВЛАДЕЛЬЦА: доступа к его проекту.
+    migrationLabel: string; migrationBody: string; migrationWhen: string;
     // 🔒 БЕЙДЖИ НАЗЫВАЮТ МОДЕЛЬ, А НЕ ХВАЛЯТ РЕЖИМ (владелец 2026-08-18).
     // Режим — это не вкус, а требование к тому, кто по нему работает: шаги
     // держит модель послабее, кейсы требуют рассуждения через всю сессию.
@@ -147,6 +151,9 @@ export type AdminStrings = {
     stepsBadgeModel: string;
     casesBadgeModel: string;
     casesBadgeWorkflows: string;
+    migrationBadgeModel: string;
+    /** Чего режим требует от владельца, а не от модели: доступ к его проекту. */
+    migrationBadgeAccess: string;
     // Дверь из карточки в работу: режим кейсов открывает проектирование
     // продуктов, и оттуда же включаются динамические рабочие процессы.
     casesToProducts: string; casesToWorkflows: string; casesOpenHint: string;

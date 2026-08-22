@@ -12,7 +12,11 @@
 // Правило общее: значение, нужное обеим сторонам, живёт в нейтральном файле.
 // Островок берёт его отсюда же — тогда двух списков режимов не существует.
 
-export const MODES = ["classic", "steps", "cases"] as const;
+// Порядок в списке — порядок на странице, и он смысловой: от «ничего не
+// требую» к «требую больше всего». `migration` стоит последним не по возрасту, а
+// потому что это единственный режим, у которого есть внешний источник — чужой
+// проект: без него он не начинается вовсе (шаг 533).
+export const MODES = ["classic", "steps", "cases", "migration"] as const;
 export type DevelopmentMode = (typeof MODES)[number];
 
 export function isDevelopmentMode(v: unknown): v is DevelopmentMode {
@@ -56,6 +60,15 @@ export function developmentModeOf(config: Record<string, unknown>): DevelopmentM
  */
 export function developmentModeChosen(config: Record<string, unknown>): boolean {
   return isDevelopmentMode(config.developmentMode);
+}
+
+/**
+ * Перенос чужого проекта — действующий режим? Спрашивается там, где поведение
+ * агента и поверхность панели зависят от переезда: очередь шагов рождается из
+ * разбора чужого кода, а не из кейсов и не из просьбы.
+ */
+export function migrationOpen(config: Record<string, unknown>): boolean {
+  return developmentModeOf(config) === "migration";
 }
 
 /**
