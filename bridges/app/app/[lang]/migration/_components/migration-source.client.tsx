@@ -19,6 +19,8 @@ import { Input } from "@/components/ui/input";
 export type MigrationRecord = {
   source?: "repository" | "local";
   repositoryUrl?: string;
+  /** Папка на машине владельца. Сервер туда не ходит — адрес нужен агенту, который работает у него. */
+  localPath?: string;
   declaredAt?: string;
 };
 
@@ -30,6 +32,7 @@ export type MigrationLabels = {
   repoLabel: string; repoBody: string;
   repoField: string; repoPlaceholder: string; repoHint: string;
   localLabel: string; localBody: string; localHint: string;
+  localField: string; localPlaceholder: string;
 };
 
 export function MigrationSource(
@@ -41,12 +44,18 @@ export function MigrationSource(
 ) {
   const [source, setSource] = useState<SourceId>(initial.source ?? "repository");
   const [url, setUrl] = useState(initial.repositoryUrl ?? "");
+  const [localPath, setLocalPath] = useState(initial.localPath ?? "");
   const [saving, setSaving] = useState(false);
   const [savedSource, setSavedSource] = useState(initial.source);
   const [savedUrl, setSavedUrl] = useState(initial.repositoryUrl ?? "");
+  const [savedPath, setSavedPath] = useState(initial.localPath ?? "");
 
   const trimmed = url.trim();
-  const dirty = source !== savedSource || (source === "repository" && trimmed !== savedUrl);
+  const trimmedPath = localPath.trim();
+  const dirty =
+    source !== savedSource ||
+    (source === "repository" && trimmed !== savedUrl) ||
+    (source === "local" && trimmedPath !== savedPath);
 
   async function save() {
     if (!dirty) { toast.error(labels.nothingToSave); return; }
@@ -65,6 +74,7 @@ export function MigrationSource(
         // Папке на машине владельца адрес не нужен, и хранить прошлый значило бы
         // держать в конфиге данные, которых решение больше не касается.
         ...(source === "repository" ? { repositoryUrl: trimmed } : {}),
+        ...(source === "local" && trimmedPath ? { localPath: trimmedPath } : {}),
         declaredAt: new Date().toISOString(),
       };
       const res = await fetch("/api/config/platform", {
@@ -77,6 +87,7 @@ export function MigrationSource(
       if (!res.ok || d?.error) throw new Error(String(d?.error ?? labels.failed));
       setSavedSource(source);
       setSavedUrl(source === "repository" ? trimmed : "");
+      setSavedPath(source === "local" ? trimmedPath : "");
       toast.success(labels.saved);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : labels.failed);
@@ -143,9 +154,26 @@ export function MigrationSource(
             )}
 
             {id === "local" && chosen && (
-              <p className="mt-2.5 pl-6 text-[10px] leading-relaxed text-emerald-700 dark:text-emerald-300">
-                {labels.localHint}
-              </p>
+              <div className="mt-2.5 pl-6">
+                {/* 🔒 ПУТЬ СПРАШИВАЕТСЯ ЗДЕСЬ, ХОТЯ СЕРВЕР ТУДА НЕ ХОДИТ (владелец
+                    2026-08-22). Панель этой папки не видит и видеть не может — адрес
+                    нужен агенту, который работает у владельца на машине, и он читает
+                    его из той же записи конфига. Поле необязательное: у владельца
+                    один проект открыт в редакторе, и агент найдёт его сам. */}
+                <label className="mb-1 block text-[10px] uppercase tracking-wide text-muted-foreground">
+                  {labels.localField}
+                </label>
+                <Input
+                  value={localPath}
+                  onChange={(e) => setLocalPath(e.target.value)}
+                  placeholder={labels.localPlaceholder}
+                  className="h-8 text-[12px]"
+                  spellCheck={false}
+                />
+                <p className="mt-1.5 text-[10px] leading-relaxed text-emerald-700 dark:text-emerald-300">
+                  {labels.localHint}
+                </p>
+              </div>
             )}
           </div>
         );

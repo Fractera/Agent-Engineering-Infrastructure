@@ -65,7 +65,7 @@ export default async function DevelopmentModePage({ params }: { params: Promise<
                 },
                 cases: {
                   label: m.casesLabel, description: m.casesBody, when: m.casesWhen,
-                  badges: [m.casesBadgeModel, m.casesBadgeWorkflows],
+                  badges: [m.casesBadgeModel, m.badgeWorkflows, m.badgeSubscription],
                 },
                 // 🔒 У ПЕРЕЕЗДА БЕЙДЖ ГОВОРИТ НЕ ТОЛЬКО О МОДЕЛИ (шаг 533).
                 // Остальным трём режимам достаточно того, что уже лежит на
@@ -74,7 +74,9 @@ export default async function DevelopmentModePage({ params }: { params: Promise<
                 // которой владелец не сможет дать хода.
                 migration: {
                   label: m.migrationLabel, description: m.migrationBody, when: m.migrationWhen,
-                  badges: [m.migrationBadgeModel, m.migrationBadgeAccess],
+                  // Переезд требует того же, что и кейсы, плюс своего: чужой
+                  // проект надо откуда-то взять.
+                  badges: [m.migrationBadgeModel, m.badgeWorkflows, m.badgeSubscription, m.migrationBadgeAccess],
                 },
               },
               // Адреса строит сервер: язык знает он, и `adminHref` — та же
@@ -84,10 +86,22 @@ export default async function DevelopmentModePage({ params }: { params: Promise<
               // целиком: панель документами не управляет. Ссылка в никуда хуже её
               // отсутствия, поэтому исчезает и подпись — не остаётся кнопки,
               // которая обещает то, чего нет.
-              cases: {
-                productsHref: adminHref(lang, "products"),
-                productsLabel: m.casesToProducts,
-                openHint: m.casesOpenHint,
+              doors: {
+                cases: {
+                  href: adminHref(lang, "products"),
+                  label: m.casesToProducts,
+                  openHint: m.casesOpenHint,
+                },
+                // 🔒 ВВОД ИСТОЧНИКА ДОЛЖЕН БЫТЬ ВИДЕН ОТСЮДА (владелец
+                // 2026-08-22). Вкладка «Переезд» появляется в меню только после
+                // сохранения режима, и человек, выбравший переезд, оставался на
+                // этой странице, не зная, где называют свой проект. Дверь ведёт
+                // прямо туда — к адресу репозитория или папке на его машине.
+                migration: {
+                  href: adminHref(lang, "migration"),
+                  label: m.migrationToTab,
+                  openHint: m.migrationOpenHint,
+                },
               },
             }}
           />

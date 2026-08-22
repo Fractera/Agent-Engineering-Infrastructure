@@ -13,7 +13,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Loader2, Save, Check, Boxes, Workflow } from "lucide-react";
+import { Loader2, Save, Check, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
@@ -32,13 +32,15 @@ export type ModeLabels = {
    * выглядел бы недоделкой.
    */
   items: Record<DevelopmentMode, { label: string; description: string; when: string; badges: string[] }>;
-  /** Двери режима кейсов: адреса приходят с сервера — язык знает он. */
-  cases: {
-    productsHref: string; productsLabel: string;
-    /** Ссылка на волны агентов. Нет — нет и кнопки: обещать некуда. */
-    workflowsHref?: string; workflowsLabel?: string;
-    openHint: string;
-  };
+  /**
+   * Двери режимов: куда идти дальше, когда режим сохранён.
+   *
+   * 🔒 ЗАПИСЬ НА РЕЖИМ, А НЕ ОТДЕЛЬНОЕ ПОЛЕ ПОД КЕЙСЫ (владелец 2026-08-22).
+   * Здесь стояла ветка `cases`, прибитая к одному режиму; у переезда дверь
+   * появилась в тот же день, и второй частный случай развалил бы карточку на
+   * два несравнимых куска. Режим без двери её просто не имеет — ключа нет.
+   */
+  doors: Partial<Record<DevelopmentMode, { href: string; label: string; openHint: string }>>;
 };
 
 export function ModePicker(
@@ -158,30 +160,20 @@ export function ModePicker(
 
             {/* 🔒 ДВЕРИ ПОЯВЛЯЮТСЯ ПОСЛЕ СОХРАНЕНИЯ, А НЕ ПОСЛЕ ВЫБОРА (2026-08-18).
                 Ссылка, показанная по несохранённому выбору, уводила бы со страницы
-                вместе с выбором: режим остался бы прежним, группа «Продукты» —
-                спрятанной, и человек попал бы в раздел, которого в его меню нет.
-                Поэтому здесь `initial` (сохранённое значение), а не `mode`. */}
-            {id === "cases" && (
+                вместе с выбором: режим остался бы прежним, раздел — спрятанным, и
+                человек попал бы туда, чего в его меню нет. Поэтому здесь
+                `initial` (сохранённое значение), а не `mode`. */}
+            {labels.doors[id] && (
               <div className="mt-2.5 pl-6">
-                {initial === "cases" ? (
-                  <div className="flex flex-wrap gap-2">
-                    <Link
-                      href={labels.cases.productsHref}
-                      className="inline-flex h-7 items-center gap-1.5 rounded-md bg-sky-600 px-2.5 text-[11px] font-medium text-white transition-colors hover:bg-sky-700"
-                    >
-                      <Boxes size={11} />{labels.cases.productsLabel}
-                    </Link>
-                    {labels.cases.workflowsHref && (
-                      <Link
-                        href={labels.cases.workflowsHref}
-                        className="inline-flex h-7 items-center gap-1.5 rounded-md border border-border px-2.5 text-[11px] text-foreground transition-colors hover:bg-muted"
-                      >
-                        <Workflow size={11} />{labels.cases.workflowsLabel}
-                      </Link>
-                    )}
-                  </div>
+                {initial === id ? (
+                  <Link
+                    href={labels.doors[id]!.href}
+                    className="inline-flex h-7 items-center gap-1.5 rounded-md bg-sky-600 px-2.5 text-[11px] font-medium text-white transition-colors hover:bg-sky-700"
+                  >
+                    {labels.doors[id]!.label}<ArrowRight size={11} />
+                  </Link>
                 ) : (
-                  <p className="text-[10px] leading-relaxed text-muted-foreground">{labels.cases.openHint}</p>
+                  <p className="text-[10px] leading-relaxed text-muted-foreground">{labels.doors[id]!.openHint}</p>
                 )}
               </div>
             )}

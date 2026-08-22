@@ -70,6 +70,7 @@ export default async function MigrationPage({ params }: { params: Promise<{ lang
               repoLabel: m.repoLabel, repoBody: m.repoBody,
               repoField: m.repoField, repoPlaceholder: m.repoPlaceholder, repoHint: m.repoHint,
               localLabel: m.localLabel, localBody: m.localBody, localHint: m.localHint,
+              localField: m.localField, localPlaceholder: m.localPlaceholder,
             }}
           />
 

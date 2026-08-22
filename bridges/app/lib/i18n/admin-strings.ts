@@ -150,13 +150,23 @@ export type AdminStrings = {
     // обрамление — «рекомендуется», «минимальные требования».
     stepsBadgeModel: string;
     casesBadgeModel: string;
-    casesBadgeWorkflows: string;
     migrationBadgeModel: string;
+    // Общие для тяжёлых режимов — кейсов и переезда. Прежний ключ звался
+    // casesBadgeWorkflows и был прибит к одному режиму; у переезда требование
+    // ровно то же, а две копии одной фразы расходятся при первой же правке.
+    badgeWorkflows: string;
+    // 🔒 ПОДПИСКА НАЗВАНА ЧЕСТНО (владелец 2026-08-22). Он работает на подписке
+    // за двадцать долларов и по себе знает, что тяжёлому режиму её не хватает:
+    // разговор обрывается на середине разбора. Умолчать об этом значит продать
+    // человеку режим, который у него не доработает до конца дня.
+    badgeSubscription: string;
     /** Чего режим требует от владельца, а не от модели: доступ к его проекту. */
     migrationBadgeAccess: string;
     // Дверь из карточки в работу: режим кейсов открывает проектирование
     // продуктов, и оттуда же включаются динамические рабочие процессы.
-    casesToProducts: string; casesToWorkflows: string; casesOpenHint: string;
+    casesToProducts: string; casesOpenHint: string;
+    /** Дверь переезда: где называют адрес репозитория или папку на машине. */
+    migrationToTab: string; migrationOpenHint: string;
     lawTitle: string; law: string;
     helpLabel: string; helpWhereTitle: string; helpWhere: string;
     helpCostTitle: string; helpCost: string;
@@ -173,6 +183,7 @@ export type AdminStrings = {
     repoLabel: string; repoBody: string;
     repoField: string; repoPlaceholder: string; repoHint: string;
     localLabel: string; localBody: string; localHint: string;
+    localField: string; localPlaceholder: string;
     /** Что владелец делает после того, как источник назван. */
     nextTitle: string; next: string;
     /** Граница: чужой код читается, но не исполняется. */

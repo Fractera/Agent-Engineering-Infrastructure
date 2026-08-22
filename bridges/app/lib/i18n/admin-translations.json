@@ -3075,11 +3075,9 @@
       "migrationWhen": "Take it when the project is already written and needs moving, not starting over.",
       "stepsBadgeModel": "recommended for Opus 5",
       "casesBadgeModel": "minimum requirement: Fable 5+",
-      "casesBadgeWorkflows": "recommended: dynamic workflows",
       "migrationBadgeModel": "minimum requirement: Fable 5+",
       "migrationBadgeAccess": "needs access to your project",
       "casesToProducts": "Go to product setup",
-      "casesToWorkflows": "Dynamic workflows",
       "casesOpenHint": "Save this mode and the Products group appears in the menu.",
       "lawTitle": "What the mode never changes.",
       "law": "Static public pages, size limits, translations instead of inline text, settings read from config — these hold in every mode. A law that a mode could switch off would not be a law.",
@@ -3087,7 +3085,11 @@
       "helpWhereTitle": "Where the choice lives.",
       "helpWhere": "In PLATFORM-CONFIG on the server, beside the feature switches. The agent reads it at the start of a session, so it survives the end of a conversation — which is why this is a setting and not a phrase said in chat.",
       "helpCostTitle": "What it costs.",
-      "helpCost": "Use cases cost more than steps, and steps more than classic — in tokens and in your time. That is the trade-off, and it is yours to make. The model is a requirement, not a ban: the badges on the cards name the model each mode was built for, and nothing here stops you from choosing otherwise."
+      "helpCost": "Use cases cost more than steps, and steps more than classic — in tokens and in your time. That is the trade-off, and it is yours to make. The model is a requirement, not a ban: the badges on the cards name the model each mode was built for, and nothing here stops you from choosing otherwise. Use cases and a migration are the heavy ones: they hold a long chain of reasoning across a whole session, and a twenty-dollar plan usually runs out of room mid-way. A Max plan is what they were built for.",
+      "badgeWorkflows": "recommended: dynamic workflows",
+      "badgeSubscription": "recommended: a Max plan",
+      "migrationToTab": "Name your project",
+      "migrationOpenHint": "Save this mode and the \"Move to Fractera\" tab appears — that is where you give the address of your repository or point at the folder on your machine."
     },
     "productPage": {
       "phases": {
@@ -3223,7 +3225,7 @@
       "repoHint": "Keep the repository open while you are moving. Fractera asks for no token on purpose: a token lying in a settings file is a secret only in appearance. Close the repository again the day the move ends.",
       "localLabel": "The folder on your own machine",
       "localBody": "The project stays on your computer and never leaves it. The agent reads it in your own editor, and what arrives here is the tree of what it found and the queue of steps.",
-      "localHint": "Nothing to fill in. Open the project in your editor and tell the agent you are starting the move.",
+      "localHint": "The server never looks into this folder — it cannot. The path is for the agent working on your machine, and it reads it from the same record. Leave it empty if the project is already open in your editor.",
       "nextTitle": "What to do next",
       "next": "Tell the agent, in ordinary words, that the move is starting. It reads the project itself — the architecture, the libraries, what rests on what — builds the tree of what your project becomes here, and lays out the queue of steps. You never have to explain your old code from memory.",
       "boundaryTitle": "Your old code is read, never run.",
@@ -3232,7 +3234,9 @@
       "helpWhereTitle": "Where the choice lives.",
       "helpWhere": "In PLATFORM-CONFIG on the server, beside the development mode. The agent reads it at the start of a session, so it survives the end of a conversation.",
       "helpOrderTitle": "The order of the move.",
-      "helpOrder": "The frame goes up first — addresses, tables, sign-in. Then the features, one step at a time, each proved on a live page. Data comes last, on access you give yourself: until that moment a mistake costs almost nothing."
+      "helpOrder": "The frame goes up first — addresses, tables, sign-in. Then the features, one step at a time, each proved on a live page. Data comes last, on access you give yourself: until that moment a mistake costs almost nothing.",
+      "localField": "Path to the folder (optional)",
+      "localPlaceholder": "C:Usersyouprojectsyour-project"
     }
   },
   "ru": {
@@ -6311,11 +6315,9 @@
       "migrationWhen": "Берите, когда проект уже написан и его нужно перевезти, а не начинать заново.",
       "stepsBadgeModel": "рекомендуется для модели Opus 5",
       "casesBadgeModel": "минимальные требования Fable 5+",
-      "casesBadgeWorkflows": "рекомендуется: динамические рабочие процессы",
       "migrationBadgeModel": "минимальные требования Fable 5+",
       "migrationBadgeAccess": "нужен доступ к вашему проекту",
       "casesToProducts": "Перейти к настройке продуктов",
-      "casesToWorkflows": "Динамические рабочие процессы",
       "casesOpenHint": "Сохраните этот режим — и группа «Продукты» появится в меню.",
       "lawTitle": "Чего режим не меняет никогда.",
       "law": "Статика публичных страниц, лимиты размера, переводы вместо вписанного текста, настройки из конфигов — действуют в любом режиме. Закон, который режим мог бы выключить, законом не был бы.",
@@ -6323,7 +6325,11 @@
       "helpWhereTitle": "Где живёт выбор.",
       "helpWhere": "В PLATFORM-CONFIG на сервере, рядом с выключателями возможностей. Агент читает его на старте сессии — поэтому выбор переживает конец разговора, и поэтому это настройка, а не фраза в чате.",
       "helpCostTitle": "Чего это стоит.",
-      "helpCost": "Кейсы дороже шагов, шаги дороже классического — и в токенах, и в вашем времени. Это и есть выбор, и он ваш. К модели он привязан требованием, а не запретом: бейджи на карточках называют, на какой модели режим работает как задумано, а выбрать иначе панель не мешает."
+      "helpCost": "Кейсы дороже шагов, шаги дороже классического — и в токенах, и в вашем времени. Это и есть выбор, и он ваш. К модели он привязан требованием, а не запретом: бейджи на карточках называют, на какой модели режим работает как задумано, а выбрать иначе панель не мешает. Кейсы и переезд — тяжёлые: они держат длинную цепочку рассуждения через всю сессию, и тарифа за двадцать долларов обычно не хватает до конца. Тариф Max — тот, под который они и строились.",
+      "badgeWorkflows": "рекомендуется: динамические рабочие процессы",
+      "badgeSubscription": "рекомендуется: тариф Max",
+      "migrationToTab": "Назвать свой проект",
+      "migrationOpenHint": "Сохраните этот режим — появится вкладка «Переезд на Fractera», где называют адрес репозитория или папку на вашей машине."
     },
     "productPage": {
       "phases": {
@@ -6459,7 +6465,7 @@
       "repoHint": "Держите репозиторий открытым, пока идёт переезд. Токена Fractera не просит намеренно: токен, лежащий в файле настроек, — секрет только на вид. Закроете репозиторий в тот день, когда переезд закончится.",
       "localLabel": "Папка на вашей машине",
       "localBody": "Проект остаётся на вашем компьютере и никуда не уезжает. Агент читает его в вашем редакторе, а сюда приезжают дерево прочитанного и очередь шагов.",
-      "localHint": "Заполнять нечего. Откройте проект в редакторе и скажите агенту, что начинаете переезд.",
+      "localHint": "Сервер в эту папку не заглядывает — и не может. Путь нужен агенту, который работает у вас на машине: он читает его из той же записи. Оставьте пустым, если проект уже открыт в вашем редакторе.",
       "nextTitle": "Что делать дальше",
       "next": "Скажите агенту обычными словами, что переезд начинается. Дальше он читает проект сам — архитектуру, библиотеки, что на чём держится, — строит дерево того, во что ваш проект превращается здесь, и раскладывает очередь шагов. Объяснять старый код по памяти не придётся.",
       "boundaryTitle": "Ваш старый код читается, но не запускается.",
@@ -6468,7 +6474,9 @@
       "helpWhereTitle": "Где живёт выбор.",
       "helpWhere": "В PLATFORM-CONFIG на сервере, рядом с режимом разработки. Агент читает его на старте сессии — поэтому выбор переживает конец разговора.",
       "helpOrderTitle": "Порядок переезда.",
-      "helpOrder": "Сначала встаёт каркас — адреса, таблицы, вход. Потом возможности, по одной за шаг, и каждая доказывается живой страницей. Данные последними, по доступу, который вы даёте сами: до этого момента ошибка почти ничего не стоит."
+      "helpOrder": "Сначала встаёт каркас — адреса, таблицы, вход. Потом возможности, по одной за шаг, и каждая доказывается живой страницей. Данные последними, по доступу, который вы даёте сами: до этого момента ошибка почти ничего не стоит.",
+      "localField": "Путь к папке (необязательно)",
+      "localPlaceholder": "C:Usersyouprojectsyour-project"
     }
   },
   "es": {
