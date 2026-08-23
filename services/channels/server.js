@@ -248,7 +248,11 @@ async function loop() {
       const place = (msg && (msg.location || (msg.venue && msg.venue.location))) || null;
       if (!text && place) text = "Место: " + place.latitude + ", " + place.longitude;
 
-      if (!text) continue;
+      // 🔒 ФОТОГРАФИЯ БЕЗ ПОДПИСИ — ЭТО ТОЖЕ СООБЩЕНИЕ.
+      // ✗ 2026-08-23: снимок чека, присланный молча, выбрасывался здесь целиком —
+      // текста нет, значит нечего передавать. Но смысл был НА снимке, а не рядом
+      // с ним: пустая подпись означает «посмотри сам», а не «ничего не произошло».
+      if (!text && !fileId) continue;
 
       // Linking: the deep-link START carries our one-time code, and the very same
       // message carries the sender's chat id. One code, one id, nothing guessed.
