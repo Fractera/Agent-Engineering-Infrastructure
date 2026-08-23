@@ -45,6 +45,53 @@ const RAG_URL = process.env.LIGHTRAG_URL ?? "http://localhost:9621";
 const RAG_KEY = process.env.LIGHTRAG_API_KEY ?? "";
 
 const LINK_TTL_MS = 10 * 60000;
+
+// 🔒 СВЕЖИЙ СЕРВЕР ДОЛЖЕН РАБОТАТЬ БЕЗ РУЧНОЙ НАСТРОЙКИ.
+//
+// Адреса дверей приложения и шаг расписания одинаковы на КАЖДОМ сервере: слот
+// всегда на :3000, маршруты заданы продуктом. Требовать вписать их руками значит
+// требовать работу, результат которой известен заранее, — и получить сервер, где
+// бот отвечает, а продукт молчит, потому что владелец до настройки не дошёл.
+//
+// Единственное, что нельзя подставить, — СЕКРЕТ: он у каждого сервера свой и
+// живёт в окружении слота. Нет секрета — двери приложения нет, и бот честно
+// работает по-старому, отвечая из базы знаний.
+const APP_HOOK_URL = process.env.APP_HOOK_URL ?? "http://127.0.0.1:3000/api/telegram/hook";
+const APP_TICK_URL = process.env.APP_TICK_URL ?? "http://127.0.0.1:3000/api/telegram/tick";
+const APP_ENV = process.env.APP_ENV_FILE ?? "/opt/fractera/app/.env.local";
+const DEFAULT_TICK_SEC = 60;
+
+function appSecret() {
+  try {
+    for (const line of fs.readFileSync(APP_ENV, "utf8").split(String.fromCharCode(10))) {
+      const t = line.trim();
+      if (t.startsWith("TELEGRAM_HOOK_SECRET=")) return t.slice("TELEGRAM_HOOK_SECRET=".length).trim();
+    }
+  } catch {}
+  return "";
+}
+
+/**
+ * Настройка канала с подставленными умолчаниями.
+ *
+ * 🔒 РЕЖИМ ВЫВОДИТСЯ, А НЕ ХРАНИТСЯ ПО УМОЛЧАНИЮ. Дверь приложения есть — значит
+ * отвечает приложение; иначе на каждое сообщение отвечали бы ДВОЕ: служба из
+ * базы знаний и продукт из своей головы. Владелец волен переопределить это в
+ * панели, и его выбор сильнее вывода.
+ */
+function channel() {
+  const tg = Object.assign({}, readConfig().telegram);
+  const secret = tg.hookSecret || appSecret();
+  const wired = Boolean(secret);
+  if (wired) {
+    tg.hookSecret = secret;
+    tg.hookUrl = tg.hookUrl || APP_HOOK_URL;
+    tg.tickUrl = tg.tickUrl || APP_TICK_URL;
+    if (tg.tickSeconds === undefined) tg.tickSeconds = DEFAULT_TICK_SEC;
+    if (!tg.mode) tg.mode = "app";
+  }
+  return tg;
+}
 const pendingLinks = new Map();
 
 // ── The inbox: what the bot heard, kept for the application ─────────────────
@@ -192,8 +239,7 @@ async function loop() {
   if (looping) return;
   looping = true;
   try {
-    const cfg = readConfig();
-    const tg = cfg.telegram || {};
+    const tg = channel();
     if (!tg.token || tg.enabled === false) return;
 
     const query = "?timeout=25&offset=" + offset + "&allowed_updates=%5B%22message%22%5D";
@@ -383,8 +429,7 @@ setInterval(loop, 2000);
 let lastTick = 0;
 
 async function tick() {
-  const cfg = readConfig();
-  const tg = cfg.telegram || {};
+  const tg = channel();
   const every = Number(tg.tickSeconds || 0);
   // Ноль или пусто — расписание выключено. Это законное состояние: проект без
   // напоминаний не должен платить за пустые запросы каждую минуту.
@@ -426,7 +471,7 @@ function readBody(req) {
 
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, "http://" + HOST + ":" + PORT);
-  const tg = readConfig().telegram || {};
+  const tg = channel();
 
   if (url.pathname === "/status") {
     let botName = null;
