@@ -157,7 +157,34 @@ else
 fi
 probe "иконки: список"                     200            "${AUTH[@]}" "$DATA/media/icons"
 probe_any "иконки: текущий набор" 200 "404:No icon sets"   "${AUTH[@]}" "$DATA/media/icons/current"
-blocked "файл иконки" "наборов нет; генерация оставила бы на сервере значок сайта — разрушительно для чужого продукта"
+
+# 🔒 ПУТЬ ИКОНОК ДОКАЗЫВАЕТСЯ ЦЕЛИКОМ — с 2026-08-23, когда у платформы появилось
+# УДАЛЕНИЕ набора. До этого проверка была невозможна без вреда: создать набор
+# можно было, убрать за собой — нет, и значок чужого сайта остался бы подменённым
+# навсегда. Проверка, портящая продукт владельца, недопустима, поэтому строка
+# честно стояла блоком, пока дыру не закрыли.
+ICON_SRC=$(curl -s "${AUTH[@]}" -F "file=@$SAMPLE_PNG" "$DATA/media/upload" | node -e "let s='';process.stdin.on('data',function(d){s+=d}).on('end',function(){try{var j=JSON.parse(s);console.log((j.item&&j.item.id)||'')}catch(e){console.log('')}})")
+if [ -n "$ICON_SRC" ]; then
+  ICON_SET=$(curl -s "${AUTH[@]}" "${JSON[@]}" -X POST -d "{\"media_id\":\"$ICON_SRC\"}" "$DATA/media/generate-icons" | node -e "let s='';process.stdin.on('data',function(d){s+=d}).on('end',function(){try{console.log(JSON.parse(s).id||'')}catch(e){console.log('')}})")
+  TOTAL=$((TOTAL+1))
+  if [ -n "$ICON_SET" ]; then
+    OK=$((OK+1)); printf "  ok      %-50s набор создан
+" "генерация набора иконок"
+    probe "файл иконки из набора"            200            "${AUTH[@]}" "$DATA/media/icons/$ICON_SET/file/favicon-32.png"
+    probe "набор виден как текущий"          200:files      "${AUTH[@]}" "$DATA/media/icons/current"
+    probe "УДАЛЕНИЕ набора иконок"           200            "${AUTH[@]}" -X DELETE "$DATA/media/icons/$ICON_SET"
+    probe "набора не осталось в списке"      "!$ICON_SET"   "${AUTH[@]}" "$DATA/media/icons"
+    probe "файл набора больше не отдаётся"   404            "${AUTH[@]}" "$DATA/media/icons/$ICON_SET/file/favicon-32.png"
+  else
+    FAIL=$((FAIL+1)); printf "  ПРОВАЛ  %-50s набор не создан
+" "генерация набора иконок"
+    FAILED_LINES="$FAILED_LINES генерация набора иконок;"
+  fi
+  curl -s "${AUTH[@]}" -X DELETE "$DATA/media/$ICON_SRC" >/dev/null 2>&1
+  probe "исходник иконок убран"              '!probe-sample' "${AUTH[@]}" "$DATA/media"
+else
+  blocked "генерация набора иконок" "не удалось загрузить исходник"
+fi
 
 echo
 echo "-- use-vector-memory -----------------------------------------"
