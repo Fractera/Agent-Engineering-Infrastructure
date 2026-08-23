@@ -196,7 +196,25 @@ if [ "${RAG_KEYED:-0}" != "0" ]; then
   probe "загрузка текста"                  200            "${AUTH[@]}" "${JSON[@]}" -X POST -d '{"text":"Fractera probe document. The courier visits Paris every morning.","file_source":"probe-doc.txt"}' "$DATA/service/rag/documents/text"
   sleep 20
   probe "запрос после загрузки"            200:courier    "${AUTH[@]}" "${JSON[@]}" -X POST -d '{"query":"what does the courier do","mode":"hybrid"}' "$DATA/service/rag/query"
-  probe "удаление документа"               200            "${AUTH[@]}" "${JSON[@]}" -X DELETE -d '{"doc_ids":["probe-doc.txt"]}' "$DATA/service/rag/documents/delete_document"
+  # 🔒 УДАЛЯТЬ ПО НАСТОЯЩЕМУ id, А НЕ ПО ИМЕНИ ФАЙЛА, И ЖДАТЬ (найдено 2026-08-23).
+  # Граф отвечает `deletion_started` и уносит работу в фон: код 200 здесь значит
+  # «принято», а не «удалено». Проба удаляла по `file_source`, получала 200 и
+  # уходила — документ оставался в чужой базе после каждого прогона. Третий раз
+  # подряд один и тот же урок: проверять РЕЗУЛЬТАТ, а не ответ.
+  DOC_ID=$(curl -s "${AUTH[@]}" "${JSON[@]}" -X POST -d '{"page":1,"page_size":10}' "$DATA/service/rag/documents/paginated" | node -e "let s='';process.stdin.on('data',function(d){s+=d}).on('end',function(){try{var l=(JSON.parse(s).documents||[]).filter(function(x){return String(x.file_path||'').indexOf('probe-doc')>=0});console.log(l.length?l[0].id:'')}catch(e){console.log('')}})")
+  if [ -n "$DOC_ID" ]; then
+    probe "удаление документа (по id)"        200 "${AUTH[@]}" "${JSON[@]}" -X DELETE -d "{\"doc_ids\":[\"$DOC_ID\"]}" "$DATA/service/rag/documents/delete_document"
+    for _ in 1 2 3 4 5 6 7 8 9 10; do
+      sleep 3
+      curl -s "${AUTH[@]}" "${JSON[@]}" -X POST -d '{"page":1,"page_size":10}' "$DATA/service/rag/documents/paginated" | grep -q "probe-doc" || break
+    done
+    probe "документа не осталось В СПИСКЕ"    '!probe-doc' "${AUTH[@]}" "${JSON[@]}" -X POST -d '{"page":1,"page_size":10}' "$DATA/service/rag/documents/paginated"
+  else
+    FAIL=$((FAIL+1)); TOTAL=$((TOTAL+1))
+    printf "  ПРОВАЛ  %-50s документ не найден в списке после загрузки
+" "удаление документа"
+    FAILED_LINES="$FAILED_LINES удаление документа;"
+  fi
 else
   blocked "загрузка текста"                "LLM_BINDING_API_KEY пуст: извлечение сущностей невозможно"
   blocked "запрос после загрузки"          "то же — отвечать нечем"
