@@ -146,6 +146,10 @@ if [ -n "$MID" ]; then
   probe "НЕГАТИВНЫЙ: trim не для картинки" 400            "${AUTH[@]}" "${JSON[@]}" -X POST -d '{"start":0,"end":1}' "$DATA/media/$MID/trim"
   probe "удаление файла"                   200            "${AUTH[@]}" -X DELETE "$DATA/media/$MID"
   probe "файла не осталось"                404            "${AUTH[@]}" "$DATA/media/$MID/file"
+  # 🔒 Проверять СПИСОК, а не только файл: прогон 2026-08-23 оставил в хранилище
+  # запись, у которой файл уже отвечал 404. Уборка, проверенная не тем концом, —
+  # это мусор в чужом продукте, копящийся с каждым прогоном.
+  probe "в списке медиа нас не осталось"     '!probe-sample' "${AUTH[@]}" "$DATA/media"
 else
   FAIL=$((FAIL+1)); printf "  ПРОВАЛ  %-50s id не получен\n" "загрузка файла"
   FAILED_LINES="$FAILED_LINES загрузка файла;"
@@ -165,7 +169,18 @@ probe "вторая запись"                      200            "${AUTH[@]
 probe "поиск по вектору"                   200:probe      "${AUTH[@]}" "${JSON[@]}" -X POST -d "{\"embedding\":$VEC,\"k\":2}" "$DATA/vectors/search"
 probe "поиск с фильтром коллекции"         200:probe      "${AUTH[@]}" "${JSON[@]}" -X POST -d "{\"collection\":\"probe\",\"embedding\":$VEC,\"k\":2}" "$DATA/vectors/search"
 probe "НЕГАТИВНЫЙ: чужая коллекция пуста"  '!probe-v1'    "${AUTH[@]}" "${JSON[@]}" -X POST -d "{\"collection\":\"no-such-collection\",\"embedding\":$VEC,\"k\":2}" "$DATA/vectors/search"
-probe "НЕГАТИВНЫЙ: без вектора и без ключа" 500           "${AUTH[@]}" "${JSON[@]}" -X POST -d '{"collection":"probe","text":"no embedding given"}' "$DATA/vectors"
+# 🔒 Ожидание зависит от ключа, и это не поблажка: без ключа модель звать нечем,
+# и отказ — правильный ответ; с ключом правильный ответ противоположный. Проба,
+# знающая только одну ветку, объявит исправный сервер сломанным при первой же
+# смене настроек владельцем.
+DATA_KEYED=$(grep -cE "^OPENAI_API_KEY=.+" /opt/fractera/services/data/.env 2>/dev/null || true)
+if [ "${DATA_KEYED:-0}" != "0" ]; then
+  probe "запись БЕЗ вектора (модель считает сама)" 200 "${AUTH[@]}" "${JSON[@]}" -X POST -d '{"id":"probe-v3","collection":"probe","text":"embedding computed by the model"}' "$DATA/vectors"
+  probe "поиск СЛОВАМИ (модель считает запрос)"    200:probe "${AUTH[@]}" "${JSON[@]}" -X POST -d '{"collection":"probe","query":"embedding computed","k":2}' "$DATA/vectors/search"
+  probe "удаление третьей записи"                  200 "${AUTH[@]}" -X DELETE "$DATA/vectors/probe-v3"
+else
+  probe "НЕГАТИВНЫЙ: без вектора и без ключа"      500 "${AUTH[@]}" "${JSON[@]}" -X POST -d '{"collection":"probe","text":"no embedding given"}' "$DATA/vectors"
+fi
 probe "удаление первой записи"             200            "${AUTH[@]}" -X DELETE "$DATA/vectors/probe-v1"
 probe "удаление второй записи"             200            "${AUTH[@]}" -X DELETE "$DATA/vectors/probe-v2"
 probe "записей не осталось"                '!probe-v1'    "${AUTH[@]}" "${JSON[@]}" -X POST -d "{\"embedding\":$VEC,\"k\":5}" "$DATA/vectors/search"
