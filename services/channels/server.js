@@ -563,6 +563,46 @@ const server = http.createServer(async (req, res) => {
     return json(res, 200, { ok: true, messageId: id, chatId: chatId });
   }
 
+  // 🔒 ОТПРАВКА ФАЙЛА: БАЙТЫ ПРИХОДЯТ ОТ ПРИЛОЖЕНИЯ, ТОКЕН ОСТАЁТСЯ ЗДЕСЬ.
+  //
+  // Без этой двери обещание «прислать запись» было бы пустым: приложение умеет
+  // достать файл из медиатеки, но говорить в Telegram может только эта служба —
+  // токен бота живёт тут и наружу не уходит.
+  if (url.pathname === "/telegram/sendFile" && req.method === "POST") {
+    if (!tg.token) return json(res, 422, { error: "Telegram is not configured" });
+    const body = await readBody(req);
+    const chatId = String(body.chatId || tg.chatId || "").trim();
+    if (!chatId) return json(res, 422, { error: "No chat to send to" });
+    const b64 = String(body.base64 || "");
+    if (!b64) return json(res, 400, { error: "base64 is required" });
+
+    // Род решает МЕТОД: голосовое, присланное картинкой, теряет проигрыватель, а
+    // документ, присланный голосовым, Telegram просто отвергает.
+    const kind = String(body.kind || "document");
+    const method = kind === "audio" ? "sendVoice" : kind === "image" ? "sendPhoto" : "sendDocument";
+    const field = kind === "audio" ? "voice" : kind === "image" ? "photo" : "document";
+    const name = String(body.name || "file");
+
+    try {
+      const form = new FormData();
+      form.append("chat_id", chatId);
+      if (body.caption) form.append("caption", String(body.caption).slice(0, 1000));
+      form.append(field, new Blob([Buffer.from(b64, "base64")]), name);
+      const r = await fetch("https://api.telegram.org/bot" + tg.token + "/" + method, {
+        method: "POST",
+        body: form,
+        signal: AbortSignal.timeout(120000),
+      });
+      const d = await r.json();
+      if (!d || d.ok !== true) {
+        return json(res, 502, { error: "Telegram refused the file", telegram: (d && d.description) || null });
+      }
+      return json(res, 200, { ok: true, messageId: d.result && d.result.message_id });
+    } catch (e) {
+      return json(res, 502, { error: String((e && e.message) || e) });
+    }
+  }
+
   if (url.pathname === "/telegram/inbox") {
     const rows = readInbox();
     const after = Number(url.searchParams.get("after") || 0);
