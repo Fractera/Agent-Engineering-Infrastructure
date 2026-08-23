@@ -339,6 +339,43 @@ async function loop() {
 
 setInterval(loop, 2000);
 
+// ── Тик по расписанию: планировщик, которого у платформы не было ────────────
+//
+// 🔒 ЗАЧЕМ ОН ЗДЕСЬ, А НЕ ОТДЕЛЬНОЙ СЛУЖБОЙ. Напоминание — это событие, которое
+// должно случиться, когда человек в приложение не заходил: страница ничего не
+// разбудит, а cron операционной системы живёт вне продукта и переживает его
+// переустановку молча. Эта служба уже тикает каждые две секунды ради опроса
+// бота; добавить к ней вторую стрелку дешевле, чем завести третий процесс.
+//
+// Сам продукт решает, что наступило: служба только СТУЧИТ в его дверь. Знать про
+// календарь ей незачем, и это граница, а не лень.
+let lastTick = 0;
+
+async function tick() {
+  const cfg = readConfig();
+  const tg = cfg.telegram || {};
+  const every = Number(tg.tickSeconds || 0);
+  // Ноль или пусто — расписание выключено. Это законное состояние: проект без
+  // напоминаний не должен платить за пустые запросы каждую минуту.
+  if (!every || !tg.tickUrl) return;
+  const now = Date.now();
+  if (now - lastTick < every * 1000) return;
+  lastTick = now;
+  try {
+    await fetch(tg.tickUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Channel-Secret": tg.hookSecret || "" },
+      body: JSON.stringify({ at: new Date().toISOString(), every: every }),
+      signal: AbortSignal.timeout(30000),
+    });
+  } catch {
+    // Приложение не ответило — следующий тик попробует снова. Пропущенное
+    // напоминание догонит себя само: продукт ищет ПРОСРОЧЕННЫЕ, а не «ровно эту минуту».
+  }
+}
+
+setInterval(tick, 5000);
+
 // ── Control surface for the admin panel (loopback only) ─────────────────────
 
 function json(res, code, body) {
@@ -377,6 +414,7 @@ const server = http.createServer(async (req, res) => {
         enabled: tg.enabled !== false,
         mode: tg.mode || "rag",
         hook: Boolean(tg.hookUrl),
+        tickSeconds: Number(tg.tickSeconds || 0),
         voice: Boolean(openAiKey()),
       },
     });
@@ -407,6 +445,13 @@ const server = http.createServer(async (req, res) => {
     // secret; null removes both.
     if (typeof body.hookUrl === "string") next.telegram.hookUrl = body.hookUrl.trim();
     if (typeof body.hookSecret === "string") next.telegram.hookSecret = body.hookSecret.trim();
+    if (typeof body.tickUrl === "string") next.telegram.tickUrl = body.tickUrl.trim();
+    // Шаг расписания в секундах. Ниже 30 не опускаем: чаще минуты напоминания не
+    // нужны никому, а нагрузка растёт линейно и молча.
+    if (body.tickSeconds !== undefined) {
+      const n = Number(body.tickSeconds);
+      next.telegram.tickSeconds = Number.isFinite(n) && n > 0 ? Math.max(30, Math.min(3600, n)) : 0;
+    }
     if (body.hookUrl === null) {
       delete next.telegram.hookUrl;
       delete next.telegram.hookSecret;
