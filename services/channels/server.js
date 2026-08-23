@@ -169,9 +169,17 @@ async function answer(question) {
     });
     if (!r.ok) return "The knowledge base is not answering right now. Please try again in a minute.";
     const d = await r.json();
-    const text = d && (d.response || d.result);
-    if (typeof text === "string" && text.trim()) return text;
-    return "I could not find anything about that in the knowledge base yet.";
+    const text = String((d && (d.response || d.result)) || "").trim();
+
+    // 🔒 THE ENGINE SPEAKS TO US, NOT TO THE PERSON. When it finds nothing it
+    // answers with its own apology and a machine marker — "[no-context]" — and
+    // forwarding that verbatim puts an implementation detail in front of somebody
+    // who asked a question. An empty base is a legal state and deserves a sentence
+    // that says WHICH state it is: nothing loaded, so nothing to answer from.
+    if (!text || text.toLowerCase().includes("[no-context]") || /^sorry, i.?m not able to provide an answer/i.test(text)) {
+      return "There is nothing in the knowledge base yet, so I have nothing to answer from. The owner adds documents in the panel.";
+    }
+    return text;
   } catch {
     return "The knowledge base is switched off. Ask the owner to turn on Agentic RAG.";
   }
