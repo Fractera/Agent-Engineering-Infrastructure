@@ -27,10 +27,13 @@ export type TelegramLabels = {
   connect: string; relink: string; waiting: string; openTelegram: string;
   linked: string; linkTimeout: string; linkExpired: string; linkFailed: string;
   channelOn: string;
+  scheduleLabel: string; scheduleHint: string; scheduleOff: string;
+  scheduleEvery: string; scheduleSaved: string;
 };
 
 export function TelegramSetup(
-  { configured, enabled, labels }: { configured: boolean; enabled: boolean; labels: TelegramLabels },
+  { configured, enabled, tickSeconds, labels }:
+    { configured: boolean; enabled: boolean; tickSeconds: number; labels: TelegramLabels },
 ) {
   const router = useRouter();
   const [token, setToken] = useState("");
@@ -38,6 +41,34 @@ export function TelegramSetup(
   const [linking, setLinking] = useState(false);
   const [deepLink, setDeepLink] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [tick, setTick] = useState(tickSeconds);
+
+  // 🔒 ШАГ ВЫБИРАЕТСЯ ИЗ СПИСКА, А НЕ ВВОДИТСЯ ЧИСЛОМ. Свободное поле здесь
+  // означает «поставлю единицу и посмотрю»: служба стучит в приложение, и
+  // цена ошибки — постоянная нагрузка, которую никто не заметит месяцами.
+  // Служба всё равно зажимает значение в 30…3600, но объяснять это отказом
+  // формы дороже, чем не дать ошибиться.
+  const STEPS = [0, 60, 300, 900, 3600];
+
+  async function saveTick(next: number) {
+    const before = tick;
+    setTick(next);
+    try {
+      const r = await fetch("/api/channels/telegram", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tickSeconds: next }),
+      });
+      if (!r.ok) { setTick(before); setError(labels.failed); return; }
+      toast.success(labels.scheduleSaved);
+      router.refresh();
+    } catch {
+      // Служба не ответила — возвращаем прежнее значение: показать выбранное
+      // как сохранённое значит соврать о состоянии сервера.
+      setTick(before);
+      setError(labels.failed);
+    }
+  }
 
   async function saveToken() {
     setSaving(true); setError(null);
@@ -129,6 +160,25 @@ export function TelegramSetup(
             {saving ? labels.saving : labels.save}
           </Button>
         </div>
+      </div>
+
+      <div className="flex flex-col gap-1.5 border-t border-border pt-3">
+        <span className="text-[10px] text-muted-foreground">{labels.scheduleLabel}</span>
+        <div className="flex flex-wrap items-center gap-1.5">
+          {STEPS.map((n) => (
+            <Button
+              key={n}
+              variant={tick === n ? "default" : "outline"}
+              size="sm"
+              disabled={!configured}
+              onClick={() => saveTick(n)}
+              className="h-7 text-[11px]"
+            >
+              {n === 0 ? labels.scheduleOff : labels.scheduleEvery.replace("{n}", String(n))}
+            </Button>
+          ))}
+        </div>
+        <p className="text-[10px] leading-relaxed text-muted-foreground">{labels.scheduleHint}</p>
       </div>
 
       <div className="flex items-center gap-2">

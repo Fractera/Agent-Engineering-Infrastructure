@@ -19,6 +19,8 @@ export type TelegramState = {
   chatId: string | null;
   who: string | null;
   enabled: boolean;
+  /** Шаг расписания в секундах. 0 — выключено; поле молодое, поэтому необязательное. */
+  tickSeconds?: number;
 };
 
 export type ChannelsState = { available: boolean; telegram: TelegramState | null };

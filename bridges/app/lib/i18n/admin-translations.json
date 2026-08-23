@@ -546,7 +546,12 @@
       "helpLinkTitle": "Why linking needs a one-time code.",
       "helpLink": "The link is opened inside a messenger, where it is visible to anyone who sees the screen. A code that worked twice would let someone else attach their account to your project, so it works once and expires.",
       "helpOffTitle": "Turning the channel off.",
-      "helpOff": "The switch stops the bot answering without deleting the token or the link — useful while you are changing the knowledge base and would rather nobody got half-built answers."
+      "helpOff": "The switch stops the bot answering without deleting the token or the link — useful while you are changing the knowledge base and would rather nobody got half-built answers.",
+      "scheduleLabel": "Schedule",
+      "scheduleHint": "How often the product is asked whether a reminder has come due. Reminders have to fire while nobody is looking at the site, so something has to knock — this is it. Off means the project has no reminders and pays for none.",
+      "scheduleOff": "Off",
+      "scheduleEvery": "Every {n} sec",
+      "scheduleSaved": "Schedule saved"
     },
     "openai": {
       "intro": "One key, entered once, that every thinking part of the platform draws on. It is not a plan with a monthly fee — it is a balance you top up, charged for what was actually used. A balance from $5 is enough to start; get a key at",
@@ -3821,7 +3826,12 @@
       "helpLinkTitle": "Почему привязке нужен одноразовый код.",
       "helpLink": "Ссылка открывается в мессенджере, где её видит всякий, кто видит экран. Код, работающий дважды, позволил бы кому-то другому привязать к вашему проекту свою учётную запись — поэтому он работает один раз и истекает.",
       "helpOffTitle": "Что делает выключение канала.",
-      "helpOff": "Переключатель останавливает ответы бота, не удаляя ни токен, ни привязку, — это удобно, пока вы меняете базу знаний и не хотите, чтобы кто-то получал недостроенные ответы."
+      "helpOff": "Переключатель останавливает ответы бота, не удаляя ни токен, ни привязку, — это удобно, пока вы меняете базу знаний и не хотите, чтобы кто-то получал недостроенные ответы.",
+      "scheduleLabel": "Расписание",
+      "scheduleHint": "Как часто у приложения спрашивают, не наступило ли напоминание. Напоминание обязано сработать, когда на сайт никто не смотрит, — значит кто-то должен постучать, и это он. «Выключено» означает, что напоминаний в проекте нет и платить за них не нужно.",
+      "scheduleOff": "Выключено",
+      "scheduleEvery": "Каждые {n} сек",
+      "scheduleSaved": "Расписание сохранено"
     },
     "openai": {
       "intro": "Один ключ, введённый однажды, из которого черпает каждая думающая часть платформы. Это не тариф с месячной платой — это баланс, который вы пополняете, и списывается только за то, что действительно было использовано. Для начала достаточно баланса от 5 долларов; ключ берётся на",

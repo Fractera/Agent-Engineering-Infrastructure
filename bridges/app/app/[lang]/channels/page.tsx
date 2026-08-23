@@ -81,6 +81,7 @@ export default async function ChannelsPage({ params }: { params: Promise<{ lang:
             <TelegramSetup
               configured={Boolean(telegram?.configured)}
               enabled={telegram?.enabled !== false}
+              tickSeconds={Number(telegram?.tickSeconds ?? 0)}
               labels={{
                 tokenLabel: c.tokenLabel, tokenPlaceholder: c.tokenPlaceholder, tokenReplace: c.tokenReplace,
                 save: c.save, saving: c.saving, saved: c.saved, failed: c.failed,
@@ -88,6 +89,9 @@ export default async function ChannelsPage({ params }: { params: Promise<{ lang:
                 waiting: c.waiting, openTelegram: c.openTelegram,
                 linked: c.linkedToast, linkTimeout: c.linkTimeout, linkExpired: c.linkExpired,
                 linkFailed: c.linkFailed, channelOn: c.channelOn,
+                scheduleLabel: c.scheduleLabel, scheduleHint: c.scheduleHint,
+                scheduleOff: c.scheduleOff, scheduleEvery: c.scheduleEvery,
+                scheduleSaved: c.scheduleSaved,
               }}
             />
 

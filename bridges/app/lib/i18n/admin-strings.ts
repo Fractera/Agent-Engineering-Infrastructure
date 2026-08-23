@@ -392,6 +392,8 @@ export type AdminStrings = {
     connect: string; relink: string; waiting: string; openTelegram: string;
     linkedToast: string; linkTimeout: string; linkExpired: string; linkFailed: string;
     channelOn: string; answersFrom: string; neverInvents: string;
+    scheduleLabel: string; scheduleHint: string; scheduleOff: string;
+    scheduleEvery: string; scheduleSaved: string;
     helpLabel: string;
     helpWhatTitle: string; helpWhat: string;
     helpWhyTitle: string; helpWhy: string;
