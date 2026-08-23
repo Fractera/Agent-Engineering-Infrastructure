@@ -244,6 +244,31 @@ async function loop() {
           continue;
         }
       }
+      // 🔒 ПРОИСХОЖДЕНИЕ ПЕРЕСЛАННОГО — ЭТО ЧАСТЬ СМЫСЛА, А НЕ УКРАШЕНИЕ.
+      //
+      // ✗ 2026-08-23: владелец переслал голосовое от знакомого, и продукт записал
+      // только слова. «Что мне говорил Ковальчук» после этого не находится никогда:
+      // имени в записи нет вовсе, хотя Telegram его прислал.
+      //
+      // Полей три поколения, и живы все: forward_origin (Bot API 7+), старые
+      // forward_from / forward_from_chat и forward_sender_name у тех, кто закрыл
+      // ссылку на свой профиль. Читаем все — иначе половина пересылок безымянна.
+      let forwardedFrom = null;
+      if (msg) {
+        const o = msg.forward_origin;
+        const nameOf = (u) =>
+          u && (u.username ? "@" + u.username : [u.first_name, u.last_name].filter(Boolean).join(" "));
+        if (o) {
+          if (o.type === "user") forwardedFrom = nameOf(o.sender_user);
+          else if (o.type === "hidden_user") forwardedFrom = o.sender_user_name || null;
+          else if (o.type === "chat") forwardedFrom = (o.sender_chat && o.sender_chat.title) || null;
+          else if (o.type === "channel") forwardedFrom = (o.chat && o.chat.title) || null;
+        }
+        if (!forwardedFrom && msg.forward_from) forwardedFrom = nameOf(msg.forward_from);
+        if (!forwardedFrom && msg.forward_from_chat) forwardedFrom = msg.forward_from_chat.title || null;
+        if (!forwardedFrom && msg.forward_sender_name) forwardedFrom = msg.forward_sender_name;
+      }
+
       // Гео приходит отдельным родом сообщения и текста не имеет вовсе.
       const place = (msg && (msg.location || (msg.venue && msg.venue.location))) || null;
       if (!text && place) text = "Место: " + place.latitude + ", " + place.longitude;
@@ -290,6 +315,7 @@ async function loop() {
         text: text,
         objectType: objectType,
         fileId: fileId,
+        forwardedFrom: forwardedFrom,
         lat: place ? place.latitude : null,
         lon: place ? place.longitude : null,
       });
@@ -319,6 +345,7 @@ async function loop() {
               text: text,
               objectType: objectType,
               fileId: fileId,
+              forwardedFrom: forwardedFrom,
               lat: place ? place.latitude : null,
               lon: place ? place.longitude : null,
             }),
