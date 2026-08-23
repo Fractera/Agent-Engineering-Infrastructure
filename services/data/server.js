@@ -1276,11 +1276,37 @@ async function proxy(target, extraHeaders, req, res) {
       body: ['GET', 'HEAD'].includes(req.method) ? undefined : JSON.stringify(req.body ?? {}),
       signal: AbortSignal.timeout(120000),
     })
-    const text = await upstream.text()
+    // 🔒 ДВОИЧНЫЙ ОТВЕТ ЧИТАЕТСЯ БАЙТАМИ, А НЕ ТЕКСТОМ.
+    //
+    // ✗ 2026-08-23: здесь стояло `await upstream.text()` для ЛЮБОГО ответа.
+    // Текстовый разбор двоичных данных заменяет каждый недопустимый байт
+    // символом U+FFFD — и делает это молча: код 200, длина правдоподобная,
+    // тип верный. Фотография, прошедшая этот прокси, приезжала мёртвой:
+    // первые байты JPEG (FF D8 FF E0) превращались в EF BF BD EF BF BD…,
+    // модель отвечала «unsupported image», а файл в медиатеке был мусором.
+    //
+    // Признак двоичного — заголовок ответа, а не догадка о маршруте: службы
+    // отдают файлы разных родов, и перечислять их здесь значило бы гадать.
+    const type = upstream.headers.get('content-type') ?? 'application/json'
+    const head = type.split(";")[0].trim().toLowerCase()
+    const isText =
+      head.startsWith("text/") ||
+      head === "application/json" ||
+      head === "application/xml" ||
+      head === "application/javascript"
+
     res.status(upstream.status)
-    res.set('Content-Type', upstream.headers.get('content-type') ?? 'application/json')
+    res.set('Content-Type', type)
     res.set('Cache-Control', 'no-store')
-    res.send(text)
+
+    // Свои заголовки службы (например, имя файла) переносим: без них
+    // принимающая сторона не знает, ЧТО ей прислали.
+    for (const [k, v] of upstream.headers.entries()) {
+      if (k.toLowerCase().startsWith('x-')) res.set(k, v)
+    }
+
+    if (isText) return res.send(await upstream.text())
+    return res.send(Buffer.from(await upstream.arrayBuffer()))
   } catch (e) {
     // A loopback service that is switched off is a normal state, not a fault of
     // this one — say which one is silent instead of returning a bare 500.
