@@ -130,7 +130,11 @@ printf '%s' 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwA
 probe "список медиа"                       200            "${AUTH[@]}" "$DATA/media"
 MID=""
 if [ -f "$SAMPLE_PNG" ]; then
-  MID=$(curl -s "${AUTH[@]}" -F "file=@$SAMPLE_PNG" "$DATA/media/upload" | node -e "let s='';process.stdin.on('data',function(d){s+=d}).on('end',function(){try{var j=JSON.parse(s);console.log(j.id||(j.media&&j.media.id)||'')}catch(e){console.log('')}})")
+  # 🔒 Идентификатор лежит в `item`, а не на верхнем уровне (найдено прогоном
+# 2026-08-23). Проба искала `id` и `media.id`, получала пустоту и объявляла
+# исправную загрузку сломанной. Это ЧЕТВЁРТАЯ ошибка самой пробы против нуля
+# ошибок платформы — цена того, что ожидания писались по памяти, а не по ответу.
+  MID=$(curl -s "${AUTH[@]}" -F "file=@$SAMPLE_PNG" "$DATA/media/upload" | node -e "let s='';process.stdin.on('data',function(d){s+=d}).on('end',function(){try{var j=JSON.parse(s);console.log((j.item&&j.item.id)||j.id||'')}catch(e){console.log('')}})")
 fi
 TOTAL=$((TOTAL+1))
 if [ -n "$MID" ]; then
