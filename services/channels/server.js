@@ -255,7 +255,7 @@ async function loop() {
 
       // Everything the bot hears goes into the inbox whatever the mode: an
       // application that wants to react must be able to see it at all.
-      pushInbox({
+      const inboxId = pushInbox({
         at: new Date().toISOString(),
         chatId: String(chat.id),
         who: chat.username
@@ -264,6 +264,35 @@ async function loop() {
         kind: kind,
         text: text,
       });
+
+      // ── The push. The inbox is a safety net; this is the main road ─────────
+      //
+      // The application cannot poll Telegram (one reader, see the header) and the
+      // platform has no scheduler, so a message that is only STORED is a message
+      // nobody acts on. If a hook is configured, it is called the moment the
+      // message lands. A failure here is deliberately silent: the row stays in the
+      // inbox and the application picks it up by cursor when it comes back.
+      if (tg.hookUrl) {
+        try {
+          await fetch(tg.hookUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Channel-Secret": tg.hookSecret || "",
+            },
+            body: JSON.stringify({
+              id: inboxId,
+              at: new Date().toISOString(),
+              channel: "telegram",
+              chatId: String(chat.id),
+              who: chat.username ? "@" + chat.username : String(chat.id),
+              kind: kind,
+              text: text,
+            }),
+            signal: AbortSignal.timeout(15000),
+          });
+        } catch {}
+      }
 
       // The mode decides WHO answers. `rag` — this service, from the knowledge
       // base, as it always did. `app` — nobody here: the application reads the
@@ -318,6 +347,7 @@ const server = http.createServer(async (req, res) => {
         who: tg.who || null,
         enabled: tg.enabled !== false,
         mode: tg.mode || "rag",
+        hook: Boolean(tg.hookUrl),
         voice: Boolean(openAiKey()),
       },
     });
@@ -343,6 +373,14 @@ const server = http.createServer(async (req, res) => {
     if (typeof body.enabled === "boolean") next.telegram.enabled = body.enabled;
     if (body.mode === "rag" || body.mode === "app" || body.mode === "both") {
       next.telegram.mode = body.mode;
+    }
+    // The application door. Empty string switches the push off without losing the
+    // secret; null removes both.
+    if (typeof body.hookUrl === "string") next.telegram.hookUrl = body.hookUrl.trim();
+    if (typeof body.hookSecret === "string") next.telegram.hookSecret = body.hookSecret.trim();
+    if (body.hookUrl === null) {
+      delete next.telegram.hookUrl;
+      delete next.telegram.hookSecret;
     }
     writeConfig(next);
     return json(res, 200, { ok: true });
