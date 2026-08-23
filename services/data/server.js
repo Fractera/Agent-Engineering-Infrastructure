@@ -5,7 +5,7 @@ import Database from 'better-sqlite3'
 import { v4 as uuidv4 } from 'uuid'
 import sharp from 'sharp'
 import pngToIco from 'png-to-ico'
-import { createReadStream, existsSync, mkdirSync, unlinkSync, writeFileSync, readFileSync, statSync } from 'fs'
+import { createReadStream, existsSync, mkdirSync, unlinkSync, rmSync, writeFileSync, readFileSync, statSync } from 'fs'
 import { resolve, dirname, extname } from 'path'
 import { fileURLToPath } from 'url'
 import { config } from 'dotenv'
@@ -775,6 +775,30 @@ app.get('/media/icons/current', (_req, res) => {
 })
 
 // ── GET /media/icons ──────────────────────────────────────────────────────────
+
+// ── DELETE /media/icons/:id — снять набор иконок ─────────────────────────────
+//
+// 🔒 ЗАЧЕМ ЭТОТ МАРШРУТ ПОЯВИЛСЯ (найдено проверкой возможностей 2026-08-23).
+// Набор иконок можно было СОЗДАТЬ и нельзя было УДАЛИТЬ: у владельца не было
+// способа отменить сгенерированный значок сайта, кроме как сгенерировать поверх
+// новый. Дыра тихая — она не мешает, пока не понадобится откатить.
+//
+// 🔒 ФАЙЛЫ И ЗАПИСЬ УХОДЯТ ВМЕСТЕ. Оставить папку без записи значит копить
+// мегабайты, о которых не знает никто; оставить запись без папки — отдавать
+// битые ссылки на значок с каждой страницы сайта.
+app.delete('/media/icons/:id', (req, res) => {
+  const row = mediaDb.prepare('SELECT * FROM icon_sets WHERE id = ?').get(req.params.id)
+  if (!row) return res.status(404).json({ ok: false, error: 'Icon set not found' })
+  const dir = resolve(ICONS_DIR, req.params.id)
+  try {
+    if (existsSync(dir)) rmSync(dir, { recursive: true, force: true })
+  } catch (e) {
+    return res.status(500).json({ ok: false, error: String(e) })
+  }
+  mediaDb.prepare('DELETE FROM icon_sets WHERE id = ?').run(req.params.id)
+  res.json({ ok: true })
+})
+
 
 app.get('/media/icons', (_req, res) => {
   const rows = mediaDb.prepare('SELECT * FROM icon_sets ORDER BY generated_at DESC').all()
