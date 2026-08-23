@@ -25,7 +25,7 @@ set -u
 DATA=http://localhost:3300
 ENV_FILE=${SLOT_ENV:-/opt/fractera/app/.env.local}
 RAG_ENV=${RAG_ENV:-/opt/fractera/services/rag/.env}
-SAMPLE_PNG=${SAMPLE_PNG:-/opt/fractera/app/public/og-default.png}
+SAMPLE_PNG=${SAMPLE_PNG:-/tmp/probe-sample.png}
 PUBLIC_HOST=${PUBLIC_DATA_HOST:-}
 
 KEY=$(grep -E '^DATA_SECRET=' "$ENV_FILE" 2>/dev/null | head -1 | cut -d= -f2- | tr -d '\r')
@@ -35,6 +35,20 @@ OK=0; FAIL=0; BLOCKED=0; TOTAL=0; FAILED_LINES=""
 
 # probe <имя> <ожидание> <аргументы curl…>
 #   ожидание: "200" — код; "200:слово" — код и подстрока; "!слово" — подстроки быть НЕ должно
+# 🔒 Ожидание бывает АЛЬТЕРНАТИВНЫМ («200|404:нет наборов»), и это не поблажка.
+# Пустой склад иконок обязан отвечать 404 с объяснением, полный — 200. Обе
+# ветки правильны, и требовать одну значит объявить исправный сервер сломанным.
+probe_any() {
+  local name="$1" a="$2" b="$3"; shift 3
+  local before_fail=$FAIL
+  probe "$name" "$a" "$@" >/dev/null 2>&1
+  if [ "$FAIL" = "$before_fail" ]; then printf "  ok      %-50s (первая ветка)
+" "$name"; return; fi
+  FAIL=$before_fail; OK=$((OK-0)); TOTAL=$((TOTAL-1))
+  FAILED_LINES=${FAILED_LINES%"$name;"}
+  probe "$name" "$b" "$@"
+}
+
 probe() {
   local name="$1" expect="$2"; shift 2
   TOTAL=$((TOTAL+1))
@@ -108,6 +122,11 @@ probe "таблицы не осталось"                "!$T"          "${AU
 
 echo
 echo "-- use-object-storage ----------------------------------------"
+# 🔒 Образец ПОРОЖДАЕТСЯ здесь же, а не ищется в проекте: путь к чужому файлу
+# — это зависимость от чужого дерева, и она уже подвела (файла не оказалось,
+# загрузка ушла без тела, а проба сказала «не работает»).
+printf '%s' 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==' | base64 -d > "$SAMPLE_PNG"
+
 probe "список медиа"                       200            "${AUTH[@]}" "$DATA/media"
 MID=""
 if [ -f "$SAMPLE_PNG" ]; then
@@ -129,7 +148,8 @@ else
   blocked "чтение/превью/правка/подрезка/удаление" "загрузка не удалась"
 fi
 probe "иконки: список"                     200            "${AUTH[@]}" "$DATA/media/icons"
-probe "иконки: текущий набор"              200            "${AUTH[@]}" "$DATA/media/icons/current"
+probe_any "иконки: текущий набор" 200 "404:No icon sets"   "${AUTH[@]}" "$DATA/media/icons/current"
+blocked "файл иконки" "наборов нет; генерация оставила бы на сервере значок сайта — разрушительно для чужого продукта"
 
 echo
 echo "-- use-vector-memory -----------------------------------------"
@@ -150,7 +170,7 @@ echo
 echo "-- use-agentic-rag -------------------------------------------"
 RAG_KEYED=$(grep -cE "^LLM_BINDING_API_KEY=.+" "$RAG_ENV" 2>/dev/null || true)
 probe "здоровье графа"                     200            "${AUTH[@]}" "$DATA/service/rag/health"
-probe "список документов"                  200            "${AUTH[@]}" "${JSON[@]}" -X POST -d '{"page":1,"page_size":5}' "$DATA/service/rag/documents/paginated"
+probe "список документов"                  200            "${AUTH[@]}" "${JSON[@]}" -X POST -d '{"page":1,"page_size":10}' "$DATA/service/rag/documents/paginated"
 probe "статус конвейера"                   200            "${AUTH[@]}" "$DATA/service/rag/documents/pipeline_status"
 probe "запрос к базе"                      200            "${AUTH[@]}" "${JSON[@]}" -X POST -d '{"query":"probe","mode":"naive"}' "$DATA/service/rag/query"
 if [ "${RAG_KEYED:-0}" != "0" ]; then
