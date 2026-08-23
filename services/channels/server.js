@@ -485,6 +485,38 @@ const server = http.createServer(async (req, res) => {
 
   // ── The two doors an application needs ─────────────────────────────────────
 
+  // 🔒 ФАЙЛ ОТДАЁТСЯ ЧЕРЕЗ СЛУЖБУ, А НЕ ССЫЛКОЙ НА TELEGRAM.
+  //
+  // Адрес файла у Telegram содержит ТОКЕН БОТА целиком. Отдать приложению такую
+  // ссылку значит отдать ему ключ от бота — и оставить его в логах, в истории
+  // запросов и в чужой памяти. Здесь ссылка строится и тут же тратится, а наружу
+  // уходят только байты по петле.
+  if (url.pathname === "/telegram/file") {
+    if (!tg.token) return json(res, 422, { error: "Telegram is not configured" });
+    const id = (url.searchParams.get("id") || "").trim();
+    if (!id) return json(res, 400, { error: "id is required" });
+    const info = await telegram(tg.token, "getFile", "?file_id=" + encodeURIComponent(id));
+    const filePath = info && info.result && info.result.file_path;
+    if (!filePath) return json(res, 404, { error: "Telegram does not know this file" });
+    try {
+      const r = await fetch("https://api.telegram.org/file/bot" + tg.token + "/" + filePath);
+      if (!r.ok) return json(res, 502, { error: "Telegram refused the download" });
+      const buf = Buffer.from(await r.arrayBuffer());
+      res.writeHead(200, {
+        "Content-Type": "application/octet-stream",
+        "Content-Length": buf.length,
+        // Имя нужно принимающей стороне: медиатека адресует файл ИМЕНЕМ, а
+        // расширение решает, чем его потом читать.
+        "X-File-Name": filePath.split("/").pop() || "file",
+        "Cache-Control": "no-store",
+      });
+      return res.end(buf);
+    } catch {
+      return json(res, 502, { error: "Download failed" });
+    }
+  }
+
+
   if (url.pathname === "/telegram/send" && req.method === "POST") {
     if (!tg.token) return json(res, 422, { error: "Telegram is not configured" });
     const body = await readBody(req);
