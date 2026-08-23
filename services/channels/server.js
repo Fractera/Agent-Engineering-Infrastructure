@@ -209,8 +209,25 @@ async function loop() {
       // A voice note carries no text of its own. It is fetched, transcribed and
       // treated exactly as if the person had typed it — nothing below this point
       // can tell the two apart.
-      let text = String((msg && msg.text) || "").trim();
+      // 🔒 ПОДПИСЬ К ВЛОЖЕНИЮ ЖИВЁТ В ДРУГОМ ПОЛЕ. Фотография с текстом кладёт его
+      // в caption, а не в text, и цикл, читавший только text, выбрасывал такое
+      // сообщение целиком — молча, как раньше выбрасывал голос. Владелец прислал
+      // фотографию с описанием услуги фотографа, и она не дошла никуда.
+      let text = String((msg && (msg.text || msg.caption)) || "").trim();
       let kind = "text";
+
+      // Род вложения и его файл. Сам файл продукт пока не забирает (это записанный
+      // долг), но знать, что он был, он обязан: подпись без предмета — половина смысла.
+      let objectType = null;
+      let fileId = null;
+      if (msg) {
+        if (Array.isArray(msg.photo) && msg.photo.length) {
+          objectType = "image";
+          fileId = msg.photo[msg.photo.length - 1].file_id;
+        } else if (msg.video) { objectType = "video"; fileId = msg.video.file_id; }
+        else if (msg.document) { objectType = "document"; fileId = msg.document.file_id; }
+        else if (msg.audio) { objectType = "audio"; fileId = msg.audio.file_id; }
+      }
       const voice = (msg && (msg.voice || msg.audio || msg.video_note)) || null;
       if (!text && voice && voice.file_id) {
         kind = "voice";
@@ -227,6 +244,10 @@ async function loop() {
           continue;
         }
       }
+      // Гео приходит отдельным родом сообщения и текста не имеет вовсе.
+      const place = (msg && (msg.location || (msg.venue && msg.venue.location))) || null;
+      if (!text && place) text = "Место: " + place.latitude + ", " + place.longitude;
+
       if (!text) continue;
 
       // Linking: the deep-link START carries our one-time code, and the very same
@@ -263,6 +284,10 @@ async function loop() {
           : [chat.first_name, chat.last_name].filter(Boolean).join(" ") || String(chat.id),
         kind: kind,
         text: text,
+        objectType: objectType,
+        fileId: fileId,
+        lat: place ? place.latitude : null,
+        lon: place ? place.longitude : null,
       });
 
       // ── The push. The inbox is a safety net; this is the main road ─────────
@@ -288,6 +313,10 @@ async function loop() {
               who: chat.username ? "@" + chat.username : String(chat.id),
               kind: kind,
               text: text,
+              objectType: objectType,
+              fileId: fileId,
+              lat: place ? place.latitude : null,
+              lon: place ? place.longitude : null,
             }),
             signal: AbortSignal.timeout(15000),
           });
