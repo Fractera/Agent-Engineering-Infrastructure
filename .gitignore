@@ -33,6 +33,11 @@ services/media/data/*.db-wal
 services/media/storage/*
 !services/media/storage/.gitkeep
 services/media/icons/*
+
+# Рантайм канала: настройка бота и ящик входящих рождаются на сервере.
+# Под git они срывали бы pull при каждом развёртывании.
+services/channels/config.json
+services/channels/inbox.json
 !services/media/icons/.gitkeep
 
 # Hermes reference docs (read-only clone of NousResearch/hermes-agent — never commit)

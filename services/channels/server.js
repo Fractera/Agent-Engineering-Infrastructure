@@ -47,6 +47,52 @@ const RAG_KEY = process.env.LIGHTRAG_API_KEY ?? "";
 const LINK_TTL_MS = 10 * 60000;
 const pendingLinks = new Map();
 
+// ── The inbox: what the bot heard, kept for the application ─────────────────
+//
+// This service is the only reader of the bot (see the header), so an application
+// that wants to REACT to a message cannot poll Telegram itself. It reads this
+// instead: a ring of the last messages, written to disk so a restart does not
+// lose the ones nobody has read yet.
+const INBOX = process.env.CHANNELS_INBOX ?? path.resolve(__dirname, "inbox.json");
+const INBOX_MAX = 500;
+
+function readInbox() {
+  try {
+    const rows = JSON.parse(fs.readFileSync(INBOX, "utf8"));
+    return Array.isArray(rows) ? rows : [];
+  } catch {
+    return [];
+  }
+}
+
+function pushInbox(entry) {
+  const rows = readInbox();
+  const id = (rows.length ? rows[rows.length - 1].id : 0) + 1;
+  rows.push(Object.assign({ id: id }, entry));
+  while (rows.length > INBOX_MAX) rows.shift();
+  try {
+    fs.writeFileSync(INBOX, JSON.stringify(rows, null, 2) + "\n", { mode: 0o600 });
+  } catch {}
+  return id;
+}
+
+// The OpenAI key lives in the data service env, written there by the panel. This
+// service deliberately has no key of its own: one place to fill in, one place to
+// revoke. An explicit OPENAI_API_KEY in this service env wins, so the day the
+// panel writes it here directly nothing has to change.
+const KEY_FILE = process.env.OPENAI_KEY_FILE ?? "/opt/fractera/services/data/.env";
+
+function openAiKey() {
+  if (process.env.OPENAI_API_KEY) return process.env.OPENAI_API_KEY;
+  try {
+    for (const line of fs.readFileSync(KEY_FILE, "utf8").split("\n")) {
+      const t = line.trim();
+      if (t.startsWith("OPENAI_API_KEY=")) return t.slice("OPENAI_API_KEY=".length).trim();
+    }
+  } catch {}
+  return "";
+}
+
 function readConfig() {
   try {
     return JSON.parse(fs.readFileSync(CONFIG, "utf8"));
@@ -75,6 +121,39 @@ async function telegram(token, method, query, body) {
 function send(token, chatId, text) {
   // Telegram refuses messages longer than 4096 characters.
   return telegram(token, "sendMessage", "", { chat_id: chatId, text: String(text).slice(0, 4000) });
+}
+
+// ── Voice: a note is a FILE, and a file has to be fetched before it is heard ──
+//
+// Telegram never sends the audio itself: the update carries a file_id, the file
+// takes two more calls to reach, and only then can it be transcribed. Without
+// this the loop dropped every voice note silently — no text, no error, no log
+// line, and the person on the other side saw a bot that ignores them.
+async function voiceToText(token, fileId) {
+  const key = openAiKey();
+  if (!key) return { text: "", error: "no-key" };
+  const info = await telegram(token, "getFile", "?file_id=" + encodeURIComponent(fileId));
+  const filePath = info && info.result && info.result.file_path;
+  if (!filePath) return { text: "", error: "no-file" };
+  try {
+    const r = await fetch("https://api.telegram.org/file/bot" + token + "/" + filePath);
+    if (!r.ok) return { text: "", error: "download" };
+    const buf = Buffer.from(await r.arrayBuffer());
+    const form = new FormData();
+    form.append("file", new Blob([buf]), filePath.split("/").pop() || "voice.ogg");
+    form.append("model", process.env.TRANSCRIBE_MODEL ?? "whisper-1");
+    const t = await fetch("https://api.openai.com/v1/audio/transcriptions", {
+      method: "POST",
+      headers: { Authorization: "Bearer " + key },
+      body: form,
+      signal: AbortSignal.timeout(120000),
+    });
+    if (!t.ok) return { text: "", error: "transcribe-" + t.status };
+    const d = await t.json();
+    return { text: String((d && d.text) || "").trim(), error: "" };
+  } catch {
+    return { text: "", error: "transcribe" };
+  }
 }
 
 // The answer itself. The bot is a mouth for the knowledge base: it asks agentic
@@ -117,8 +196,30 @@ async function loop() {
       offset = Math.max(offset, (u.update_id || 0) + 1);
       const msg = u.message;
       const chat = msg && msg.chat;
-      const text = String((msg && msg.text) || "").trim();
-      if (!chat || chat.id == null || !text) continue;
+      if (!chat || chat.id == null) continue;
+
+      // A voice note carries no text of its own. It is fetched, transcribed and
+      // treated exactly as if the person had typed it — nothing below this point
+      // can tell the two apart.
+      let text = String((msg && msg.text) || "").trim();
+      let kind = "text";
+      const voice = (msg && (msg.voice || msg.audio || msg.video_note)) || null;
+      if (!text && voice && voice.file_id) {
+        kind = "voice";
+        const heard = await voiceToText(tg.token, voice.file_id);
+        text = heard.text;
+        if (!text) {
+          await send(
+            tg.token,
+            chat.id,
+            heard.error === "no-key"
+              ? "I cannot listen yet: the owner has not added an OpenAI key in the panel."
+              : "I could not make out that recording. Please try again, or write it as text."
+          );
+          continue;
+        }
+      }
+      if (!text) continue;
 
       // Linking: the deep-link START carries our one-time code, and the very same
       // message carries the sender's chat id. One code, one id, nothing guessed.
@@ -144,7 +245,24 @@ async function loop() {
         continue;
       }
 
-      await send(tg.token, chat.id, await answer(text));
+      // Everything the bot hears goes into the inbox whatever the mode: an
+      // application that wants to react must be able to see it at all.
+      pushInbox({
+        at: new Date().toISOString(),
+        chatId: String(chat.id),
+        who: chat.username
+          ? "@" + chat.username
+          : [chat.first_name, chat.last_name].filter(Boolean).join(" ") || String(chat.id),
+        kind: kind,
+        text: text,
+      });
+
+      // The mode decides WHO answers. `rag` — this service, from the knowledge
+      // base, as it always did. `app` — nobody here: the application reads the
+      // inbox and replies through /telegram/send. `both` — the base answers and
+      // the application still sees the message.
+      const mode = tg.mode === "app" || tg.mode === "both" ? tg.mode : "rag";
+      if (mode !== "app") await send(tg.token, chat.id, await answer(text));
     }
   } catch {
     // A bad poll must never stop the loop; the next tick tries again.
@@ -191,6 +309,8 @@ const server = http.createServer(async (req, res) => {
         chatId: tg.chatId || null,
         who: tg.who || null,
         enabled: tg.enabled !== false,
+        mode: tg.mode || "rag",
+        voice: Boolean(openAiKey()),
       },
     });
   }
@@ -213,6 +333,9 @@ const server = http.createServer(async (req, res) => {
       offset = 0;
     }
     if (typeof body.enabled === "boolean") next.telegram.enabled = body.enabled;
+    if (body.mode === "rag" || body.mode === "app" || body.mode === "both") {
+      next.telegram.mode = body.mode;
+    }
     writeConfig(next);
     return json(res, 200, { ok: true });
   }
@@ -238,6 +361,34 @@ const server = http.createServer(async (req, res) => {
     }
     if (!pendingLinks.has(code)) return json(res, 200, { status: "expired" });
     return json(res, 200, { status: "waiting" });
+  }
+
+  // ── The two doors an application needs ─────────────────────────────────────
+
+  if (url.pathname === "/telegram/send" && req.method === "POST") {
+    if (!tg.token) return json(res, 422, { error: "Telegram is not configured" });
+    const body = await readBody(req);
+    const chatId = String(body.chatId || tg.chatId || "").trim();
+    if (!chatId) return json(res, 422, { error: "No chat to send to — link one in the panel" });
+    const text = String(body.text || "").trim();
+    if (!text) return json(res, 400, { error: "text is required" });
+    const r = await send(tg.token, chatId, text);
+    const id = r && r.result && r.result.message_id;
+    if (!id) {
+      return json(res, 502, { error: "Telegram refused the message", telegram: (r && r.description) || null });
+    }
+    return json(res, 200, { ok: true, messageId: id, chatId: chatId });
+  }
+
+  if (url.pathname === "/telegram/inbox") {
+    const rows = readInbox();
+    const after = Number(url.searchParams.get("after") || 0);
+    const limit = Math.min(Number(url.searchParams.get("limit") || 50) || 50, 200);
+    return json(res, 200, {
+      ok: true,
+      messages: rows.filter((r) => r.id > after).slice(0, limit),
+      lastId: rows.length ? rows[rows.length - 1].id : 0,
+    });
   }
 
   return json(res, 404, { error: "not found" });
