@@ -105,6 +105,22 @@ export default async function ChannelsPage({ params }: { params: Promise<{ lang:
         </div>
       )}
 
+      {/* Что ассистент рассказывает о себе. Владелец видит ЗДЕСЬ то же самое,
+          что человек услышит в чате: два текста, разошедшиеся между собой, —
+          это два разных продукта в глазах покупателя и в глазах владельца. */}
+      <HelpDetails label={c.introLabel}>
+        <p>{c.introIntro}</p>
+        <p><strong>{c.introAbilitiesTitle}</strong></p>
+        <ul className="list-disc space-y-1 pl-4">
+          {c.introAbilities.map((line) => (<li key={line}>{line}</li>))}
+        </ul>
+        <p><strong>{c.introCommandsTitle}</strong></p>
+        <ul className="list-disc space-y-1 pl-4">
+          {c.introCommands.map((line) => (<li key={line}>{line}</li>))}
+        </ul>
+        <p><strong>{c.introNotYetTitle}</strong> {c.introNotYet}</p>
+      </HelpDetails>
+
       <HelpDetails label={c.helpLabel}>
         <p><strong>{c.helpWhatTitle}</strong> {c.helpWhat}</p>
         <p><strong>{c.helpWhyTitle}</strong> {c.helpWhy}</p>

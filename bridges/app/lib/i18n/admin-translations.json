@@ -551,7 +551,31 @@
       "scheduleHint": "How often the product is asked whether a reminder has come due. Reminders have to fire while nobody is looking at the site, so something has to knock — this is it. Off means the project has no reminders and pays for none.",
       "scheduleOff": "Off",
       "scheduleEvery": "Every {n} sec",
-      "scheduleSaved": "Schedule saved"
+      "scheduleSaved": "Schedule saved",
+      "introLabel": "What the assistant tells people",
+      "introIntro": "This is what the bot answers on /start and on «what can you do». It is not a setting: it describes what the product really does today, so it changes with the product, not from this page.",
+      "introAbilitiesTitle": "It can:",
+      "introAbilities": [
+        "listen by voice or text — a voice note is transcribed and treated exactly like typing",
+        "remember WHEN it happened, not only when it was told: «yesterday I bought…» is stored under yesterday",
+        "understand what it was told — a purchase, a task, a place, a promise — and keep the useful fields, such as an amount and a vendor",
+        "mark anything involving money, so «what did I spend» is answered from a column instead of re-reading a year",
+        "keep the location when one is sent",
+        "search by MEANING, not by words: «where did I buy electronics» finds the shop even when that word appears nowhere",
+        "build a knowledge graph out of everything, so connections between separate days can be found later",
+        "set reminders and events, one-off or repeating, warning in advance when asked — and it always reads the time back before setting it"
+      ],
+      "introCommandsTitle": "Phrasings it is taught:",
+      "introCommands": [
+        "«запомни …» — remember as a promise, not as a passing note",
+        "«напомни … в …» — a reminder at a time; it names the time and asks first",
+        "«напоминай каждый рабочий день в 9 …» — repeating: daily, weekdays, weekly, monthly",
+        "«запланируй встречу … в 10, напомни за час» — an event with advance warning",
+        "«найди …», «когда я …», «сколько я …» — search their own history",
+        "«что ты умеешь» — this list"
+      ],
+      "introNotYetTitle": "What it does NOT promise:",
+      "introNotYet": "Storing files. A photo, a video or a PDF arrives with its caption saved, but the file itself is not yet kept in the media library. Until it is, the assistant deliberately does not offer it — a promise nobody keeps is discovered at the worst moment, when someone relied on it."
     },
     "openai": {
       "intro": "One key, entered once, that every thinking part of the platform draws on. It is not a plan with a monthly fee — it is a balance you top up, charged for what was actually used. A balance from $5 is enough to start; get a key at",
@@ -3831,7 +3855,31 @@
       "scheduleHint": "Как часто у приложения спрашивают, не наступило ли напоминание. Напоминание обязано сработать, когда на сайт никто не смотрит, — значит кто-то должен постучать, и это он. «Выключено» означает, что напоминаний в проекте нет и платить за них не нужно.",
       "scheduleOff": "Выключено",
       "scheduleEvery": "Каждые {n} сек",
-      "scheduleSaved": "Расписание сохранено"
+      "scheduleSaved": "Расписание сохранено",
+      "introLabel": "Что ассистент рассказывает о себе",
+      "introIntro": "Это то, что бот отвечает на /start и на «что ты умеешь». Это не настройка: текст описывает, что продукт действительно умеет сегодня, и меняется вместе с продуктом, а не с этой страницы.",
+      "introAbilitiesTitle": "Умеет:",
+      "introAbilities": [
+        "слушать голосом и текстом — голосовая заметка расшифровывается и дальше неотличима от напечатанной",
+        "помнить, КОГДА это случилось, а не только когда рассказали: «вчера купил…» ложится вчерашним днём",
+        "понимать, о чём речь — покупка, задача, место, обещание — и хранить полезные поля, например сумму и продавца",
+        "отмечать всё, где есть деньги, чтобы «сколько я потратил» отвечалось из колонки, а не перечитыванием года",
+        "сохранять место, если его прислали",
+        "искать по СМЫСЛУ, а не по словам: «где я покупал технику» найдёт магазин, даже если слова «техника» там нет",
+        "строить из записей граф связей, чтобы находить нить между разными днями",
+        "ставить напоминания и встречи, разовые и повторяющиеся, с предупреждением заранее — и всегда переспрашивает время, прежде чем поставить"
+      ],
+      "introCommandsTitle": "Слова, которым он обучен:",
+      "introCommands": [
+        "«запомни …» — запомнить как обещание, а не как проходную заметку",
+        "«напомни … в …» — напоминание ко времени; он назовёт время и переспросит",
+        "«напоминай каждый рабочий день в 9 …» — повторяющееся: ежедневно, по будням, еженедельно, ежемесячно",
+        "«запланируй встречу … в 10, напомни за час» — событие с предупреждением",
+        "«найди …», «когда я …», «сколько я …» — поиск по своей истории",
+        "«что ты умеешь» — этот список"
+      ],
+      "introNotYetTitle": "Чего он НЕ обещает:",
+      "introNotYet": "Хранение файлов. Фотография, видео или PDF приходят с сохранённой подписью, но сам файл в медиатеке пока не остаётся. Пока это так, ассистент намеренно этого не предлагает: обещание, которого никто не держит, обнаруживается в худшую минуту — когда на него понадеялись."
     },
     "openai": {
       "intro": "Один ключ, введённый однажды, из которого черпает каждая думающая часть платформы. Это не тариф с месячной платой — это баланс, который вы пополняете, и списывается только за то, что действительно было использовано. Для начала достаточно баланса от 5 долларов; ключ берётся на",

@@ -394,6 +394,10 @@ export type AdminStrings = {
     channelOn: string; answersFrom: string; neverInvents: string;
     scheduleLabel: string; scheduleHint: string; scheduleOff: string;
     scheduleEvery: string; scheduleSaved: string;
+    introLabel: string; introIntro: string;
+    introAbilitiesTitle: string; introAbilities: string[];
+    introCommandsTitle: string; introCommands: string[];
+    introNotYetTitle: string; introNotYet: string;
     helpLabel: string;
     helpWhatTitle: string; helpWhat: string;
     helpWhyTitle: string; helpWhy: string;
