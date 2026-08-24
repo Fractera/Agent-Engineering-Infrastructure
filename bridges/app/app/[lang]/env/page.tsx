@@ -11,9 +11,10 @@
 //
 // Динамическая: значения живые.
 
-import { AlertCircle, Lock, Download } from "lucide-react";
+import { AlertCircle, Lock, Download, KeyRound } from "lucide-react";
 import { getAdminStrings, fill } from "@/lib/i18n/admin-strings";
 import { hasMark, ENV_TRANSFERRED_KEY } from "@/lib/dev-tools-marks";
+import { keyIssued } from "@/lib/ssh-access";
 import { publicAppUrl } from "@/lib/public-app-url";
 import { PageShell } from "../_components/page-shell";
 import { HelpDetails } from "../_components/help-details";
@@ -31,6 +32,15 @@ export default async function EnvPage({ params }: { params: Promise<{ lang: stri
 
   const result = await readEnv();
   const transferred = hasMark(ENV_TRANSFERRED_KEY);
+
+  // 🔒 ВЫДАН ЛИ КЛЮЧ АГЕНТУ (владелец 2026-08-24). ✗ Оплачено часом поисков:
+  // дверь выдачи ключа (`api/config/ssh-key`) существовала, а кнопки к ней не
+  // построил никто. Выгрузка окружения молча не пишет `FRACTERA_SSH_*`, пока
+  // ключа нет, `deploy.sh` отказывает и советует «сделайте выгрузку» — то есть
+  // называет ВТОРОЕ звено цепочки вместо первого порванного. Владелец делал
+  // выгрузку, переменных не появлялось, и все заключали «доступа нет вовсе».
+  // Поэтому состояние показывается ЗДЕСЬ и словами, а не выводится молчанием.
+  const agentKeyIssued = keyIssued();
 
   // Письмо о правке платформы собирается на СЕРВЕРЕ и теми же словами, что на
   // странице «Как построить этот проект»: партнёру не нужно вспоминать свой адрес,
@@ -83,16 +93,50 @@ export default async function EnvPage({ params }: { params: Promise<{ lang: stri
           {e.transferTitle}
         </p>
         <p className="mt-1.5 text-[11px] leading-relaxed text-blue-700 dark:text-blue-300">{e.exportHint}</p>
-        <a
-          href="/api/config/env-export"
-          download=".env.local"
-          title={e.exportTitle}
-          className="mt-2 inline-flex h-7 items-center gap-1.5 rounded-md border border-blue-500/40 bg-blue-500/10 px-2.5 text-[11px] font-medium text-blue-700 transition-colors hover:bg-blue-500/20 dark:text-blue-300"
-        >
-          <Download size={11} />
-          <span className="font-mono">{e.exportAction}</span>
-        </a>
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <a
+            href="/api/config/env-export"
+            download=".env.local"
+            title={e.exportTitle}
+            className="inline-flex h-7 items-center gap-1.5 rounded-md border border-blue-500/40 bg-blue-500/10 px-2.5 text-[11px] font-medium text-blue-700 transition-colors hover:bg-blue-500/20 dark:text-blue-300"
+          >
+            <Download size={11} />
+            <span className="font-mono">{e.exportAction}</span>
+          </a>
+
+          {/* 🔒 ВЫДАЧА КЛЮЧА СТОИТ РЯДОМ С ВЫГРУЗКОЙ НАМЕРЕННО (владелец
+              2026-08-24): порядок кнопок и есть порядок работы. Сначала ключ,
+              потом выгрузка — иначе файл приедет без строк доступа. Ссылка, а
+              не форма: дверь отвечает файлом ключа, ровно как соседняя. */}
+          <a
+            href="/api/config/ssh-key"
+            download="fractera-agent-key"
+            title={e.keyActionTitle}
+            className="inline-flex h-7 items-center gap-1.5 rounded-md border border-blue-500/40 bg-blue-500/10 px-2.5 text-[11px] font-medium text-blue-700 transition-colors hover:bg-blue-500/20 dark:text-blue-300"
+          >
+            <KeyRound size={11} />
+            <span className="font-mono">{e.keyAction}</span>
+          </a>
+        </div>
+
         <p className="mt-1.5 text-[10px] leading-relaxed text-muted-foreground">{e.transferHint}</p>
+
+        {/* Доступ агента: заголовок, зачем, четыре шага и текущее состояние.
+            Состояние словами — потому что молчание этой страницы и стоило часа. */}
+        <div className="mt-2.5 rounded-md border border-blue-500/30 bg-blue-500/5 p-2.5">
+          <p className="text-[11px] font-semibold text-blue-700 dark:text-blue-300">{e.keyTitle}</p>
+          <p className="mt-1 text-[10px] leading-relaxed text-blue-700/90 dark:text-blue-300/90">{e.keyLead}</p>
+          <p className="mt-1.5 text-[10px] leading-relaxed text-blue-700/90 dark:text-blue-300/90">{e.keySteps}</p>
+          <p
+            className={
+              agentKeyIssued
+                ? "mt-1.5 text-[10px] font-medium leading-relaxed text-emerald-700 dark:text-emerald-400"
+                : "mt-1.5 text-[10px] font-medium leading-relaxed text-amber-700 dark:text-amber-400"
+            }
+          >
+            {agentKeyIssued ? e.keyIssuedNote : e.keyMissingNote}
+          </p>
+        </div>
         <TransferCheck
           initial={transferred}
           labels={{ label: e.transferLabel, saving: e.transferSaving, failed: e.transferFailed }}
