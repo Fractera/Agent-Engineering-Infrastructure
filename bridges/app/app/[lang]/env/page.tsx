@@ -11,7 +11,7 @@
 //
 // Динамическая: значения живые.
 
-import { AlertCircle, Lock, Download, KeyRound } from "lucide-react";
+import { AlertCircle, Lock, Download } from "lucide-react";
 import { getAdminStrings, fill } from "@/lib/i18n/admin-strings";
 import { hasMark, ENV_TRANSFERRED_KEY } from "@/lib/dev-tools-marks";
 import { keyIssued } from "@/lib/ssh-access";
@@ -104,19 +104,11 @@ export default async function EnvPage({ params }: { params: Promise<{ lang: stri
             <span className="font-mono">{e.exportAction}</span>
           </a>
 
-          {/* 🔒 ВЫДАЧА КЛЮЧА СТОИТ РЯДОМ С ВЫГРУЗКОЙ НАМЕРЕННО (владелец
-              2026-08-24): порядок кнопок и есть порядок работы. Сначала ключ,
-              потом выгрузка — иначе файл приедет без строк доступа. Ссылка, а
-              не форма: дверь отвечает файлом ключа, ровно как соседняя. */}
-          <a
-            href="/api/config/ssh-key"
-            download="fractera-agent-key"
-            title={e.keyActionTitle}
-            className="inline-flex h-7 items-center gap-1.5 rounded-md border border-blue-500/40 bg-blue-500/10 px-2.5 text-[11px] font-medium text-blue-700 transition-colors hover:bg-blue-500/20 dark:text-blue-300"
-          >
-            <KeyRound size={11} />
-            <span className="font-mono">{e.keyAction}</span>
-          </a>
+          {/* 🔒 ВТОРОЙ КНОПКИ ЗДЕСЬ НЕТ, И ЭТО РЕШЕНИЕ ВЛАДЕЛЬЦА (2026-08-24).
+              Первая версия просила скачать ключ отдельно и положить его руками
+              в папку проекта. Владелец назвал это неприемлемым: четыре ручных
+              действия там, где хватает одного. Ключ теперь заводится САМ при
+              нажатии кнопки слева и едет внутри того же файла. */}
         </div>
 
         <p className="mt-1.5 text-[10px] leading-relaxed text-muted-foreground">{e.transferHint}</p>

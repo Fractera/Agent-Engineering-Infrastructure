@@ -474,7 +474,7 @@ export type AdminStrings = {
     // Выгрузка окружения для локальной разработки — перенесена из старой панели.
     exportHint: string; exportAction: string; exportTitle: string; exportWarning: string;
     // Выдача ключа доступа агенту (2026-08-24): дверь была, кнопки не было.
-    keyTitle: string; keyLead: string; keyAction: string; keyActionTitle: string;
+    keyTitle: string; keyLead: string;
     keySteps: string; keyIssuedNote: string; keyMissingNote: string;
     keyHeader: string; valueHeader: string;
     lockedHint: string; secretHint: string; emptyValue: string; unchanged: string;

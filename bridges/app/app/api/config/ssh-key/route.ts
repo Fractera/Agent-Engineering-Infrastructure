@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
-import { execFileSync } from "child_process"
 import fs from "fs"
-import path from "path"
 import { requireAuth } from "@/lib/require-auth"
-import { KEY_DIR, KEY_FILE, AUTH_KEYS, MARKER, sshHost } from "@/lib/ssh-access"
+import { KEY_FILE, AUTH_KEYS, MARKER, sshHost, ensureKeyPair, authorize } from "@/lib/ssh-access"
 
 // 🔒 ДОСТУП АГЕНТА К СЕРВЕРУ ВЫДАЁТ ПАНЕЛЬ (владелец 2026-08-24).
 //
@@ -29,29 +27,8 @@ import { KEY_DIR, KEY_FILE, AUTH_KEYS, MARKER, sshHost } from "@/lib/ssh-access"
 // держится дисциплиной, а не техникой. Говорить об этом надо прямо: технически
 // он может больше, чем ему позволено.
 
-function ensureKeyPair(): string {
-  if (!fs.existsSync(KEY_DIR)) fs.mkdirSync(KEY_DIR, { recursive: true, mode: 0o700 })
-  if (!fs.existsSync(KEY_FILE)) {
-    execFileSync("ssh-keygen", ["-t", "ed25519", "-N", "", "-C", MARKER, "-f", KEY_FILE], {
-      stdio: "ignore",
-    })
-  }
-  fs.chmodSync(KEY_FILE, 0o600)
-  return fs.readFileSync(`${KEY_FILE}.pub`, "utf8").trim()
-}
-
-function authorize(publicKey: string): void {
-  const dir = path.dirname(AUTH_KEYS)
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true, mode: 0o700 })
-  const current = fs.existsSync(AUTH_KEYS) ? fs.readFileSync(AUTH_KEYS, "utf8") : ""
-  // Идемпотентно: строка с этой меткой должна быть ровно одна. Перевыпуск ключа
-  // обязан ЗАМЕНИТЬ прежнюю строку, иначе старый ключ останется рабочим, а
-  // владелец будет считать, что отозвал доступ.
-  const kept = current.split("\n").filter((l) => l.trim() && !l.includes(MARKER))
-  kept.push(publicKey)
-  fs.writeFileSync(AUTH_KEYS, kept.join("\n") + "\n", { mode: 0o600 })
-  fs.chmodSync(AUTH_KEYS, 0o600)
-}
+// Пара функций переехала в `lib/ssh-access` 2026-08-24: выгрузка окружения
+// заводит ключ сама, и две копии одной процедуры разошлись бы молча.
 
 export async function GET(req: NextRequest) {
   const ok = await requireAuth(req.headers.get("cookie") ?? "")

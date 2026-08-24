@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import fs from "fs"
 import { requireAuth } from "@/lib/require-auth"
 import { publicDataUrl } from "@/lib/public-data-url"
-import { sshHost, keyIssued, CLIENT_KEY_PATH } from "@/lib/ssh-access"
+import { sshHost, CLIENT_KEY_PATH, ensureKeyPair, authorize, privateKeyB64 } from "@/lib/ssh-access"
 
 const APP_ENV  = process.env.APP_ENV_PATH  ?? "/opt/fractera/app/.env.local"
 const DATA_ENV = process.env.DATA_ENV_PATH ?? "/opt/fractera/services/data/.env"
@@ -34,6 +34,7 @@ const EXCLUDE_KEYS = new Set([
   "FRACTERA_SSH_USER",
   "FRACTERA_SSH_PORT",
   "FRACTERA_SSH_KEY_PATH",
+  "FRACTERA_SSH_KEY_B64",
 ])
 
 function readAllVars(file: string): Record<string, string> {
@@ -124,24 +125,41 @@ export async function GET(req: NextRequest) {
   // сервер, так и он должен ходить».
   //
   // ✗ До этой правки `scripts/server/*` в проекте требовали `FRACTERA_SSH_*` и
-  // файл ключа, а не выдавал их НИКТО: поиск по всему продукту давал ноль
-  // совпадений. Агент на машине владельца упирался в тупик, и это выглядело
+  // файл ключа, а не выдавал их НИКТО. Агент упирался в тупик, и это выглядело
   // как его непослушание.
   //
-  // Пишем ТОЛЬКО когда ключ уже выдан кнопкой в панели. Иначе агент прочитал бы
-  // «доступ настроен» и бил в отказ вместо честного «ключ ещё не выдавали».
+  // 🔒 ОДНА КНОПКА. Выгрузка ЗАВОДИТ ключ сама, если его ещё нет, и кладёт
+  // приватную половину прямо сюда строкой. Владелец скачивает один файл и
+  // больше не делает НИЧЕГО: скрипты слота разворачивают ключ на диск сами.
+  //
+  // ✗ Прежний порядок — скачать ключ отдельной кнопкой, положить руками в
+  // `.fractera-ssh/`, скачать окружение второй кнопкой — владелец назвал
+  // неприемлемым, и он прав: четыре ручных действия там, где хватает одного.
   const host = sshHost()
-  if (keyIssued() && host) {
-    lines.push(
-      `# --- Server access (your agent reaches the server the way we do) ---`,
-      `# The private key is downloaded once from the panel and saved as the path below.`,
-      `# The folder is git-ignored: the key never travels to GitHub with your code.`,
-      `FRACTERA_SSH_HOST=${host}`,
-      `FRACTERA_SSH_USER=root`,
-      `FRACTERA_SSH_PORT=22`,
-      `FRACTERA_SSH_KEY_PATH=${CLIENT_KEY_PATH}`,
-      ``,
-    )
+  if (host) {
+    try {
+      authorize(ensureKeyPair())
+      lines.push(
+        `# --- Server access (your agent reaches the server the way we do) ---`,
+        `# The key below is already authorised on the server. Nothing to place by hand:`,
+        `# the slot scripts write it to the path above with 600 permissions on first use.`,
+        `# This file is git-ignored, so the key never travels to GitHub with your code.`,
+        `FRACTERA_SSH_HOST=${host}`,
+        `FRACTERA_SSH_USER=root`,
+        `FRACTERA_SSH_PORT=22`,
+        `FRACTERA_SSH_KEY_PATH=${CLIENT_KEY_PATH}`,
+        `FRACTERA_SSH_KEY_B64=${privateKeyB64()}`,
+        ``,
+      )
+    } catch {
+      // Ключ не завёлся — молчать нельзя: агент прочитает файл без строк
+      // доступа и снова решит, что канала нет вовсе.
+      lines.push(
+        `# --- Server access ---`,
+        `# FAILED to issue the access key on the server. Tell the platform team.`,
+        ``,
+      )
+    }
   }
 
   // Append all remaining custom vars from app/.env.local
