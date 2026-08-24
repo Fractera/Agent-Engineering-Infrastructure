@@ -13,6 +13,27 @@ const EXCLUDE_KEYS = new Set([
   "APP_DB_PATH",
   "AUTH_TRUST_HOST",
   "NEXT_PUBLIC_MEDIA_URL", // exported as REMOTE_DATA_URL
+  // 🔒 КЛЮЧИ, КОТОРЫЕ ЭТА ВЫГРУЗКА ВЫДАЁТ САМА ВЫШЕ (2026-08-24).
+  //
+  // ✗ Дефект, который они создавали, — ровно тот, ради предотвращения которого
+  // написан весь этот файл. `REMOTE_DATA_URL` вычисляется выше «с точки зрения
+  // принимающей машины», а затем дамп серверного окружения дописывал его ВТОРОЙ
+  // раз — со значением `http://localhost:3300`, верным на сервере и ведущим в
+  // пустоту на ноутбуке. `.env` читается сверху вниз, побеждает последняя
+  // строка, поэтому правильный адрес молча отменялся своим же дублем.
+  //
+  // Правило применили к `NEXT_PUBLIC_MEDIA_URL` и пропустили на переменной,
+  // которую сама выгрузка и производит. Нашёл агент в проекте владельца,
+  // разбирая, почему локальная копия не видит данных.
+  "REMOTE_DATA_URL",
+  "DATA_SECRET",
+  "DATA_API_KEY",
+  "DEPLOY_SECRET",
+  "FRACTERA_DEPLOY_SECRET",
+  "FRACTERA_SSH_HOST",
+  "FRACTERA_SSH_USER",
+  "FRACTERA_SSH_PORT",
+  "FRACTERA_SSH_KEY_PATH",
 ])
 
 function readAllVars(file: string): Record<string, string> {
