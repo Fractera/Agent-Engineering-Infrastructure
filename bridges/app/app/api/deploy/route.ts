@@ -136,7 +136,9 @@ function slotBuildEnv(): NodeJS.ProcessEnv {
   return env;
 }
 
-async function isAuthorized(req: NextRequest): Promise<boolean> {
+// Экспортирован 2026-08-24: тем же ключом проверяется статус сборки. Вторая
+// реализация той же проверки разошлась бы с этой — и разошлась бы молча.
+export async function isAuthorized(req: NextRequest): Promise<boolean> {
   const secret = process.env.DEPLOY_SECRET;
   if (secret && req.headers.get("x-deploy-secret") === secret) return true;
   return requireAuth(req.headers.get("cookie") ?? "");

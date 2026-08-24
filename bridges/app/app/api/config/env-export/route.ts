@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import fs from "fs"
 import { requireAuth } from "@/lib/require-auth"
 import { publicDataUrl } from "@/lib/public-data-url"
+import { sshHost, keyIssued, CLIENT_KEY_PATH } from "@/lib/ssh-access"
 
 const APP_ENV  = process.env.APP_ENV_PATH  ?? "/opt/fractera/app/.env.local"
 const DATA_ENV = process.env.DATA_ENV_PATH ?? "/opt/fractera/services/data/.env"
@@ -94,6 +95,30 @@ export async function GET(req: NextRequest) {
     lines.push(
       `# --- Deployment (lets your agent press Deploy without opening the panel) ---`,
       `FRACTERA_DEPLOY_SECRET=${deploySecret}`,
+      ``,
+    )
+  }
+
+  // 🔒 ДОСТУП К СЕРВЕРУ ДЛЯ АГЕНТА (владелец 2026-08-24): «как ты ходишь на
+  // сервер, так и он должен ходить».
+  //
+  // ✗ До этой правки `scripts/server/*` в проекте требовали `FRACTERA_SSH_*` и
+  // файл ключа, а не выдавал их НИКТО: поиск по всему продукту давал ноль
+  // совпадений. Агент на машине владельца упирался в тупик, и это выглядело
+  // как его непослушание.
+  //
+  // Пишем ТОЛЬКО когда ключ уже выдан кнопкой в панели. Иначе агент прочитал бы
+  // «доступ настроен» и бил в отказ вместо честного «ключ ещё не выдавали».
+  const host = sshHost()
+  if (keyIssued() && host) {
+    lines.push(
+      `# --- Server access (your agent reaches the server the way we do) ---`,
+      `# The private key is downloaded once from the panel and saved as the path below.`,
+      `# The folder is git-ignored: the key never travels to GitHub with your code.`,
+      `FRACTERA_SSH_HOST=${host}`,
+      `FRACTERA_SSH_USER=root`,
+      `FRACTERA_SSH_PORT=22`,
+      `FRACTERA_SSH_KEY_PATH=${CLIENT_KEY_PATH}`,
       ``,
     )
   }
