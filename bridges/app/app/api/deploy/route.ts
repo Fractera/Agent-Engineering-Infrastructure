@@ -136,6 +136,53 @@ function slotBuildEnv(): NodeJS.ProcessEnv {
   return env;
 }
 
+// 🔒 МЕТКА КОММИТА — ЧАСТЬ СБОРКИ, А НЕ УКРАШЕНИЕ (2026-08-25).
+//
+// ✗ Оплачено дырой в законе доказательств. Корпус требует первым пруфом доставки
+// сверять метку сборки из `/api/health` с хэшем, который собирали. Метку ставил
+// ТОЛЬКО `scripts/server/deploy.sh`; кнопка панели — нет. Значит на КАНОНИЧЕСКОМ
+// пути (очередь панели, её журнал, откат на последнюю рабочую сборку)
+// `/api/health` отвечал `commit: null`, и пруф был недостижим В ПРИНЦИПЕ. Агент,
+// честно исполняющий закон, упирался в `null` и заключал, что доставка не
+// состоялась.
+//
+// 🔒 ПИШЕМ В `.env.local` СЛОТА, А НЕ В ОКРУЖЕНИЕ ПОТОМКА — и это не вкус:
+// `slotBuildEnv()` намеренно УДАЛЯЕТ у потомка каждый ключ, объявленный в файле
+// слота, чтобы файл слота выигрывал. Переменная, подсунутая мимо файла, либо
+// стёрлась бы этим же циклом, либо нарушила бы правило, ради которого он написан.
+// Тот же приём уже доказан в `deploy.sh` (там метка тоже дописывается в файл
+// ПЕРЕД сборкой) — одна механика вместо двух.
+//
+// 🔒 ХЭШ БЕРЁТСЯ У СЛОТА, а не у панели: собирается слот, и метка обязана
+// называть то, что собрано. Нет git или нет коммитов — молча ничего не меняем:
+// прежнее значение честнее выдуманного.
+function stampSlotCommit(): string | null {
+  try {
+    const { execSync } = require("child_process");
+    const hash = String(
+      execSync(`git -C ${JSON.stringify(APP_DIR)} rev-parse --short HEAD`, {
+        timeout: 10000,
+        stdio: ["ignore", "pipe", "ignore"],
+      }),
+    ).trim();
+    if (!/^[0-9a-f]{7,40}$/.test(hash)) return null;
+
+    const envFile = resolve(APP_DIR, ".env.local");
+    let text = "";
+    try { text = readFileSync(envFile, "utf8"); } catch { /* файла ещё нет — создадим */ }
+    const line = `NEXT_PUBLIC_GIT_COMMIT=${hash}`;
+    text = /^NEXT_PUBLIC_GIT_COMMIT=.*$/m.test(text)
+      ? text.replace(/^NEXT_PUBLIC_GIT_COMMIT=.*$/m, line)
+      : `${text}${text.endsWith("\n") || text === "" ? "" : "\n"}${line}\n`;
+    writeFileSync(envFile, text);
+    return hash;
+  } catch {
+    // Слот без git, без коммитов или файл недоступен на запись. Сборку из-за
+    // метки не останавливаем: она вспомогательная, а сборка — основная работа.
+    return null;
+  }
+}
+
 // Экспортирован 2026-08-24: тем же ключом проверяется статус сборки. Вторая
 // реализация той же проверки разошлась бы с этой — и разошлась бы молча.
 export async function isAuthorized(req: NextRequest): Promise<boolean> {
@@ -159,7 +206,19 @@ export function runBuild(description: string): string {
   writeWAL({ status: "STARTED", jobId, startedAt: new Date().toISOString(), description });
   void recordRun("/deploy-runs", "POST", { id: jobId, status: "RUNNING", description });
 
-  const logFd = openSync(logFile, "w");
+  // Метка коммита дописывается в `.env.local` слота ДО запуска сборки, иначе
+  // запечённое значение не совпадёт с тем, что собрано. → `stampSlotCommit`.
+  //
+  // Строка идёт первой в лог, чтобы читающий лог видел, ЧТО собиралось, не
+  // выходя из него. Порядок здесь содержательный: сначала пишем заголовок,
+  // ТОЛЬКО ПОТОМ открываем дескриптор на ДОПИСЫВАНИЕ. Открыть на "w" раньше
+  // значило бы отдать потомку нулевое смещение — и он затёр бы заголовок своим
+  // первым же выводом.
+  const stamped = stampSlotCommit();
+  writeFileSync(logFile, stamped
+    ? `NEXT_PUBLIC_GIT_COMMIT=${stamped}\n`
+    : `NEXT_PUBLIC_GIT_COMMIT: не проставлена (у слота нет git или коммитов) — /api/health вернёт прежнее значение\n`);
+  const logFd = openSync(logFile, "a");
   // Spawn the slot build with a SLOT-SCOPED env so the slot's own app/.env.local fully governs
   // every build-time variable it declares (languages, Stripe keys, any custom app var). → step 143.
   const proc = spawn("npm", ["run", "build", "--prefix", APP_DIR], {
