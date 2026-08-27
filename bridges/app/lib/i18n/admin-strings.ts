@@ -539,7 +539,15 @@ export type AdminStrings = {
      * любая ошибка читается как «проект уже уничтожен», и человек не решается
      * повторить с исправленным адресом.
      */
-    adoptUrlLabel: string; adoptUrlPlaceholder: string; adoptCta: string;
+    /**
+     * ✗ Здесь стояло `adoptCta` — имя, уже занятое подписью кнопки на ЭКРАНЕ
+     * ВЫБОРА («Подключить репозиторий с проектом Fractera»). Дубль в типе не дал
+     * бы собраться, но в JSON победил второй, и кнопка выбора пути молча стала
+     * называться «Заменить слот этим проектом». Поймала СБОРКА: `next dev` типы
+     * не проверяет, а `next build` проверяет. Отсюда правило: перед новым ключом
+     * словаря искать его имя, а не полагаться на то, что оно свободно.
+     */
+    adoptUrlLabel: string; adoptUrlPlaceholder: string; adoptReplaceCta: string;
     adoptConfirmTitle: string; adoptConfirmBody: string;
     adoptConfirmYes: string; adoptConfirmNo: string;
     adoptRunning: string; adoptFailedPrefix: string; adoptSlotIntact: string;

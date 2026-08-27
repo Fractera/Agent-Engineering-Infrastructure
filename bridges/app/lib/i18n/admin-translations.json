@@ -711,7 +711,7 @@
       "starterMore": "Nothing is downloaded and nothing is replaced: the project you already have becomes yours on GitHub. This is also the road to take if you plan to move an existing project onto Fractera later — that migration starts from a working starter.",
       "adoptTitle": "Connect another Fractera project",
       "adoptBody": "You already have a project built on the Fractera architecture and kept on GitHub. This server drops its own starter and runs your project instead.",
-      "adoptCta": "Replace the slot with this project",
+      "adoptCta": "Connect a repository with a Fractera project",
       "adoptMoreLabel": "What this means",
       "adoptMore": "The starter now on this server is destroyed, and nothing brings it back except installing it again. Your settings, your data and your uploaded files stay where they are. Connect a repository that really is built on the Fractera architecture: a project from another framework will not build, and the panel will say so rather than guess.",
       "migrationCta": "Migrating to the Fractera architecture",
@@ -845,7 +845,8 @@
       "reasonSlotNotARepo": "The slot does not look like a git repository.",
       "reasonSlotHoldsOther": "The slot holds a different repository than the one requested.",
       "reasonBuildMissing": "The build has not produced output yet — wait for it to finish.",
-      "reasonSlotMissing": "The project slot was not found on the server."
+      "reasonSlotMissing": "The project slot was not found on the server.",
+      "adoptReplaceCta": "Replace the slot with this project"
     },
     "githubAbout": {
       "intro": "Three buttons move your project between three places: this server, your repository on GitHub, and the live application your visitors see. Here is what each one does and in which direction.",
@@ -4166,7 +4167,7 @@
       "starterMore": "Ничего не скачивается и ничего не подменяется: проект, который у вас уже есть, становится вашим на GitHub. Этой же дорогой идут те, кто собирается позже перенести на Fractera существующий проект, — переезд начинается с работающего шаблона.",
       "adoptTitle": "Подключить другой проект Fractera",
       "adoptBody": "У вас уже есть проект на архитектуре Fractera, и он лежит на GitHub. Сервер расстаётся со своим стартовым шаблоном и запускает вместо него ваш проект.",
-      "adoptCta": "Заменить слот этим проектом",
+      "adoptCta": "Подключить репозиторий с проектом Fractera",
       "adoptMoreLabel": "Что это значит",
       "adoptMore": "Стартовый шаблон, который сейчас стоит на сервере, уничтожается, и вернуть его можно только установив заново. Ваши настройки, ваши данные и загруженные файлы остаются на месте. Подключайте репозиторий, действительно построенный на архитектуре Fractera: проект другого фреймворка не соберётся, и панель скажет об этом прямо, а не станет гадать.",
       "migrationCta": "Миграция на архитектуру Fractera",
@@ -4300,7 +4301,8 @@
       "reasonSlotNotARepo": "Слот не выглядит как git-репозиторий.",
       "reasonSlotHoldsOther": "В слоте лежит не тот репозиторий, который запрашивали.",
       "reasonBuildMissing": "Сборка ещё не дала результата — дождитесь её окончания.",
-      "reasonSlotMissing": "Слот проекта на сервере не найден."
+      "reasonSlotMissing": "Слот проекта на сервере не найден.",
+      "adoptReplaceCta": "Заменить слот этим проектом"
     },
     "githubAbout": {
       "intro": "Три кнопки перемещают ваш проект между тремя местами: этим сервером, вашим репозиторием на GitHub и работающим приложением, которое видят посетители. Вот что делает каждая и в какую сторону.",
