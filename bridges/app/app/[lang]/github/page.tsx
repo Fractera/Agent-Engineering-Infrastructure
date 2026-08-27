@@ -360,7 +360,7 @@ export default async function GitHubPage({ params }: { params: Promise<{ lang: s
                   email="admin@fractera.ai"
                   labels={{
                     urlLabel: l.adoptUrlLabel, urlPlaceholder: l.adoptUrlPlaceholder,
-                    cta: l.adoptCta, confirmTitle: l.adoptConfirmTitle,
+                    cta: l.adoptReplaceCta, confirmTitle: l.adoptConfirmTitle,
                     confirmBody: l.adoptConfirmBody, confirmYes: l.adoptConfirmYes,
                     confirmNo: l.adoptConfirmNo, running: l.adoptRunning,
                     failedPrefix: l.adoptFailedPrefix, slotIntact: l.adoptSlotIntact,
