@@ -21,7 +21,7 @@ import {
   Cookie, Users, ImagePlus, Database, BrainCircuit, Brain, Map as MapIcon, Download, Upload,
   Link2, KeyRound, MessagesSquare, Sparkles, GitBranch, Info, History, Settings, BookOpen,
   HelpCircle, PackagePlus, FileText, Target, Boxes, Wrench, Network, BookMarked, GraduationCap,
-  ListChecks, AlertTriangle, Search, Bot, Smartphone, Paintbrush, LayoutTemplate, Ruler, LifeBuoy, Compass, Code2, ChevronRight, Crop, Scissors, Mic, Hourglass, FlaskConical, UserRound, IdCard, Workflow, Radar, MonitorSmartphone, Type, ALargeSmall, Frame, TruckIcon, Layers, type LucideIcon } from "lucide-react";
+  ListChecks, AlertTriangle, Search, Bot, Rocket, Smartphone, Paintbrush, LayoutTemplate, Ruler, LifeBuoy, Compass, Code2, ChevronRight, Crop, Scissors, Mic, Hourglass, FlaskConical, UserRound, IdCard, Workflow, Radar, MonitorSmartphone, Type, ALargeSmall, Frame, TruckIcon, Layers, type LucideIcon } from "lucide-react";
 import { NAV_GROUPS, NAV_BY_GROUP, adminHref, type AdminPageSlug } from "@/lib/admin-nav";
 import { warningsBySlug, type AdminWarning } from "@/lib/admin-warnings";
 import { hiddenSlugs } from "@/lib/platform-features";
@@ -74,6 +74,7 @@ const ICONS: Record<AdminPageSlug, LucideIcon> = {
   "login-methods": KeyRound,
   channels: MessagesSquare,
   openai: Sparkles,
+  "project-start": Rocket,
   github: GitBranch,
   "github-about": Info,
   deployments: History,

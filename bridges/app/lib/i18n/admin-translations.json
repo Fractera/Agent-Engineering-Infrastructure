@@ -1506,6 +1506,10 @@
         "title": "OpenAI settings",
         "hint": "The key and the models the project uses."
       },
+      "project-start": {
+        "title": "Project launch",
+        "hint": "From an empty repository to the first change seen at your own address."
+      },
       "github": {
         "title": "Project launch",
         "hint": "From an empty repository to your first change, live at your own address."
@@ -4961,6 +4965,10 @@
       "openai": {
         "title": "Настройки OpenAI",
         "hint": "Ключ и модели, которыми пользуется проект."
+      },
+      "project-start": {
+        "title": "Запуск проекта",
+        "hint": "От пустого репозитория до первого изменения, увиденного на вашем собственном адресе."
       },
       "github": {
         "title": "Запуск проекта",

@@ -116,6 +116,7 @@ export const NAV = [
   { slug: "openai",          group: "access" },
 
   { slug: "map-project",      group: "project" },
+  { slug: "project-start",   group: "project" },
   { slug: "github",          group: "project" },
   { slug: "github-about",    group: "project" },
   { slug: "deployments",     group: "project" },

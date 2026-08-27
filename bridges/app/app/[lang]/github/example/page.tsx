@@ -24,7 +24,7 @@ import { Breadcrumbs } from "../../_components/breadcrumbs";
 import { getAdminStrings } from "@/lib/i18n/admin-strings";
 import { ExampleHeader } from "./_components/example-header";
 import { exampleStrings } from "./_demo-strings";
-import { PathChoice } from "./_components/path-choice.client";
+import { PathChoice } from "../../_components/launch/path-choice.client";
 import { ExampleFlow } from "./_components/example-flow.client";
 import { exampleSteps, exampleFlowLabels } from "./_demo-steps";
 import { Small } from "@/components/ui/typography";
