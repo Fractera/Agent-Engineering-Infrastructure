@@ -115,3 +115,67 @@ html[data-app-width="wide"] { --app-w: calc(100vw - 64px - var(--app-sbw, 0px));
    слоёв, а правило из @layer base им проиграло бы. Проверено в собранном CSS —
    .leaflet-container{isolation:isolate} присутствует. */
 .leaflet-container { isolation: isolate; }
+
+/* Верёвочка мастера запуска (шаг 25-2): зелёная часть вырастает от нуля до
+   пройденной доли при каждом показе страницы. Читается как «продвинулись», а не
+   мигает. Ширину даёт сервер переменной `--rope`, поэтому JS здесь не нужен. */
+.launch-rope {
+  width: var(--rope, 0%);
+  animation: launch-rope-grow 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes launch-rope-grow {
+  from { width: 0%; }
+  to { width: var(--rope, 0%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .launch-rope { animation: none; }
+}
+
+/* Переливание оранжевый ↔ чёрный на крупной надписи первого шага (25-3).
+   Решение владельца: «кнопку эту люди не замечают и никто не нажимает».
+   Градиент едет под текстом, текст его вырезает. */
+.launch-shimmer {
+  background-image: linear-gradient(
+    90deg,
+    var(--launch-shimmer-dark, #111) 0%,
+    #f97316 35%,
+    #fb923c 50%,
+    #f97316 65%,
+    var(--launch-shimmer-dark, #111) 100%
+  );
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: launch-shimmer-slide 3.2s linear infinite;
+}
+
+@keyframes launch-shimmer-slide {
+  from { background-position: 150% 0; }
+  to { background-position: -50% 0; }
+}
+
+/* На тёмной теме «чёрный» край нечитаем — берём светлый. */
+.dark .launch-shimmer { --launch-shimmer-dark: #e5e7eb; }
+
+/* Пульсация оранжевой кнопки — второй способ обратить внимание, названный
+   владельцем: «пульсирует большая оранжевая». Мягкое дыхание тени, не мигание. */
+.launch-pulse { animation: launch-pulse-ring 2s ease-in-out infinite; }
+
+@keyframes launch-pulse-ring {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.55); }
+  50% { box-shadow: 0 0 0 7px rgba(249, 115, 22, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .launch-shimmer {
+    animation: none;
+    background-image: none;
+    -webkit-background-clip: border-box;
+    background-clip: border-box;
+    color: #ea580c;
+  }
+  .launch-pulse { animation: none; }
+}

@@ -11,7 +11,7 @@
 //
 // Динамическая: значения живые.
 
-import { AlertCircle, Lock, Download } from "lucide-react";
+import { AlertCircle, Lock } from "lucide-react";
 import { getAdminStrings, fill } from "@/lib/i18n/admin-strings";
 import { hasMark, ENV_TRANSFERRED_KEY } from "@/lib/dev-tools-marks";
 import { keyIssued } from "@/lib/ssh-access";
@@ -22,6 +22,7 @@ import { readEnv } from "./_lib/env";
 import { EnvEditor } from "./_components/env-editor.client";
 import { TransferCheck } from "./_components/transfer-check.client";
 import { SshAccess } from "./_components/ssh-access.client";
+import { ExportButton } from "./_components/export-button.client";
 
 export const dynamic = "force-dynamic";
 
@@ -94,15 +95,15 @@ export default async function EnvPage({ params }: { params: Promise<{ lang: stri
         </p>
         <p className="mt-1.5 text-[11px] leading-relaxed text-blue-700 dark:text-blue-300">{e.exportHint}</p>
         <div className="mt-2 flex flex-wrap items-center gap-2">
-          <a
-            href="/api/config/env-export"
-            download=".env.local"
-            title={e.exportTitle}
-            className="inline-flex h-7 items-center gap-1.5 rounded-md border border-blue-500/40 bg-blue-500/10 px-2.5 text-[11px] font-medium text-blue-700 transition-colors hover:bg-blue-500/20 dark:text-blue-300"
-          >
-            <Download size={11} />
-            <span className="font-mono">{e.exportAction}</span>
-          </a>
+          {/* 🔒 ОРАНЖЕВАЯ И ПУЛЬСИРУЮЩАЯ, А НЕ ГОЛУБАЯ (владелец 2026-08-26).
+              «Голубая кнопка незаметна пользователем» — а мастер запуска шлёт
+              сюда одним шагом из тринадцати. Не нашёл кнопку — шаг не пройден, и
+              причина невидима. После нажатия голубеет до следующего захода на
+              страницу; состояние живёт в `sessionStorage` островка, потому что
+              сказано «до следующего перехода», а не «навсегда».
+              Ссылкой на скачивание она быть не перестала: выгрузка работает и
+              без JS. */}
+          <ExportButton labels={{ action: e.exportAction, title: e.exportTitle }} />
 
           {/* 🔒 ВТОРОЙ КНОПКИ ЗДЕСЬ НЕТ, И ЭТО РЕШЕНИЕ ВЛАДЕЛЬЦА (2026-08-24).
               Первая версия просила скачать ключ отдельно и положить его руками

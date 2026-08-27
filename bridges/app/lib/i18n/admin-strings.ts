@@ -26,6 +26,7 @@ import translations from "./admin-translations.json";
 import { ADMIN_LANGUAGES } from "@/config/translations/admin-languages";
 import type { AdminPageSlug, NavGroup, MappedGroup } from "@/lib/admin-nav";
 import type { ProjectTypeId } from "@/lib/project-types";
+import type { LaunchStepId } from "@/lib/launch.shared";
 
 export type AdminStrings = {
   // header
@@ -458,6 +459,99 @@ export type AdminStrings = {
     helpFirstTitle: string; helpFirst: string;
     helpTokenTitle: string; helpToken: string;
     helpDataTitle: string; helpData: string;
+  };
+  // Мастер запуска проекта (шаг 25). Живёт на той же странице, что и подключение
+  // GitHub: GitHub — первые три шага пути, а не отдельная работа.
+  //
+  // 🔒 ЗАГОЛОВКИ ШАГОВ — `Record<LaunchStepId, …>`, и это единственная механическая
+  // гарантия во всём разделе: шаг, добавленный в `lib/launch.shared.ts` без слов,
+  // не соберётся. Запрет в тексте не исполняется — тип исполняется.
+  //
+  // 🔒 ДЛИННОЙ ПРОЗЫ ЗДЕСЬ НЕТ И НЕ БУДЕТ. Пояснения на три абзаца и инструкции,
+  // которые человек копирует агенту, живут файлами `_content/launch-*.<lang>.md`:
+  // их правят как текст, а не как ключи, они применяются без пересборки, и
+  // корпус на 82 языка не растёт на каждый абзац.
+  launch: {
+    // Экран выбора двери — то, что видно ВМЕСТО всего остального, пока путь не выбран.
+    chooseTitle: string; chooseLead: string;
+    starterTitle: string; starterBody: string; starterCta: string;
+    starterMoreLabel: string; starterMore: string;
+    adoptTitle: string; adoptBody: string; adoptCta: string;
+    adoptMoreLabel: string; adoptMore: string;
+    /** Третья кнопка НИЧЕГО не запускает — только объясняет, где живёт переезд. */
+    migrationCta: string; migrationTitle: string; migrationOpen: string;
+    chooseFailed: string;
+    // Общая рамка мастера: верёвочка, свёрнутый пройденный шаг, галочка, выход.
+    stepOf: string; stepDone: string; reopen: string;
+    checkLabel: string; checkSaving: string; checkFailed: string;
+    machineOnly: string;
+    /**
+     * Причины отказа проверки — ПЛОСКИМИ ключами, а не картой.
+     *
+     * 🔒 Карта деградирует целиком: недостающий у языка объект заменяется
+     * английским со всеми причинами разом. Плоский ключ деградирует поштучно —
+     * непереведённой останется одна строка, остальные придут на своём языке.
+     * `mergeTwoLevels` работает на два уровня, и это ровно та граница.
+     */
+    reasonRepoNotSet: string; reasonRepoNotFound: string; reasonAuthFailed: string;
+    reasonNetwork: string; reasonKeyNotIssued: string; reasonNoMainBranch: string;
+    reasonNotImplemented: string; reasonUnknown: string;
+    /** Крупная переливающаяся надпись первого шага и подпись кнопки ключа. */
+    createRepoCta: string; issueKeyCta: string;
+    /**
+     * Подписи кнопок ПРОВЕРКИ — у каждого машинного шага своя.
+     *
+     * ✗ Оплачено 2026-08-27 в 25-4: кнопка проверки носила `checkLabel`, то есть
+     * «Я выполнил этот шаг» — подпись ЧЕКБОКСА. Кнопка машинного шага говорила
+     * человеку ровно обратное тому, что делала: проверяет система, а надпись
+     * предлагала ему подтвердить самому.
+     */
+    verifyRepoCta: string; verifyKeyCta: string; verifyUploadCta: string;
+    verifying: string; verifyFailed: string;
+    /** Блок копируемой инструкции и адрес репозитория, если он ещё не назван. */
+    copyCta: string; copiedNote: string; copyFailed: string; repoUnknown: string;
+    /**
+     * Стартовая инструкция агенту — ОДНОЙ строкой словаря, а не файлом прозы.
+     *
+     * 🔒 Это текст, который человек копирует и отправляет машине: в нём нет
+     * абзацев, ссылок и разметки, зато есть подстановка `{repoUrl}`. Файл
+     * `_content/` разбирается как markdown и годится для чтения глазами; здесь
+     * важна ровно та строка, что уедет в чат, — без обёрток и без потерь.
+     */
+    firstPromptText: string;
+    /** Ещё две инструкции для копирования: первое изменение и первое развёртывание. */
+    firstChangeText: string; firstDeployText: string;
+    /**
+     * Финальный экран. Показывается вместо блока шага, когда пройдено всё.
+     *
+     * 🔒 Главное в нём — не поздравление, а ОДНА фраза, которой человек начинает
+     * каждую следующую задачу: «создай новый шаг разработки». Она экономит его
+     * деньги на каждом прогоне, и сказать её надо там, где он дочитает.
+     */
+    finishTitle: string; finishLead: string;
+    finishAskTitle: string; finishAskBody: string;
+    finishStepsTitle: string; finishStepsBody: string; finishStepsPhrase: string;
+    finishBye: string; finishContact: string;
+    /**
+     * Поток B — подключение чужого проекта Fractera (шаг 25-7).
+     *
+     * 🔒 Отказ обязан сказать, что слот ЦЕЛ (`adoptSlotIntact`). Без этой строки
+     * любая ошибка читается как «проект уже уничтожен», и человек не решается
+     * повторить с исправленным адресом.
+     */
+    adoptUrlLabel: string; adoptUrlPlaceholder: string; adoptCta: string;
+    adoptConfirmTitle: string; adoptConfirmBody: string;
+    adoptConfirmYes: string; adoptConfirmNo: string;
+    adoptRunning: string; adoptFailedPrefix: string; adoptSlotIntact: string;
+    restoreCta: string; restoreRunning: string;
+    adoptMailCta: string; adoptMailSubject: string; adoptMailBody: string;
+    reasonAdoptNotStarted: string; reasonSlotNotARepo: string;
+    reasonSlotHoldsOther: string; reasonBuildMissing: string; reasonSlotMissing: string;
+    restart: string; restartTitle: string; restartBody: string;
+    restartKeep: string; restartWithGithub: string; restartWithGithubHint: string;
+    restartCancel: string; restartDone: string; restartFailed: string;
+    /** Заголовок и одна строка сути — у КАЖДОГО шага обеих дверей. */
+    steps: Record<LaunchStepId, { title: string; lead: string }>;
   };
   githubAbout: {
     intro: string;

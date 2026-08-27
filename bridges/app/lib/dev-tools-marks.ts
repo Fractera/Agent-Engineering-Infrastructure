@@ -118,3 +118,64 @@ export function installedMap(): Record<DevTool, boolean> {
     editor: isInstalled("editor"),
   };
 }
+
+/**
+ * Записать ЗНАЧЕНИЕ решения — там, где важен сам выбор, а не дата (шаг 25).
+ *
+ * 🔒 ЗАЧЕМ ВТОРАЯ ФУНКЦИЯ, А НЕ ВТОРОЙ МОДУЛЬ. `setMark` записывает ФАКТ: он
+ * умеет ровно «было/не было» и кладёт в значение отметку времени. Режим старта
+ * («стартовый шаблон» или «чужой проект») фактом не выражается — это выбор из
+ * нескольких, и его надо прочитать обратно словом. Заводить ради этого свой
+ * писатель `.env.local` нельзя: файл держит и языки, и GitHub, и все отметки, а
+ * две реализации записи стоили бы его целиком при первой же гонке. Поэтому здесь
+ * ещё одна пара функций поверх ТОГО ЖЕ `upsert`/`remove`, а не второй дом.
+ *
+ * `null` стирает строку — тем же `remove`, что снимает отметки.
+ */
+export function setValue(key: string, value: string | null): void {
+  const existing = fs.existsSync(APP_ENV) ? fs.readFileSync(APP_ENV, "utf-8") : "";
+  const next = value === null ? remove(existing, key) : upsert(existing, key, value);
+  fs.mkdirSync(path.dirname(APP_ENV), { recursive: true });
+  fs.writeFileSync(APP_ENV, next, "utf-8");
+}
+
+/**
+ * Прочитать значение. Пустая строка = «не задано»: так же ведёт себя `hasMark`,
+ * и отсутствующий файл ничем не отличается от пустого ключа — это честно, потому
+ * что для читателя разницы между ними нет.
+ */
+export function getValue(key: string): string {
+  try {
+    const m = fs.readFileSync(APP_ENV, "utf-8").match(new RegExp(`^${key}=(.*)$`, "m"));
+    return m ? m[1].trim() : "";
+  } catch {
+    return "";
+  }
+}
+
+/**
+ * Стереть все ключи, начинающиеся с префикса, ОДНОЙ записью файла (шаг 25).
+ *
+ * 🔒 ПОЧЕМУ НЕ ЦИКЛ ИЗ `setValue`. Сброс мастера снимает полтора десятка отметок
+ * сразу. Полтора десятка чтений и записей одного файла подряд — это полтора
+ * десятка окон, в которые может влезть соседняя запись (галочка, сохранение
+ * языков, подключение GitHub). Читаем один раз, пишем один раз.
+ */
+export function clearPrefix(prefix: string): string[] {
+  const existing = fs.existsSync(APP_ENV) ? fs.readFileSync(APP_ENV, "utf-8") : "";
+  const removed: string[] = [];
+  const next = existing.split("\n").filter((line) => {
+    const t = line.trim();
+    if (!t || t.startsWith("#")) return true;
+    const eq = t.indexOf("=");
+    if (eq <= 0) return true;
+    const key = t.slice(0, eq).trim();
+    if (!key.startsWith(prefix)) return true;
+    removed.push(key);
+    return false;
+  });
+  while (next.length && next[next.length - 1] === "") next.pop();
+  fs.mkdirSync(path.dirname(APP_ENV), { recursive: true });
+  fs.writeFileSync(APP_ENV, next.join("\n") + "\n", "utf-8");
+  return removed;
+}

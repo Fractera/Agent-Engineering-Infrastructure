@@ -701,6 +701,152 @@
       "helpDataTitle": "It carries files, never data.",
       "helpData": "Pages, components and configuration travel through git. Rows, uploaded files and vectors stay on the server and are not in the repository at all — they are backed up separately, in Export data. Restoring a repository does not bring data back, and restoring data does not bring code back."
     },
+    "launch": {
+      "chooseTitle": "How do you want to start?",
+      "chooseLead": "Two roads lead into development, and they are not interchangeable. Pick one — the rest of this page appears after you do.",
+      "starterTitle": "Start from the Fractera starter",
+      "starterBody": "This server already carries a working starter project. You create an empty repository on GitHub, send the starter into it, and develop from there.",
+      "starterCta": "Put the Fractera starter on GitHub",
+      "starterMoreLabel": "What this means",
+      "starterMore": "Nothing is downloaded and nothing is replaced: the project you already have becomes yours on GitHub. This is also the road to take if you plan to move an existing project onto Fractera later — that migration starts from a working starter.",
+      "adoptTitle": "Connect another Fractera project",
+      "adoptBody": "You already have a project built on the Fractera architecture and kept on GitHub. This server drops its own starter and runs your project instead.",
+      "adoptCta": "Replace the slot with this project",
+      "adoptMoreLabel": "What this means",
+      "adoptMore": "The starter now on this server is destroyed, and nothing brings it back except installing it again. Your settings, your data and your uploaded files stay where they are. Connect a repository that really is built on the Fractera architecture: a project from another framework will not build, and the panel will say so rather than guess.",
+      "migrationCta": "Migrating to the Fractera architecture",
+      "migrationTitle": "Migrating to the Fractera architecture",
+      "migrationOpen": "Open “Development mode”",
+      "chooseFailed": "The choice was not saved.",
+      "stepOf": "Step {n} of {total}",
+      "stepDone": "Done",
+      "reopen": "Open again",
+      "checkLabel": "I have done this step",
+      "checkSaving": "Saving…",
+      "checkFailed": "The mark was not saved.",
+      "machineOnly": "This step closes with a check, not with a tick: the answer comes from GitHub.",
+      "restart": "Start over",
+      "restartTitle": "Start over",
+      "restartBody": "The wizard returns to the choice screen and every tick you set is cleared. Claude Code on your machine is not touched — a mark about a program you installed is not ours to erase.",
+      "restartKeep": "Start over, keep the GitHub connection",
+      "restartWithGithub": "Start over and erase the GitHub connection",
+      "restartWithGithubHint": "The repository address and the access key are deleted from this server. You will have to enter them again.",
+      "restartCancel": "Cancel",
+      "restartDone": "The wizard has been reset.",
+      "restartFailed": "The reset failed.",
+      "steps": {
+        "repo": {
+          "title": "The repository on GitHub",
+          "lead": "An empty repository is where your project will live."
+        },
+        "key": {
+          "title": "The security key",
+          "lead": "GitHub lets this server write only with a key you issue."
+        },
+        "upload": {
+          "title": "Send the project",
+          "lead": "Until this is pressed, the repository stays empty."
+        },
+        "adopt": {
+          "title": "Replace the project",
+          "lead": "The starter is destroyed and your repository takes its place."
+        },
+        "live-check": {
+          "title": "Check that it runs",
+          "lead": "Open your site and confirm the project is alive."
+        },
+        "claude-code": {
+          "title": "Claude Code",
+          "lead": "The agent that is going to write your code."
+        },
+        "folder": {
+          "title": "A folder of its own",
+          "lead": "One project, one folder — this is what makes the agent effective."
+        },
+        "open-folder": {
+          "title": "Open that folder in Claude Code",
+          "lead": "The agent works in the folder you choose at start."
+        },
+        "subscription": {
+          "title": "Sign in to your subscription",
+          "lead": "A subscription belongs to the browser it was paid in."
+        },
+        "first-prompt": {
+          "title": "The starting instruction",
+          "lead": "The first message, telling the agent where the project lives."
+        },
+        "env": {
+          "title": "Environment variables",
+          "lead": "The keys that point your local copy at this server."
+        },
+        "drop-env": {
+          "title": "Hand the file to the agent",
+          "lead": "Drag the downloaded file into the Claude Code window."
+        },
+        "install": {
+          "title": "Dependencies and localhost:3000",
+          "lead": "Install the packages and see the project in your browser."
+        },
+        "first-change": {
+          "title": "The first change",
+          "lead": "Your company name, put in by the agent through a development step."
+        },
+        "first-deploy": {
+          "title": "The first deployment",
+          "lead": "The same change, seen at your own address on the internet."
+        }
+      },
+      "reasonRepoNotSet": "No repository address saved yet.",
+      "reasonRepoNotFound": "GitHub does not know this repository. Check the address.",
+      "reasonAuthFailed": "GitHub refused the token. Check that it is valid and has write access.",
+      "reasonNetwork": "Could not reach GitHub from this server.",
+      "reasonKeyNotIssued": "The key has not been issued yet — press the orange button first.",
+      "reasonNoMainBranch": "Branch main is empty. Send the project first, then check again.",
+      "reasonNotImplemented": "This check is not built yet.",
+      "reasonUnknown": "Unknown reason.",
+      "createRepoCta": "Create an empty repository on GitHub",
+      "issueKeyCta": "Issue an access key",
+      "verifyRepoCta": "Check repository",
+      "verifyKeyCta": "Check the key",
+      "verifyUploadCta": "Check project",
+      "verifying": "Checking…",
+      "verifyFailed": "Check failed:",
+      "copyCta": "Copy",
+      "copiedNote": "Copied",
+      "copyFailed": "The clipboard is unavailable — select the text and copy it by hand.",
+      "repoUnknown": "(repository not named yet)",
+      "firstPromptText": "We are starting development of a Fractera project.\n\nProject repository: {repoUrl}\n\nIMPORTANT, ORDER OF WORK: in the next step I will hand you the environment file .env.local.\nThe project will not start without it. DO NOT install dependencies and do not run a build\nuntil that file is with you — wait for it.\n\nFor now: read the project instruction and tell me you understand the setup and are waiting\nfor the environment.",
+      "firstChangeText": "We are starting development, and I want you to begin with STEP NUMBER ONE.\n\nAlways follow the development-steps instruction: open a new step, create the current-steps\ndocument, and close the step with a result when you finish. This is a project rule and it\napplies from the very first change, even while the folder is still empty.\n\nThis is our first test step — short, a warm-up really.\n\nTask: ask me what my company is called. When you have the answer, put that name into the\npage title THROUGH THE CONFIGURATION FILE, not by editing markup.\n\nRecord the step in all three documents as the instruction requires. When you are done, tell\nme that my company name is now visible on every page of the project, and make a commit so I\ncan see the change in the browser.",
+      "firstDeployText": "Next development step: the first deployment of the project to a real server.\n\nUse your own understanding of this project architecture to carry out the deployment. Run\nthe work as a development step, as usual.\n\nA first deployment usually takes longer than the rest: you have to work out how this\napplication is put together. Errors may appear during it — that is normal.\n\nIMPORTANT: so that we never repeat them, we keep a document called ANTI-PATTERNS. Its job\nis to hold the knowledge of what should not have been done. Write everything you learn on\nthis deployment as the FIRST entry in that document: symptom, mechanism, cure.\n\nWhen you are done, tell me the address where I will see the changes on the internet.",
+      "finishTitle": "You have mastered working with a programming agent",
+      "finishLead": "From here you develop the project yourself. Everything below is worth knowing before you start.",
+      "finishAskTitle": "Ask the agent — it knows this project",
+      "finishAskBody": "The agent holds the full picture of this architecture and how it works. If something is unclear, keep asking until it has explained the whole process to you. There is no such thing as too many questions here.",
+      "finishStepsTitle": "Every task begins with one phrase",
+      "finishStepsBody": "The whole project is built on development steps. Saying this lets the agent set aside resources, open a branch correctly and tie the work to the steps already finished. It is one of the things that will save you real money on every run.",
+      "finishStepsPhrase": "Create a new development step in which we will…",
+      "finishBye": "We wish you a happy journey with a professional tool for generating applications and automation.",
+      "finishContact": "Questions, or something not working? Write to us:",
+      "adoptUrlLabel": "Repository address of your Fractera project",
+      "adoptUrlPlaceholder": "https://github.com/owner/repository",
+      "adoptConfirmTitle": "The starter template will be destroyed permanently",
+      "adoptConfirmBody": "Everything currently standing in the slot will be removed and replaced with the contents of that repository. The control panel is unaffected — it runs on its own port. Nothing is touched until the repository has answered.",
+      "adoptConfirmYes": "Yes, replace it",
+      "adoptConfirmNo": "Cancel",
+      "adoptRunning": "Replacing…",
+      "adoptFailedPrefix": "Could not connect:",
+      "adoptSlotIntact": "Your slot was not touched.",
+      "restoreCta": "Restore the Fractera starter template",
+      "restoreRunning": "Restoring…",
+      "adoptMailCta": "Ask Fractera to migrate my project",
+      "adoptMailSubject": "Migrating my project to the Fractera architecture",
+      "adoptMailBody": "Hello,\n\nI would like to move my existing project to the Fractera architecture.\n\nRepository: {repoUrl}\n\nPlease tell me what is needed from my side.",
+      "reasonAdoptNotStarted": "No project has been connected yet.",
+      "reasonSlotNotARepo": "The slot does not look like a git repository.",
+      "reasonSlotHoldsOther": "The slot holds a different repository than the one requested.",
+      "reasonBuildMissing": "The build has not produced output yet — wait for it to finish.",
+      "reasonSlotMissing": "The project slot was not found on the server."
+    },
     "githubAbout": {
       "intro": "Three buttons move your project between three places: this server, your repository on GitHub, and the live application your visitors see. Here is what each one does and in which direction.",
       "pushTitle": "Push — from this server to GitHub",
@@ -1360,8 +1506,8 @@
         "hint": "The key and the models the project uses."
       },
       "github": {
-        "title": "Connect GitHub",
-        "hint": "Connect the repository this server pushes to and pulls from."
+        "title": "Project launch",
+        "hint": "From an empty repository to your first change, live at your own address."
       },
       "github-about": {
         "title": "About GitHub",
@@ -4010,6 +4156,152 @@
       "helpDataTitle": "Через него едут файлы, но не данные.",
       "helpData": "Страницы, компоненты и настройки ездят через git. Строки, загруженные файлы и векторы остаются на сервере и в репозитории отсутствуют вовсе — для них есть отдельная выгрузка данных. Восстановление репозитория не вернёт данные, а восстановление данных не вернёт код."
     },
+    "launch": {
+      "chooseTitle": "С чего вы начинаете?",
+      "chooseLead": "В разработку ведут две дороги, и они не взаимозаменяемы. Выберите одну — всё остальное на этой странице появится после выбора.",
+      "starterTitle": "Начать со стартового шаблона Fractera",
+      "starterBody": "На этом сервере уже стоит работающий стартовый проект. Вы заводите пустой репозиторий на GitHub, отправляете шаблон туда и дальше развиваете его.",
+      "starterCta": "Установить стартовый шаблон Fractera на GitHub",
+      "starterMoreLabel": "Что это значит",
+      "starterMore": "Ничего не скачивается и ничего не подменяется: проект, который у вас уже есть, становится вашим на GitHub. Этой же дорогой идут те, кто собирается позже перенести на Fractera существующий проект, — переезд начинается с работающего шаблона.",
+      "adoptTitle": "Подключить другой проект Fractera",
+      "adoptBody": "У вас уже есть проект на архитектуре Fractera, и он лежит на GitHub. Сервер расстаётся со своим стартовым шаблоном и запускает вместо него ваш проект.",
+      "adoptCta": "Заменить слот этим проектом",
+      "adoptMoreLabel": "Что это значит",
+      "adoptMore": "Стартовый шаблон, который сейчас стоит на сервере, уничтожается, и вернуть его можно только установив заново. Ваши настройки, ваши данные и загруженные файлы остаются на месте. Подключайте репозиторий, действительно построенный на архитектуре Fractera: проект другого фреймворка не соберётся, и панель скажет об этом прямо, а не станет гадать.",
+      "migrationCta": "Миграция на архитектуру Fractera",
+      "migrationTitle": "Миграция на архитектуру Fractera",
+      "migrationOpen": "Открыть «Режим разработки»",
+      "chooseFailed": "Выбор не сохранился.",
+      "stepOf": "Шаг {n} из {total}",
+      "stepDone": "Пройдено",
+      "reopen": "Открыть снова",
+      "checkLabel": "Я выполнил этот шаг",
+      "checkSaving": "Сохраняю…",
+      "checkFailed": "Отметка не сохранилась.",
+      "machineOnly": "Этот шаг закрывается проверкой, а не галочкой: ответ даёт GitHub.",
+      "restart": "Начать сначала",
+      "restartTitle": "Начать сначала",
+      "restartBody": "Мастер вернётся к экрану выбора, и все поставленные вами галочки будут сняты. Claude Code на вашей машине это не трогает — гасить отметку о программе, которую вы поставили сами, у нас нет оснований.",
+      "restartKeep": "Начать сначала, связь с GitHub оставить",
+      "restartWithGithub": "Начать сначала и стереть связь с GitHub",
+      "restartWithGithubHint": "Адрес репозитория и ключ доступа удаляются с этого сервера. Вводить их придётся заново.",
+      "restartCancel": "Отмена",
+      "restartDone": "Мастер сброшен.",
+      "restartFailed": "Сбросить не удалось.",
+      "steps": {
+        "repo": {
+          "title": "Репозиторий на GitHub",
+          "lead": "Пустой репозиторий — место, где будет жить ваш проект."
+        },
+        "key": {
+          "title": "Ключ безопасности",
+          "lead": "GitHub пускает сервер на запись только по ключу, который выдаёте вы."
+        },
+        "upload": {
+          "title": "Загрузить проект",
+          "lead": "Пока это не нажато, репозиторий остаётся пустым."
+        },
+        "adopt": {
+          "title": "Заменить проект",
+          "lead": "Стартовый шаблон уничтожается, на его место встаёт ваш репозиторий."
+        },
+        "live-check": {
+          "title": "Убедиться, что проект работает",
+          "lead": "Откройте свой сайт и подтвердите, что проект жив."
+        },
+        "claude-code": {
+          "title": "Claude Code",
+          "lead": "Агент, который будет писать ваш код."
+        },
+        "folder": {
+          "title": "Отдельная папка проекта",
+          "lead": "Один проект — одна папка. Именно это делает работу агента эффективной."
+        },
+        "open-folder": {
+          "title": "Открыть эту папку в Claude Code",
+          "lead": "Агент работает в той папке, которую вы выбрали при запуске."
+        },
+        "subscription": {
+          "title": "Вход в аккаунт подписки",
+          "lead": "Подписка привязана к тому браузеру, в котором её оплатили."
+        },
+        "first-prompt": {
+          "title": "Стартовая инструкция",
+          "lead": "Первое сообщение: с какого репозитория начинается разработка."
+        },
+        "env": {
+          "title": "Переменные окружения",
+          "lead": "Ключи, которыми ваша локальная копия смотрит на этот сервер."
+        },
+        "drop-env": {
+          "title": "Передать файл агенту",
+          "lead": "Перетащите скачанный файл в окно Claude Code."
+        },
+        "install": {
+          "title": "Зависимости и localhost:3000",
+          "lead": "Поставьте пакеты и увидьте проект в своём браузере."
+        },
+        "first-change": {
+          "title": "Первое изменение",
+          "lead": "Название вашей компании, внесённое агентом через шаг разработки."
+        },
+        "first-deploy": {
+          "title": "Первое развёртывание",
+          "lead": "То же изменение, увиденное на вашем собственном адресе в интернете."
+        }
+      },
+      "reasonRepoNotSet": "Адрес репозитория ещё не сохранён.",
+      "reasonRepoNotFound": "GitHub не знает такого репозитория. Проверьте адрес.",
+      "reasonAuthFailed": "GitHub отказал токену. Проверьте, что он действителен и даёт право на запись.",
+      "reasonNetwork": "С этого сервера не удалось достучаться до GitHub.",
+      "reasonKeyNotIssued": "Ключ ещё не выдан — сначала нажмите оранжевую кнопку.",
+      "reasonNoMainBranch": "Ветка main пуста. Сначала отправьте проект, потом проверяйте.",
+      "reasonNotImplemented": "Эта проверка ещё не построена.",
+      "reasonUnknown": "Причина неизвестна.",
+      "createRepoCta": "Создать пустой репозиторий на GitHub",
+      "issueKeyCta": "Выдать ключ доступа",
+      "verifyRepoCta": "Проверить репозиторий",
+      "verifyKeyCta": "Проверить ключ",
+      "verifyUploadCta": "Проверить проект",
+      "verifying": "Проверяю…",
+      "verifyFailed": "Проверка не прошла:",
+      "copyCta": "Скопировать",
+      "copiedNote": "Скопировано",
+      "copyFailed": "Буфер обмена недоступен — выделите текст и скопируйте вручную.",
+      "repoUnknown": "(репозиторий ещё не назван)",
+      "firstPromptText": "Мы начинаем разработку проекта Fractera.\n\nРепозиторий проекта: {repoUrl}\n\nВАЖНО, ПОРЯДОК: на следующем шаге я передам тебе файл переменных окружения .env.local.\nБез него проект не поднимется. НЕ УСТАНАВЛИВАЙ зависимости и не запускай сборку, пока\nфайл не окажется у тебя — дождись его.\n\nСейчас: прочитай инструкцию проекта и скажи, что понял устройство и ждёшь окружение.",
+      "firstChangeText": "Мы начинаем разработку, и я хочу, чтобы ты приступил к ШАГУ НОМЕР ОДИН.\n\nВсегда следуй инструкции по использованию шагов разработки: заведи новый шаг, создай\nдокумент current-steps, а по окончании закрой шаг итогом. Это правило проекта, и оно\nдействует с самого первого изменения, даже если папка пока пустая.\n\nЭто наш первый тестовый шаг — короткий, буквально разогрев.\n\nЗадача: спроси у меня, как называется моя компания. Когда получишь ответ, внеси это\nназвание в заголовок страницы ЧЕРЕЗ ФАЙЛ КОНФИГУРАЦИИ, а не правкой разметки.\n\nОтметь шаг во всех трёх документах согласно инструкции. Когда закончишь — скажи мне,\nчто теперь на всех страницах проекта видно название моей компании, и сделай коммит,\nчтобы я увидел изменение в браузере.",
+      "firstDeployText": "Следующий шаг разработки: первое развёртывание проекта на реальный сервер.\n\nИспользуй собственное понимание архитектуры этого проекта, чтобы выполнить развёртывание.\nВеди работу шагом разработки, как обычно.\n\nПервое развёртывание обычно идёт дольше остальных: тебе предстоит разобраться в\nособенностях этого приложения. Во время него могут появиться первые ошибки — это\nнормально.\n\nВАЖНО: чтобы мы их больше не повторяли, у нас есть документ ANTI-PATTERNS. Его задача —\nхранить знание о том, как делать не стоило. Всё, чему ты научишься на этом развёртывании,\nзапиши ПЕРВОЙ записью в этот документ: симптом, механизм, лечение.\n\nКогда закончишь, скажи мне адрес, по которому я увижу изменения в интернете.",
+      "finishTitle": "Вы полностью освоили работу с агентом-программистом",
+      "finishLead": "Дальше вы разрабатываете проект самостоятельно. Всё, что ниже, стоит знать до начала.",
+      "finishAskTitle": "Спрашивайте агента — он знает этот проект",
+      "finishAskBody": "Агент-программист полностью владеет информацией об архитектуре этого проекта и принципах его работы. Если вам что-то непонятно, смело расспрашивайте до тех пор, пока он не разъяснит весь процесс. Лишних вопросов здесь не бывает.",
+      "finishStepsTitle": "Каждая задача начинается с одной фразы",
+      "finishStepsBody": "Весь проект строится на шагах разработки. Эта фраза позволяет агенту выделить ресурсы, правильно начать ветку и связать работу с уже выполненными шагами. Это одно из действий, которые в будущем существенно сэкономят вам деньги на разработке.",
+      "finishStepsPhrase": "Создай новый шаг разработки, в котором мы будем…",
+      "finishBye": "Желаем вам счастливого пути в этом прекрасном путешествии с профессиональным инструментом для генерации приложений и автоматизации.",
+      "finishContact": "Остались вопросы или что-то не получается? Пишите нам:",
+      "adoptUrlLabel": "Адрес репозитория вашего проекта Fractera",
+      "adoptUrlPlaceholder": "https://github.com/owner/repository",
+      "adoptConfirmTitle": "Стартовый шаблон будет уничтожен безвозвратно",
+      "adoptConfirmBody": "Всё, что сейчас стоит в слоте, будет удалено и заменено содержимым указанного репозитория. Панель управления это не затронет — она работает на отдельном порту. Ничего не сносится, пока репозиторий не отозвался.",
+      "adoptConfirmYes": "Да, заменить",
+      "adoptConfirmNo": "Отмена",
+      "adoptRunning": "Заменяю…",
+      "adoptFailedPrefix": "Не удалось подключить:",
+      "adoptSlotIntact": "Ваш слот не тронут.",
+      "restoreCta": "Вернуть стартовый шаблон Fractera",
+      "restoreRunning": "Возвращаю…",
+      "adoptMailCta": "Попросить Fractera перенести мой проект",
+      "adoptMailSubject": "Перенос моего проекта на архитектуру Fractera",
+      "adoptMailBody": "Здравствуйте!\n\nХочу перенести свой существующий проект на архитектуру Fractera.\n\nРепозиторий: {repoUrl}\n\nПодскажите, что нужно с моей стороны.",
+      "reasonAdoptNotStarted": "Проект ещё не подключён.",
+      "reasonSlotNotARepo": "Слот не выглядит как git-репозиторий.",
+      "reasonSlotHoldsOther": "В слоте лежит не тот репозиторий, который запрашивали.",
+      "reasonBuildMissing": "Сборка ещё не дала результата — дождитесь её окончания.",
+      "reasonSlotMissing": "Слот проекта на сервере не найден."
+    },
     "githubAbout": {
       "intro": "Три кнопки перемещают ваш проект между тремя местами: этим сервером, вашим репозиторием на GitHub и работающим приложением, которое видят посетители. Вот что делает каждая и в какую сторону.",
       "pushTitle": "Отправить — с этого сервера в GitHub",
@@ -4669,8 +4961,8 @@
         "hint": "Ключ и модели, которыми пользуется проект."
       },
       "github": {
-        "title": "Подключить GitHub",
-        "hint": "Репозиторий, куда сервер отправляет и откуда забирает код."
+        "title": "Запуск проекта",
+        "hint": "От пустого репозитория до первого изменения, увиденного на вашем собственном адресе."
       },
       "github-about": {
         "title": "О GitHub",
