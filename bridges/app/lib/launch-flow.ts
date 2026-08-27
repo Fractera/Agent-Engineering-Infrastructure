@@ -50,7 +50,15 @@ export function flowValue(step: FlowStep): string {
 }
 
 export function setFlowValue(step: FlowStep, value: string | null): void {
-  setValue(key(step), value && value.trim() !== "" ? value.trim() : null);
+  const next = value && value.trim() !== "" ? value.trim() : null;
+  const changed = next !== (getValue(key(step)).trim() || null);
+  setValue(key(step), next);
+
+  // 🔒 СМЕНИЛОСЬ ПРОВЕРЕННОЕ — ОТМЕТКА ПРОВЕРКИ ГАСНЕТ. GitHub отвечал про ТОТ
+  // адрес и ТОТ токен; после замены зелёная отметка утверждала бы то, чего никто
+  // не спрашивал. Гасить надо здесь, у единственного писателя значений, — иначе
+  // однажды появится второй путь записи, который об этом не знает.
+  if (changed) setValue(FLOW_VERIFIED_KEY, null);
 }
 
 /** Пройден ли шаг. Один источник правды — наличие значения. */
@@ -80,4 +88,31 @@ export function resetFlow(): string[] {
 /** Сколько шагов пути пройдено — для карты пути и шкалы. */
 export function flowDoneCount(): number {
   return FLOW_STEPS.filter(flowDone).length;
+}
+
+// ── ШАГ 3: ПРОВЕРКА СВЯЗИ ───────────────────────────────────────────────────
+//
+// 🔒 ЭТО ОТМЕТКА, А НЕ ЗНАЧЕНИЕ, И ПОТОМУ ЖИВЁТ ОТДЕЛЬНО. У шагов 1 и 2 факт
+// «пройден» выводится из наличия значения; у проверки значения нет — есть только
+// ответ GitHub и время, когда он пришёл. Втиснуть её в `FLOW_STEPS` значило бы
+// назвать временну́ю метку «значением шага» и однажды показать её человеку в
+// поле ввода.
+//
+// 🔒 ОТМЕТКА ГАСНЕТ ПРИ ЛЮБОЙ СМЕНЕ АДРЕСА ИЛИ ТОКЕНА. Проверено было ТО, что
+// стояло в тот момент; заменил токен — проверка больше ничего не утверждает.
+// Оставить зелёным — ровно тот дефект шага 25, где мастер поздравлял человека с
+// тем, чего он не делал.
+
+export const FLOW_VERIFIED_KEY = `${FLOW_PREFIX}VERIFIED_AT`;
+
+export function flowVerifiedAt(): string {
+  return getValue(FLOW_VERIFIED_KEY).trim();
+}
+
+export function flowVerified(): boolean {
+  return flowVerifiedAt() !== "";
+}
+
+export function setFlowVerified(on: boolean): void {
+  setValue(FLOW_VERIFIED_KEY, on ? new Date().toISOString() : null);
 }

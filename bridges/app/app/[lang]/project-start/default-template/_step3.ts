@@ -22,10 +22,21 @@ export type StepThreeStrings = {
   stepOf: string;
   done: string;
   cta: string;
-  /** Честная строка о том, чего сейчас не хватает. */
-  pendingTitle: string;
-  pendingBody: string;
-  pendingWhy: string;
+  busy: string;
+  successTitle: string;
+  successHint: string;
+  failureTitle: string;
+  /**
+   * Причина отказа → ЧТО ДЕЛАТЬ. Ключи — машинные слова двери.
+   *
+   * 🔒 ЗДЕСЬ НЕ ОПИСАНИЕ ОШИБКИ, А СЛЕДУЮЩЕЕ ДЕЙСТВИЕ. «Токен не подошёл» есть
+   * сообщение о состоянии программы; человеку нужно знать, что выпустить новый и
+   * отметить область `repo`.
+   */
+  reasons: Record<string, string>;
+  reasonUnknown: string;
+  /** Строка о том, когда связь была проверена. */
+  verifiedAt: string;
 };
 
 const ru: StepThreeStrings = {
@@ -50,11 +61,24 @@ const ru: StepThreeStrings = {
   done: "Шаг завершён",
   cta: "Проверить связь",
 
-  pendingTitle: "Проверка пока не подключена.",
-  pendingBody:
-    "Кнопка выключена намеренно: настоящая проверка спрашивает GitHub и записывает результат в состояние мастера, а трогать его до отдельного распоряжения нельзя.",
-  pendingWhy:
-    "Кнопка, показывающая «связь проверена» без вопроса к GitHub, была бы ложью о работе шага. Кнопка, всегда отвечающая отказом, — мёртвой. Поэтому она выключена и сказано почему.",
+  busy: "Спрашиваем GitHub…",
+  successTitle: "Связь проверена",
+  successHint: "GitHub подтвердил: этот токен достаёт до этого репозитория и может в него писать",
+  failureTitle: "Связь не подтверждена",
+  reasons: {
+    "no-url": "Сначала вернитесь на первый шаг и сохраните адрес репозитория.",
+    "no-token": "Сначала вернитесь на второй шаг и сохраните токен доступа.",
+    "bad-url": "Адрес не похож на репозиторий GitHub. Он выглядит так: https://github.com/владелец/название",
+    "bad-token": "GitHub не принял токен. Выпустите новый classic-токен и отметьте область «repo».",
+    "no-repo":
+      "GitHub не нашёл этот репозиторий ЭТИМ токеном. Проверьте адрес; если репозиторий приватный, у токена должна стоять область «repo».",
+    "no-push":
+      "Токен читает репозиторий, но не может в него писать. Выпустите новый и отметьте область «repo» целиком.",
+    network: "GitHub не ответил. Это не про ваш токен — попробуйте ещё раз через минуту.",
+    "github-error": "GitHub ответил ошибкой на своей стороне. Попробуйте ещё раз через минуту.",
+  },
+  reasonUnknown: "Причина неизвестна. Попробуйте ещё раз; если повторится — сообщите нам.",
+  verifiedAt: "Проверено:",
 };
 
 const en: StepThreeStrings = {
@@ -79,11 +103,24 @@ const en: StepThreeStrings = {
   done: "Step finished",
   cta: "Verify the connection",
 
-  pendingTitle: "The check is not wired up yet.",
-  pendingBody:
-    "The button is disabled on purpose: a real check asks GitHub and writes the result into the wizard's state, and that must not be touched without a separate instruction.",
-  pendingWhy:
-    "A button reporting «verified» without asking GitHub would be a lie about the step. A button always answering with a refusal would be dead. So it is disabled, and the reason is stated.",
+  busy: "Asking GitHub…",
+  successTitle: "The connection is verified",
+  successHint: "GitHub confirmed: this token reaches this repository and can write to it",
+  failureTitle: "The connection was not confirmed",
+  reasons: {
+    "no-url": "Go back to step one and save the repository address first.",
+    "no-token": "Go back to step two and save the access token first.",
+    "bad-url": "The address does not look like a GitHub repository. It looks like https://github.com/owner/name",
+    "bad-token": "GitHub did not accept the token. Issue a new classic token and tick the «repo» scope.",
+    "no-repo":
+      "GitHub did not find this repository with THIS token. Check the address; if the repository is private, the token needs the «repo» scope.",
+    "no-push":
+      "The token can read the repository but cannot write to it. Issue a new one with the whole «repo» scope ticked.",
+    network: "GitHub did not answer. This is not about your token — try again in a minute.",
+    "github-error": "GitHub answered with an error on its side. Try again in a minute.",
+  },
+  reasonUnknown: "The reason is unknown. Try again; if it repeats, tell us.",
+  verifiedAt: "Verified:",
 };
 
 const DICT: Record<string, StepThreeStrings> = { en, ru };

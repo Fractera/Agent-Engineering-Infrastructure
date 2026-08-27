@@ -26,8 +26,10 @@ import { getAdminStrings } from "@/lib/i18n/admin-strings";
 import { adminHref } from "@/lib/admin-nav";
 import { PageShell } from "../../../_components/page-shell";
 import { StepSection } from "../../../_components/launch/step-section";
-import { Callout } from "../../../_components/launch/callout";
+import { VerifyStep } from "../../../_components/launch/verify-step.client";
 import { Small } from "@/components/ui/typography";
+import { Check } from "lucide-react";
+import { flowVerified, flowVerifiedAt } from "@/lib/launch-flow";
 import { DEFAULT_TEMPLATE_TOTAL, DEFAULT_TEMPLATE_BUILT } from "../_strings";
 import { stepThreeStrings } from "../_step3";
 
@@ -39,6 +41,8 @@ export default async function DefaultTemplateStepThree(
   const { lang } = await params;
   const s = getAdminStrings(lang);
   const x = stepThreeStrings(lang);
+  const verified = flowVerified();
+  const verifiedAt = flowVerifiedAt();
 
   return (
     <PageShell
@@ -57,6 +61,9 @@ export default async function DefaultTemplateStepThree(
         total={DEFAULT_TEMPLATE_TOTAL}
         stepOfTemplate={x.stepOf}
         doneLabel={x.done}
+        // 🔒 Зелёный круг — от ОТВЕТА GITHUB, а не от нажатия. Отметка гаснет
+        // при любой смене адреса или токена: проверено было то, что стояло тогда.
+        done={verified}
         badge={x.badge}
         title={x.title}
         lead={x.lead}
@@ -71,22 +78,30 @@ export default async function DefaultTemplateStepThree(
         }
       >
         <div className="flex flex-col gap-5">
-          {/* Кнопка есть, но не работает — и рядом сказано почему. Ни одного
-              островка: нажимать нечего, значит и JS в браузер везти незачем. */}
-          <button
-            type="button"
-            disabled
-            data-step-cta
-            className="inline-flex h-11 w-full cursor-not-allowed items-center justify-center rounded-lg bg-primary px-4 text-[length:var(--fs-small)] font-medium text-primary-foreground opacity-50"
-          >
-            {x.cta}
-          </button>
+          {/* 🔒 ПРОВЕРКА ПОДКЛЮЧЕНА (28-19, по слову владельца «go to finish
+              it»). Кнопка больше не выключена: она задаёт настоящий вопрос
+              GitHub. Островку отдаются только его слова, перечисленные
+              поимённо. */}
+          {verified && (
+            <div className="flex items-center gap-2.5 rounded-lg border border-emerald-500/40 bg-emerald-500/[0.06] px-3.5 py-2.5">
+              <Check size={16} aria-hidden className="shrink-0 text-emerald-600 dark:text-emerald-400" />
+              <Small className="text-emerald-700 dark:text-emerald-300">
+                {x.verifiedAt} {new Date(verifiedAt).toLocaleString(lang === "ru" ? "ru-RU" : "en-GB")}
+              </Small>
+            </div>
+          )}
 
-          <Callout tone="important">
-            <span className="font-semibold">{x.pendingTitle}</span> {x.pendingBody}
-          </Callout>
-
-          <Small>{x.pendingWhy}</Small>
+          <VerifyStep
+            labels={{
+              cta: x.cta,
+              busy: x.busy,
+              successTitle: x.successTitle,
+              successHint: x.successHint,
+              failureTitle: x.failureTitle,
+              reasons: x.reasons,
+              reasonUnknown: x.reasonUnknown,
+            }}
+          />
         </div>
       </StepSection>
     </PageShell>
