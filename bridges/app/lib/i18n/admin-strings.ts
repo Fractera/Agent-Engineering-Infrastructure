@@ -485,6 +485,19 @@ export type AdminStrings = {
     stepOf: string; stepDone: string; reopen: string;
     checkLabel: string; checkSaving: string; checkFailed: string;
     machineOnly: string;
+    /**
+     * Причины отказа проверки — ПЛОСКИМИ ключами, а не картой.
+     *
+     * 🔒 Карта деградирует целиком: недостающий у языка объект заменяется
+     * английским со всеми причинами разом. Плоский ключ деградирует поштучно —
+     * непереведённой останется одна строка, остальные придут на своём языке.
+     * `mergeTwoLevels` работает на два уровня, и это ровно та граница.
+     */
+    reasonRepoNotSet: string; reasonRepoNotFound: string; reasonAuthFailed: string;
+    reasonNetwork: string; reasonKeyNotIssued: string; reasonNoMainBranch: string;
+    reasonNotImplemented: string; reasonUnknown: string;
+    /** Крупная переливающаяся надпись первого шага и подпись кнопки ключа. */
+    createRepoCta: string; issueKeyCta: string;
     restart: string; restartTitle: string; restartBody: string;
     restartKeep: string; restartWithGithub: string; restartWithGithubHint: string;
     restartCancel: string; restartDone: string; restartFailed: string;

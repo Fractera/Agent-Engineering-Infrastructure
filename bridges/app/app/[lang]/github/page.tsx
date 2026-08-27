@@ -28,6 +28,8 @@ import { StartChoice } from "./_components/start-choice.client";
 import { LaunchReset } from "./_components/launch-reset.client";
 import { StepBeads } from "./_components/step-beads";
 import { LaunchStep } from "./_components/launch-step";
+import { ShimmerLink } from "./_components/shimmer-link";
+import { VerifyButton } from "./_components/verify-button.client";
 
 export const dynamic = "force-dynamic";
 
@@ -128,6 +130,23 @@ export default async function GitHubPage({ params }: { params: Promise<{ lang: s
   // всё: тогда блока шага нет вовсе, и это законное состояние (финал — 25-6).
   const cur = launch.steps[launch.current];
 
+  // Проза шага — файлом, не ключом словаря: она длинная, её правят как текст, и
+  // корпус на 82 языка не растёт на каждый абзац. Файла нет — блок просто без
+  // прозы, а не пустой экран.
+  const stepDoc = cur ? readLocalizedContent(`launch-step-${cur.id}`, lang) : null;
+
+  // Причины отказа проверки — плоскими ключами, собираются в карту здесь, на
+  // сервере. Островку уезжают только те строки, которые ему нужны.
+  const verifyLabels = {
+    action: l.checkLabel, checking: l.checkSaving, failedPrefix: l.checkFailed,
+    reasons: {
+      repo_not_set: l.reasonRepoNotSet, repo_not_found: l.reasonRepoNotFound,
+      auth_failed: l.reasonAuthFailed, network: l.reasonNetwork,
+      key_not_issued: l.reasonKeyNotIssued, no_main_branch: l.reasonNoMainBranch,
+      not_implemented_yet: l.reasonNotImplemented, unknown: l.reasonUnknown,
+    },
+  };
+
   return (
     <PageShell lang={lang} slug="github" s={s} title={s.pages.github.title} hint={s.pages.github.hint}>
       {/* Полоса состояния — серверная: правда видна и без JS. */}
@@ -212,7 +231,25 @@ export default async function GitHubPage({ params }: { params: Promise<{ lang: s
           kind={cur.kind}
           labels={{ stepOf: l.stepOf, machineOnly: l.machineOnly }}
         >
+          {/* Проза шага — общая для всех, идёт первой. */}
+          {stepDoc?.ok && (
+            <div className="mb-3">
+              {stepDoc.isFallback && (
+                <p className="mb-2 rounded-md border border-dashed border-border px-3 py-2 text-[11px] text-muted-foreground/80">
+                  {s.content.englishFallback}
+                </p>
+              )}
+              <GuideProse markdown={stepDoc.text} />
+            </div>
+          )}
+
           {cur.id === "repo" ? (
+        <>
+          {/* Крупная переливающаяся надпись — решение владельца: способность
+              существовала и не работала, потому что кнопку не замечали. */}
+          <p className="mb-3">
+            <ShimmerLink href="https://github.com/new">{l.createRepoCta}</ShimmerLink>
+          </p>
         <ConnectForm
           repoUrl={st.repoUrl}
           hasToken={st.hasToken}
@@ -233,7 +270,28 @@ export default async function GitHubPage({ params }: { params: Promise<{ lang: s
             step4Check: g.step4Check, step4Open: g.step4Open,
           }}
         />
+          <div className="mt-3">
+            <VerifyButton step="repo" labels={verifyLabels} />
+          </div>
+        </>
+          ) : cur.id === "key" ? (
+            // 🔒 Кнопка ключа ПУЛЬСИРУЕТ — второй способ обратить внимание,
+            // названный владельцем. Сама выдача живёт на вкладке `env`, здесь —
+            // проверка факта: ключ либо есть на диске, либо его нет.
+            <div className="flex flex-wrap items-center gap-3">
+              <Link
+                href={adminHref(lang, "env")}
+                className="launch-pulse inline-flex items-center gap-2 rounded-md bg-orange-600 px-4 py-2 text-[12px] font-medium text-white hover:bg-orange-500"
+              >
+                {l.issueKeyCta}
+              </Link>
+              <VerifyButton step="key" labels={verifyLabels} pulse={false} />
+            </div>
+          ) : cur.id === "upload" ? (
+            <VerifyButton step="upload" labels={verifyLabels} pulse />
           ) : (
+            // ⏳ Шаги 4–13 наполняются в 25-4…25-6. До тех пор блок честно
+            // показывает суть шага прозой и не притворяется работающим.
             <p className="rounded-md border border-dashed border-border px-3 py-2 text-[11px] text-muted-foreground">
               {g.setupTitle}
             </p>

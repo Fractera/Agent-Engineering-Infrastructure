@@ -795,7 +795,17 @@
           "title": "The first deployment",
           "lead": "The same change, seen at your own address on the internet."
         }
-      }
+      },
+      "reasonRepoNotSet": "No repository address saved yet.",
+      "reasonRepoNotFound": "GitHub does not know this repository. Check the address.",
+      "reasonAuthFailed": "GitHub refused the token. Check that it is valid and has write access.",
+      "reasonNetwork": "Could not reach GitHub from this server.",
+      "reasonKeyNotIssued": "The key has not been issued yet — press the orange button first.",
+      "reasonNoMainBranch": "Branch main is empty. Send the project first, then check again.",
+      "reasonNotImplemented": "This check is not built yet.",
+      "reasonUnknown": "Unknown reason.",
+      "createRepoCta": "Create an empty repository on GitHub",
+      "issueKeyCta": "Issue an access key"
     },
     "githubAbout": {
       "intro": "Three buttons move your project between three places: this server, your repository on GitHub, and the live application your visitors see. Here is what each one does and in which direction.",
@@ -4200,7 +4210,17 @@
           "title": "Первое развёртывание",
           "lead": "То же изменение, увиденное на вашем собственном адресе в интернете."
         }
-      }
+      },
+      "reasonRepoNotSet": "Адрес репозитория ещё не сохранён.",
+      "reasonRepoNotFound": "GitHub не знает такого репозитория. Проверьте адрес.",
+      "reasonAuthFailed": "GitHub отказал токену. Проверьте, что он действителен и даёт право на запись.",
+      "reasonNetwork": "С этого сервера не удалось достучаться до GitHub.",
+      "reasonKeyNotIssued": "Ключ ещё не выдан — сначала нажмите оранжевую кнопку.",
+      "reasonNoMainBranch": "Ветка main пуста. Сначала отправьте проект, потом проверяйте.",
+      "reasonNotImplemented": "Эта проверка ещё не построена.",
+      "reasonUnknown": "Причина неизвестна.",
+      "createRepoCta": "Создать пустой репозиторий на GitHub",
+      "issueKeyCta": "Выдать ключ доступа"
     },
     "githubAbout": {
       "intro": "Три кнопки перемещают ваш проект между тремя местами: этим сервером, вашим репозиторием на GitHub и работающим приложением, которое видят посетители. Вот что делает каждая и в какую сторону.",
