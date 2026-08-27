@@ -137,3 +137,32 @@ export function flowPushed(): boolean {
 export function setFlowPushed(on: boolean): void {
   setValue(FLOW_PUSHED_KEY, on ? new Date().toISOString() : null);
 }
+
+// ── ШАГ 5: ОТМЕТКИ, КОТОРЫЕ СТАВИТ ЧЕЛОВЕК ─────────────────────────────────
+//
+// 🔒 ТРЕТИЙ РОД ФАКТА, И ОН НЕ СВОДИТСЯ К ДВУМ ПРЕДЫДУЩИМ. У шагов 1–2 факт —
+// сохранённое ЗНАЧЕНИЕ, у шагов 3–4 — СОБЫТИЕ, случившееся на сервере. Здесь
+// факт живёт на машине человека: Claude Code открыт, подписка оплачена. Панель
+// работает на сервере, канала для такого вопроса между ними нет, и спрашивать
+// его неоткуда.
+//
+// 🔒 ПОЭТОМУ ОТМЕТКА СНИМАЕМАЯ. Одноразовая говорила бы «когда-то стояло» и
+// врала бы ровно тем способом, который этот проект выкорчёвывает: подписка
+// кончается, программу сносят. Снял галочку — шаг снова открыт.
+
+export const FLOW_MARKS = ["claude-code"] as const;
+export type FlowMark = (typeof FLOW_MARKS)[number];
+
+export const isFlowMark = (v: unknown): v is FlowMark =>
+  typeof v === "string" && (FLOW_MARKS as readonly string[]).includes(v);
+
+const markKeyOf = (mark: FlowMark): string =>
+  `${FLOW_PREFIX}MARK_${mark.toUpperCase().replace(/-/g, "_")}_AT`;
+
+export function flowMarked(mark: FlowMark): boolean {
+  return getValue(markKeyOf(mark)).trim() !== "";
+}
+
+export function setFlowMark(mark: FlowMark, on: boolean): void {
+  setValue(markKeyOf(mark), on ? new Date().toISOString() : null);
+}
