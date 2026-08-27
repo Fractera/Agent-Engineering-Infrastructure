@@ -32,6 +32,7 @@ import { ShimmerLink } from "./_components/shimmer-link";
 import { VerifyButton } from "./_components/verify-button.client";
 import { StepCheck } from "./_components/step-check.client";
 import { CopyBlock } from "./_components/copy-block.client";
+import { LaunchFinish } from "./_components/launch-finish";
 
 export const dynamic = "force-dynamic";
 
@@ -333,6 +334,20 @@ export default async function GitHubPage({ params }: { params: Promise<{ lang: s
                 labels={{ label: l.checkLabel, saving: l.checkSaving, failed: l.checkFailed }}
               />
             </div>
+          ) : cur.id === "first-change" || cur.id === "first-deploy" ? (
+            // Две последние инструкции для агента. Обе задают ему режим работы
+            // шагами разработки — на пустой папке он про него иногда забывает.
+            <div className="space-y-3">
+              <CopyBlock
+                text={cur.id === "first-change" ? l.firstChangeText : l.firstDeployText}
+                labels={{ copy: l.copyCta, copied: l.copiedNote, failed: l.copyFailed }}
+              />
+              <StepCheck
+                step={cur.id}
+                initial={cur.done}
+                labels={{ label: l.checkLabel, saving: l.checkSaving, failed: l.checkFailed }}
+              />
+            </div>
           ) : cur.kind === "checked" ? (
             // 🔒 Человеческий шаг закрывает ЧЕЛОВЕК, и отметка снимаемая. У панели
             // нет глаз на его машине: проверить, что папка создана и подписка
@@ -350,6 +365,22 @@ export default async function GitHubPage({ params }: { params: Promise<{ lang: s
             </p>
           )}
         </LaunchStep>
+      )}
+
+      {/* 🔒 ПРОЙДЕНО ВСЁ — вместо блока шага финальный экран. `cur` здесь
+          `undefined` по построению: `current` равен `total`, и `steps[total]`
+          не существует. Это не «пустое состояние», а законный конец пути. */}
+      {!cur && (
+        <LaunchFinish
+          email="admin@fractera.ai"
+          labels={{
+            title: l.finishTitle, lead: l.finishLead,
+            askTitle: l.finishAskTitle, askBody: l.finishAskBody,
+            stepsTitle: l.finishStepsTitle, stepsBody: l.finishStepsBody,
+            stepsPhrase: l.finishStepsPhrase,
+            bye: l.finishBye, contact: l.finishContact,
+          }}
+        />
       )}
 
       <div className="mt-4 flex flex-wrap items-center justify-between gap-2">

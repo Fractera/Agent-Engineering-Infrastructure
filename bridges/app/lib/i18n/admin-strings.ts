@@ -519,6 +519,19 @@ export type AdminStrings = {
      * важна ровно та строка, что уедет в чат, — без обёрток и без потерь.
      */
     firstPromptText: string;
+    /** Ещё две инструкции для копирования: первое изменение и первое развёртывание. */
+    firstChangeText: string; firstDeployText: string;
+    /**
+     * Финальный экран. Показывается вместо блока шага, когда пройдено всё.
+     *
+     * 🔒 Главное в нём — не поздравление, а ОДНА фраза, которой человек начинает
+     * каждую следующую задачу: «создай новый шаг разработки». Она экономит его
+     * деньги на каждом прогоне, и сказать её надо там, где он дочитает.
+     */
+    finishTitle: string; finishLead: string;
+    finishAskTitle: string; finishAskBody: string;
+    finishStepsTitle: string; finishStepsBody: string; finishStepsPhrase: string;
+    finishBye: string; finishContact: string;
     restart: string; restartTitle: string; restartBody: string;
     restartKeep: string; restartWithGithub: string; restartWithGithubHint: string;
     restartCancel: string; restartDone: string; restartFailed: string;

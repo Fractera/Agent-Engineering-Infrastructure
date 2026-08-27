@@ -815,7 +815,18 @@
       "copiedNote": "Copied",
       "copyFailed": "The clipboard is unavailable — select the text and copy it by hand.",
       "repoUnknown": "(repository not named yet)",
-      "firstPromptText": "We are starting development of a Fractera project.\n\nProject repository: {repoUrl}\n\nIMPORTANT, ORDER OF WORK: in the next step I will hand you the environment file .env.local.\nThe project will not start without it. DO NOT install dependencies and do not run a build\nuntil that file is with you — wait for it.\n\nFor now: read the project instruction and tell me you understand the setup and are waiting\nfor the environment."
+      "firstPromptText": "We are starting development of a Fractera project.\n\nProject repository: {repoUrl}\n\nIMPORTANT, ORDER OF WORK: in the next step I will hand you the environment file .env.local.\nThe project will not start without it. DO NOT install dependencies and do not run a build\nuntil that file is with you — wait for it.\n\nFor now: read the project instruction and tell me you understand the setup and are waiting\nfor the environment.",
+      "firstChangeText": "We are starting development, and I want you to begin with STEP NUMBER ONE.\n\nAlways follow the development-steps instruction: open a new step, create the current-steps\ndocument, and close the step with a result when you finish. This is a project rule and it\napplies from the very first change, even while the folder is still empty.\n\nThis is our first test step — short, a warm-up really.\n\nTask: ask me what my company is called. When you have the answer, put that name into the\npage title THROUGH THE CONFIGURATION FILE, not by editing markup.\n\nRecord the step in all three documents as the instruction requires. When you are done, tell\nme that my company name is now visible on every page of the project, and make a commit so I\ncan see the change in the browser.",
+      "firstDeployText": "Next development step: the first deployment of the project to a real server.\n\nUse your own understanding of this project architecture to carry out the deployment. Run\nthe work as a development step, as usual.\n\nA first deployment usually takes longer than the rest: you have to work out how this\napplication is put together. Errors may appear during it — that is normal.\n\nIMPORTANT: so that we never repeat them, we keep a document called ANTI-PATTERNS. Its job\nis to hold the knowledge of what should not have been done. Write everything you learn on\nthis deployment as the FIRST entry in that document: symptom, mechanism, cure.\n\nWhen you are done, tell me the address where I will see the changes on the internet.",
+      "finishTitle": "You have mastered working with a programming agent",
+      "finishLead": "From here you develop the project yourself. Everything below is worth knowing before you start.",
+      "finishAskTitle": "Ask the agent — it knows this project",
+      "finishAskBody": "The agent holds the full picture of this architecture and how it works. If something is unclear, keep asking until it has explained the whole process to you. There is no such thing as too many questions here.",
+      "finishStepsTitle": "Every task begins with one phrase",
+      "finishStepsBody": "The whole project is built on development steps. Saying this lets the agent set aside resources, open a branch correctly and tie the work to the steps already finished. It is one of the things that will save you real money on every run.",
+      "finishStepsPhrase": "Create a new development step in which we will…",
+      "finishBye": "We wish you a happy journey with a professional tool for generating applications and automation.",
+      "finishContact": "Questions, or something not working? Write to us:"
     },
     "githubAbout": {
       "intro": "Three buttons move your project between three places: this server, your repository on GitHub, and the live application your visitors see. Here is what each one does and in which direction.",
@@ -4240,7 +4251,18 @@
       "copiedNote": "Скопировано",
       "copyFailed": "Буфер обмена недоступен — выделите текст и скопируйте вручную.",
       "repoUnknown": "(репозиторий ещё не назван)",
-      "firstPromptText": "Мы начинаем разработку проекта Fractera.\n\nРепозиторий проекта: {repoUrl}\n\nВАЖНО, ПОРЯДОК: на следующем шаге я передам тебе файл переменных окружения .env.local.\nБез него проект не поднимется. НЕ УСТАНАВЛИВАЙ зависимости и не запускай сборку, пока\nфайл не окажется у тебя — дождись его.\n\nСейчас: прочитай инструкцию проекта и скажи, что понял устройство и ждёшь окружение."
+      "firstPromptText": "Мы начинаем разработку проекта Fractera.\n\nРепозиторий проекта: {repoUrl}\n\nВАЖНО, ПОРЯДОК: на следующем шаге я передам тебе файл переменных окружения .env.local.\nБез него проект не поднимется. НЕ УСТАНАВЛИВАЙ зависимости и не запускай сборку, пока\nфайл не окажется у тебя — дождись его.\n\nСейчас: прочитай инструкцию проекта и скажи, что понял устройство и ждёшь окружение.",
+      "firstChangeText": "Мы начинаем разработку, и я хочу, чтобы ты приступил к ШАГУ НОМЕР ОДИН.\n\nВсегда следуй инструкции по использованию шагов разработки: заведи новый шаг, создай\nдокумент current-steps, а по окончании закрой шаг итогом. Это правило проекта, и оно\nдействует с самого первого изменения, даже если папка пока пустая.\n\nЭто наш первый тестовый шаг — короткий, буквально разогрев.\n\nЗадача: спроси у меня, как называется моя компания. Когда получишь ответ, внеси это\nназвание в заголовок страницы ЧЕРЕЗ ФАЙЛ КОНФИГУРАЦИИ, а не правкой разметки.\n\nОтметь шаг во всех трёх документах согласно инструкции. Когда закончишь — скажи мне,\nчто теперь на всех страницах проекта видно название моей компании, и сделай коммит,\nчтобы я увидел изменение в браузере.",
+      "firstDeployText": "Следующий шаг разработки: первое развёртывание проекта на реальный сервер.\n\nИспользуй собственное понимание архитектуры этого проекта, чтобы выполнить развёртывание.\nВеди работу шагом разработки, как обычно.\n\nПервое развёртывание обычно идёт дольше остальных: тебе предстоит разобраться в\nособенностях этого приложения. Во время него могут появиться первые ошибки — это\nнормально.\n\nВАЖНО: чтобы мы их больше не повторяли, у нас есть документ ANTI-PATTERNS. Его задача —\nхранить знание о том, как делать не стоило. Всё, чему ты научишься на этом развёртывании,\nзапиши ПЕРВОЙ записью в этот документ: симптом, механизм, лечение.\n\nКогда закончишь, скажи мне адрес, по которому я увижу изменения в интернете.",
+      "finishTitle": "Вы полностью освоили работу с агентом-программистом",
+      "finishLead": "Дальше вы разрабатываете проект самостоятельно. Всё, что ниже, стоит знать до начала.",
+      "finishAskTitle": "Спрашивайте агента — он знает этот проект",
+      "finishAskBody": "Агент-программист полностью владеет информацией об архитектуре этого проекта и принципах его работы. Если вам что-то непонятно, смело расспрашивайте до тех пор, пока он не разъяснит весь процесс. Лишних вопросов здесь не бывает.",
+      "finishStepsTitle": "Каждая задача начинается с одной фразы",
+      "finishStepsBody": "Весь проект строится на шагах разработки. Эта фраза позволяет агенту выделить ресурсы, правильно начать ветку и связать работу с уже выполненными шагами. Это одно из действий, которые в будущем существенно сэкономят вам деньги на разработке.",
+      "finishStepsPhrase": "Создай новый шаг разработки, в котором мы будем…",
+      "finishBye": "Желаем вам счастливого пути в этом прекрасном путешествии с профессиональным инструментом для генерации приложений и автоматизации.",
+      "finishContact": "Остались вопросы или что-то не получается? Пишите нам:"
     },
     "githubAbout": {
       "intro": "Три кнопки перемещают ваш проект между тремя местами: этим сервером, вашим репозиторием на GitHub и работающим приложением, которое видят посетители. Вот что делает каждая и в какую сторону.",
