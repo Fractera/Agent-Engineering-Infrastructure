@@ -26,7 +26,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { Loader2, Check } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -59,10 +59,27 @@ export function StepForm({
   labels,
   nextHref,
   secret = false,
+  flowStep,
+  saved = "",
 }: {
   index: number;
   total: number;
   labels: StepFormLabels;
+  /**
+   * Ключ шага в состоянии НОВОГО пути. Задан — значение сохраняется дверью
+   * `POST /api/config/launch-flow` и переживает перезагрузку страницы.
+   *
+   * 🔒 ЗАЧЕМ ЭТО ПОЯВИЛОСЬ. Владелец ввёл адрес, перезагрузил страницу и не
+   * нашёл его: «нету обратной связи… ты сохраняешь?». Не сохранял — намеренно,
+   * потому что запись в `USER_LAUNCH_*` двигает ЖИВОЙ мастер. Его решение —
+   * «replace logic to new flow»: у нового пути свои ключи `USER_FLOW_*`.
+   */
+  flowStep?: "repo-url" | "token";
+  /**
+   * Уже сохранённое значение, показываемое человеку. Для секрета приходит
+   * замаскированным — полное значение сервер не отдаёт вовсе.
+   */
+  saved?: string;
   /** Куда вести после удачи. Пусто — шага дальше нет, и тост его не обещает. */
   nextHref?: string;
   /**
@@ -88,16 +105,37 @@ export function StepForm({
 
   const ready = value.trim().length > 0;
 
-  function submit() {
+  async function submit() {
     setBusy(true);
 
-    // 🔒 ДВЕРЬ ПОКА НЕ ПОДКЛЮЧЕНА, И ЭТО НАЗВАНО ЗДЕСЬ, А НЕ СПРЯТАНО.
-    // Настоящее подключение репозитория пишет `USER_LAUNCH_*` в `.env.local`
-    // слота и двигает состояние ЖИВОГО мастера — того самого, который владелец
-    // запретил трогать до отдельного слова. Поэтому шаг сегодня показывает свой
-    // путь целиком: поле, кнопку, тост, переход, — но состояние не меняет.
-    // Строка ниже — единственное место, куда встанет вызов
-    // `POST /api/config/launch/step`, когда владелец скажет.
+    // 🔒 СНАЧАЛА СОХРАНИТЬ, ПОТОМ ПОЗДРАВЛЯТЬ. Тост об удаче до ответа двери —
+    // поздравление с тем, чего, возможно, не случилось. Порядок здесь и есть
+    // разница между обратной связью и её имитацией.
+    if (flowStep) {
+      try {
+        const r = await fetch("/api/config/launch-flow", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          // Секрет уезжает ТЕЛОМ запроса: в строке адреса он попал бы в журнал
+          // сервера, историю браузера и заголовок Referer.
+          body: JSON.stringify({ step: flowStep, value: value.trim() }),
+          credentials: "include",
+        });
+        const d = (await r.json().catch(() => ({}))) as { ok?: boolean; error?: string };
+        if (!r.ok || !d.ok) {
+          // 🔒 ОТКАЗ НАЗЫВАЕТ, ЧТО ДЕЛАТЬ. Причина от двери приходит машинным
+          // словом (`bad-repo-url`); человеку нужно действие, а не код.
+          toast.error(labels.failureTitle, { description: labels.failureFix, duration: TOAST_MS });
+          setBusy(false);
+          return;
+        }
+      } catch {
+        toast.error(labels.failureTitle, { description: labels.failureFix, duration: TOAST_MS });
+        setBusy(false);
+        return;
+      }
+    }
+
     toast.success(fill(labels.successTitle, { n: index, total }), {
       description: labels.successHint,
       duration: TOAST_MS,
@@ -105,12 +143,33 @@ export function StepForm({
 
     timer.current = setTimeout(() => {
       if (nextHref) router.push(nextHref);
-      else setBusy(false);
+      // 🔒 Обновляем СЕРВЕРНУЮ страницу: зелёная отметка рисуется из состояния
+      // на сервере, и без этого она появится только после ручной перезагрузки.
+      else { router.refresh(); setBusy(false); }
     }, ADVANCE_MS);
   }
 
   return (
     <div className="flex flex-col gap-5">
+      {/* 🔒 СОХРАНЁННОЕ ЗНАЧЕНИЕ ПОКАЗЫВАЕТСЯ ЗЕЛЁНЫМ — требование владельца:
+          «поле, в котором был добавлен репозиторий, должно существовать также с
+          зелёным цветом». Оно стоит ОТДЕЛЬНОЙ строкой над полем ввода, а не
+          подставляется в само поле: подставленное значение человек примет за
+          свой черновик и начнёт править, а секрет туда вернуть невозможно —
+          сервер отдаёт его замаскированным.
+
+          Так на экране одновременно видно и то, что сохранено, и то, что можно
+          ввести взамен. */}
+      {saved && (
+        <div
+          data-saved-value
+          className="flex items-center gap-2.5 rounded-lg border border-emerald-500/40 bg-emerald-500/[0.06] px-3.5 py-2.5"
+        >
+          <Check size={16} aria-hidden className="shrink-0 text-emerald-600 dark:text-emerald-400" />
+          <Small className="truncate text-emerald-700 dark:text-emerald-300">{saved}</Small>
+        </div>
+      )}
+
       <label className="flex flex-col gap-2">
         <Small className="text-foreground">{labels.inputLabel}</Small>
         <Input

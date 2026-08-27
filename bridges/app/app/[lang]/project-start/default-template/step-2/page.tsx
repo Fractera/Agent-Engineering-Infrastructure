@@ -21,6 +21,7 @@ import { adminHref } from "@/lib/admin-nav";
 import { PageShell } from "../../../_components/page-shell";
 import { StepSection } from "../../../_components/launch/step-section";
 import { StepForm } from "../../../_components/launch/step-form.client";
+import { flowShown, flowDone } from "@/lib/launch-flow";
 import { stepTwoStrings, DEFAULT_TEMPLATE_TOTAL, DEFAULT_TEMPLATE_BUILT } from "../_strings";
 
 export const dynamic = "force-dynamic";
@@ -49,6 +50,7 @@ export default async function DefaultTemplateStepTwo(
         total={DEFAULT_TEMPLATE_TOTAL}
         stepOfTemplate={x.stepOf}
         doneLabel={x.done}
+        done={flowDone("token")}
         badge={x.badge}
         title={x.title}
         lead={x.lead}
@@ -89,6 +91,11 @@ export default async function DefaultTemplateStepTwo(
           index={2}
           total={DEFAULT_TEMPLATE_TOTAL}
           secret
+          // 🔒 ТЕПЕРЬ ШАГ СОХРАНЯЕТ (28-17), ключ свой — `USER_FLOW_TOKEN`.
+          // Наружу возвращается замаскированное значение: человеку нужно видеть,
+          // ЧТО токен сохранён, а не сам токен.
+          flowStep="token"
+          saved={flowShown("token")}
           labels={{
             inputLabel: x.form.inputLabel,
             inputPlaceholder: x.form.inputPlaceholder,

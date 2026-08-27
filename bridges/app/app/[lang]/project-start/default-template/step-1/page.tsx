@@ -25,6 +25,7 @@ import { adminHref } from "@/lib/admin-nav";
 import { PageShell } from "../../../_components/page-shell";
 import { StepSection } from "../../../_components/launch/step-section";
 import { StepForm } from "../../../_components/launch/step-form.client";
+import { flowShown, flowDone } from "@/lib/launch-flow";
 import { stepOneStrings, DEFAULT_TEMPLATE_TOTAL, DEFAULT_TEMPLATE_BUILT } from "../_strings";
 
 export const dynamic = "force-dynamic";
@@ -56,6 +57,10 @@ export default async function DefaultTemplateStepOne(
         total={DEFAULT_TEMPLATE_TOTAL}
         stepOfTemplate={x.stepOf}
         doneLabel={x.done}
+        // 🔒 Зелёный круг и словесная отметка рисуются ОТ СОХРАНЁННОГО ФАКТА, а
+        // не от того, что человек побывал на странице. Иначе шаг поздравлял бы с
+        // тем, чего не случилось, — дефект, оплаченный в шаге 25.
+        done={flowDone("repo-url")}
         badge={x.badge}
         title={x.title}
         lead={x.lead}
@@ -92,6 +97,10 @@ export default async function DefaultTemplateStepOne(
         <StepForm
           index={1}
           total={DEFAULT_TEMPLATE_TOTAL}
+          // 🔒 ТЕПЕРЬ ШАГ СОХРАНЯЕТ (28-17). Ключ — свой, `USER_FLOW_REPO_URL`;
+          // состояние живого мастера не задето ни одним байтом.
+          flowStep="repo-url"
+          saved={flowShown("repo-url")}
           labels={{
             inputLabel: x.form.inputLabel,
             inputPlaceholder: x.form.inputPlaceholder,
