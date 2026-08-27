@@ -26,6 +26,8 @@ import { readGitStatus } from "./_lib/git";
 import { ConnectForm } from "./_components/connect-form.client";
 import { StartChoice } from "./_components/start-choice.client";
 import { LaunchReset } from "./_components/launch-reset.client";
+import { StepBeads } from "./_components/step-beads";
+import { LaunchStep } from "./_components/launch-step";
 
 export const dynamic = "force-dynamic";
 
@@ -122,6 +124,10 @@ export default async function GitHubPage({ params }: { params: Promise<{ lang: s
 
   const st = result.status;
 
+  // Единственный открытый шаг — первый незакрытый. `undefined`, когда пройдено
+  // всё: тогда блока шага нет вовсе, и это законное состояние (финал — 25-6).
+  const cur = launch.steps[launch.current];
+
   return (
     <PageShell lang={lang} slug="github" s={s} title={s.pages.github.title} hint={s.pages.github.hint}>
       {/* Полоса состояния — серверная: правда видна и без JS. */}
@@ -179,12 +185,34 @@ export default async function GitHubPage({ params }: { params: Promise<{ lang: s
           Не воскрешать: страница отвечает на «как подключить», а не «что у меня
           не сохранено». */}
 
-      {/* ⏳ ВРЕМЕННО, ДО ПОДШАГА 25-2. Здесь встанет мастер: верёвочка с бусинами
-          и шаги, открывающиеся по одному. Пока путь выбран, но мастера ещё нет,
-          страница показывает прежнюю рабочую форму подключения — половина
-          способности хуже её отсутствия, а неработающая страница хуже обеих. */}
+      {/* Верёвочка с бусинами — сверху, над единственным открытым шагом. */}
       <div className="mt-4">
-        <h2 className="mb-2 text-[12px] font-medium text-foreground">{g.setupTitle}</h2>
+        <StepBeads
+          done={launch.steps.map((x) => x.done)}
+          current={launch.current}
+          labels={{ stepOf: l.stepOf }}
+        />
+      </div>
+
+      {/* 🔒 РОВНО ОДИН БЛОК ШАГА. Пройденные свёрнуты в зелёные бусины, будущих
+          не видно. Всё пройдено — блока нет вовсе, и это законное состояние:
+          финальный экран строится в 25-6.
+
+          ⏳ ДО ПОДШАГА 25-3 содержимое есть только у шага `repo` — это прежняя
+          рабочая форма подключения, переехавшая внутрь блока. Остальные шаги
+          показывают свою суть и честную строку «содержимое строится». Половина
+          способности хуже её отсутствия: форму нельзя было убрать раньше, чем
+          25-3 даст ей замену. */}
+      {cur && (
+        <LaunchStep
+          index={launch.current}
+          total={launch.total}
+          title={l.steps[cur.id].title}
+          lead={l.steps[cur.id].lead}
+          kind={cur.kind}
+          labels={{ stepOf: l.stepOf, machineOnly: l.machineOnly }}
+        >
+          {cur.id === "repo" ? (
         <ConnectForm
           repoUrl={st.repoUrl}
           hasToken={st.hasToken}
@@ -205,7 +233,13 @@ export default async function GitHubPage({ params }: { params: Promise<{ lang: s
             step4Check: g.step4Check, step4Open: g.step4Open,
           }}
         />
-      </div>
+          ) : (
+            <p className="rounded-md border border-dashed border-border px-3 py-2 text-[11px] text-muted-foreground">
+              {g.setupTitle}
+            </p>
+          )}
+        </LaunchStep>
+      )}
 
       <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
         <p className="text-[10px] leading-relaxed text-muted-foreground">
