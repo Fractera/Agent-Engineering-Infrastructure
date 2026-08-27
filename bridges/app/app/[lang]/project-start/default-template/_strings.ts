@@ -33,6 +33,15 @@ export type StepStrings = {
   done: string;
   /** Подпись ссылки-действия: слово, стоящее перед адресом. */
   linkLabel: string;
+  /**
+   * Снимок чужого экрана — две РАЗНЫЕ строки, и путать их нельзя.
+   *
+   * `shotAlt` — ЧТО на снимке; читается вслух тем, кто его не увидит, поэтому
+   * называет содержимое, а не повторяет подпись. `shotCaption` — чей это экран
+   * и на что смотреть; её видят все.
+   */
+  shotAlt?: string;
+  shotCaption?: string;
   form: StepFormLabels;
 };
 
@@ -150,6 +159,9 @@ const ru2: StepStrings = {
   stepOf: "Шаг {n} из {total}",
   done: "Шаг завершён",
   linkLabel: "ссылка",
+  shotAlt:
+    "Страница GitHub «New personal access token (classic)»: поле Note, срок жизни «No expiration» с предупреждением, и список прав, где отмечена одна галочка «repo», а пять вложенных отметились сами.",
+  shotCaption: "Так это выглядит на GitHub: отмечена РОВНО одна галочка — «repo».",
 
   form: {
     inputLabel: "Токен доступа (classic, область repo)",
@@ -186,6 +198,9 @@ const en2: StepStrings = {
   stepOf: "Step {n} of {total}",
   done: "Step finished",
   linkLabel: "link",
+  shotAlt:
+    "The GitHub page «New personal access token (classic)»: the Note field, «No expiration» with a warning, and the scope list where exactly one box — «repo» — is ticked, with five nested ones ticked by themselves.",
+  shotCaption: "This is how it looks on GitHub: EXACTLY one box is ticked — «repo».",
 
   form: {
     inputLabel: "Access token (classic, repo scope)",
