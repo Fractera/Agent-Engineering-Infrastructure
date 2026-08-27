@@ -176,7 +176,7 @@ const ru2: StepStrings = {
     cta: "Сохранить токен",
     busy: "Проверяем…",
     successTitle: "Вы завершили шаг {n} из {total}",
-    successHint: "Следующий шаг — проверка связи; он появится здесь, когда будет построен",
+    successHint: "Перейдёте к следующему шагу — проверка связи — через несколько секунд",
     failureTitle: "Токен не принят",
     failureFix: "Обычно у токена нет области repo либо он скопирован не целиком — выпустите новый",
   },
@@ -215,7 +215,7 @@ const en2: StepStrings = {
     cta: "Save the token",
     busy: "Checking…",
     successTitle: "You finished step {n} of {total}",
-    successHint: "The next step is the connection check; it will appear here once it is built",
+    successHint: "You will move to the next step — the connection check — in a few seconds",
     failureTitle: "The token was not accepted",
     failureFix: "Usually the token lacks the repo scope or was not copied in full — issue a new one",
   },
@@ -252,4 +252,4 @@ export const DEFAULT_TEMPLATE_TOTAL = 16;
  * Число растёт на единицу с каждым новым шагом. Забыть его — значит получить
  * мёртвую ссылку, и это ловится нажатием, а не чтением.
  */
-export const DEFAULT_TEMPLATE_BUILT = 2;
+export const DEFAULT_TEMPLATE_BUILT = 3;

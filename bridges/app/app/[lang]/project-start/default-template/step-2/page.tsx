@@ -100,8 +100,9 @@ export default async function DefaultTemplateStepTwo(
             failureTitle: x.form.failureTitle,
             failureFix: x.form.failureFix,
           }}
-          // Шага третьего ещё нет — перехода нет, и тост его не обещает.
-          nextHref={undefined}
+          // 🔒 ПЕРЕХОД ПОЯВИЛСЯ ВМЕСТЕ С ШАГОМ 3 (28-16). До этого его здесь не
+          // было намеренно: шага не существовало, и тост его не обещал.
+          nextHref={`${adminHref(lang, "project-start")}/default-template/step-3`}
         />
       </StepSection>
     </PageShell>
