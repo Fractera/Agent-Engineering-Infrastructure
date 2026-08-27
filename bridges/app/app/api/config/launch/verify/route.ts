@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
-import { exec } from "child_process";
+import path from "path";
+import { exec, execFileSync } from "child_process";
 import { promisify } from "util";
 import { requireAuth } from "@/lib/require-auth";
 import { keyIssued } from "@/lib/ssh-access";
@@ -26,6 +27,9 @@ import { isLaunchStepId } from "@/lib/launch.shared";
 
 const execAsync = promisify(exec);
 const APP_ENV = process.env.APP_ENV_PATH ?? "/opt/fractera/app/.env.local";
+
+/** Корень слота — тот же, что у очереди сборки: панель живёт в bridges/app. */
+const resolveSlot = () => path.resolve(process.cwd(), "../../app");
 
 function readEnv(): Record<string, string> {
   const out: Record<string, string> = {};
@@ -99,6 +103,36 @@ async function verifyUpload(): Promise<Outcome> {
   }
 }
 
+/**
+ * Чужой проект действительно встал в слот — и это спрашивается У СЛОТА.
+ *
+ * 🔒 Наша запись говорит, что мы ПРОСИЛИ; `remote` слота говорит, что
+ * ПОЛУЧИЛОСЬ. Расходятся они ровно тогда, когда что-то пошло не так, и верить
+ * надо второму. Плюс `.next`: без сборки проект не запустится, а замена файлов
+ * сама по себе ещё ничего не значит.
+ */
+function verifyAdopt(): Outcome {
+  const slotDir = process.env.APP_DIR ?? resolveSlot();
+  const requested = readEnv()["USER_ADOPT_REPO_URL"] ?? "";
+  if (!requested) return { ok: false, reason: "adopt_not_started", status: 422 };
+
+  let slotRemote = "";
+  try {
+    slotRemote = execFileSync("git", ["-C", slotDir, "remote", "get-url", "origin"], {
+      encoding: "utf8", timeout: 10_000,
+    }).toString().trim().replace(/x-access-token:[^@]*@/, "");
+  } catch {
+    return { ok: false, reason: "slot_not_a_repo", status: 422 };
+  }
+
+  const same = slotRemote.replace(/\.git$/, "") === requested.replace(/\.git$/, "");
+  if (!same) return { ok: false, reason: "slot_holds_other_repo", status: 422 };
+  if (!fs.existsSync(path.resolve(slotDir, ".next"))) {
+    return { ok: false, reason: "build_missing", status: 422 };
+  }
+  return { ok: true };
+}
+
 export async function POST(req: NextRequest) {
   if (!(await requireAuth(req.headers.get("cookie") ?? ""))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -125,8 +159,7 @@ export async function POST(req: NextRequest) {
     case "repo": outcome = await verifyRepo(); break;
     case "key": outcome = verifyKey(); break;
     case "upload": outcome = await verifyUpload(); break;
-    // `adopt` — замена слота чужим проектом, строится в 25-7. До тех пор честный
-    // отказ, а не молчаливое «проверено».
+    case "adopt": outcome = verifyAdopt(); break;
     default: outcome = { ok: false, reason: "not_implemented_yet", status: 501 };
   }
 

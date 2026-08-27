@@ -33,6 +33,7 @@ import { VerifyButton } from "./_components/verify-button.client";
 import { StepCheck } from "./_components/step-check.client";
 import { CopyBlock } from "./_components/copy-block.client";
 import { LaunchFinish } from "./_components/launch-finish";
+import { AdoptOutcome } from "./_components/adopt-outcome.client";
 
 export const dynamic = "force-dynamic";
 
@@ -146,8 +147,15 @@ export default async function GitHubPage({ params }: { params: Promise<{ lang: s
   // проверяет система, а надпись предлагала подтвердить самому. У каждого
   // машинного шага теперь своя подпись.
   const verifyCta: Partial<Record<string, string>> = {
-    repo: l.verifyRepoCta, key: l.verifyKeyCta, upload: l.verifyUploadCta,
+    repo: l.verifyRepoCta, key: l.verifyKeyCta, upload: l.verifyUploadCta, adopt: l.verifyUploadCta,
   };
+  // Причины отказа потока B — общие для обоих режимов островка.
+  const adoptReasons = {
+    repo_not_set: l.reasonRepoNotSet, repo_not_found: l.reasonRepoNotFound,
+    auth_failed: l.reasonAuthFailed, network: l.reasonNetwork,
+    slot_missing: l.reasonSlotMissing, unknown: l.reasonUnknown,
+  };
+
   const verifyLabels = {
     action: (cur && verifyCta[cur.id]) || l.verifyRepoCta,
     checking: l.verifying,
@@ -157,6 +165,8 @@ export default async function GitHubPage({ params }: { params: Promise<{ lang: s
       auth_failed: l.reasonAuthFailed, network: l.reasonNetwork,
       key_not_issued: l.reasonKeyNotIssued, no_main_branch: l.reasonNoMainBranch,
       not_implemented_yet: l.reasonNotImplemented, unknown: l.reasonUnknown,
+      adopt_not_started: l.reasonAdoptNotStarted, slot_not_a_repo: l.reasonSlotNotARepo,
+      slot_holds_other_repo: l.reasonSlotHoldsOther, build_missing: l.reasonBuildMissing,
     },
   };
 
@@ -333,6 +343,53 @@ export default async function GitHubPage({ params }: { params: Promise<{ lang: s
                 initial={cur.done}
                 labels={{ label: l.checkLabel, saving: l.checkSaving, failed: l.checkFailed }}
               />
+            </div>
+          ) : cur.id === "adopt" || cur.id === "live-check" ? (
+            // 🔒 ДВА ШАГА ПОТОКА B, И ОНИ РАЗНЫЕ ПО РОДУ. `adopt` закрывает машина
+            // (сборка прошла), `live-check` — человек глазами: «вижу проект в
+            // рабочем состоянии». Панель не может посмотреть за него.
+            //
+            // Развилка отказа показывается на `live-check`: сюда человек попадает
+            // с уже подключённым проектом, и если он говорит «не окей» — ему нужны
+            // откат и письмо, а не повтор замены.
+            <div className="space-y-3">
+              {cur.id === "adopt" ? (
+                <AdoptOutcome
+                  mode="form"
+                  initialUrl={launch.repoUrl}
+                  email="admin@fractera.ai"
+                  labels={{
+                    urlLabel: l.adoptUrlLabel, urlPlaceholder: l.adoptUrlPlaceholder,
+                    cta: l.adoptCta, confirmTitle: l.adoptConfirmTitle,
+                    confirmBody: l.adoptConfirmBody, confirmYes: l.adoptConfirmYes,
+                    confirmNo: l.adoptConfirmNo, running: l.adoptRunning,
+                    failedPrefix: l.adoptFailedPrefix, slotIntact: l.adoptSlotIntact,
+                    reasons: adoptReasons,
+                  }}
+                />
+              ) : (
+                <AdoptOutcome
+                  mode="failed"
+                  initialUrl={launch.repoUrl}
+                  email="admin@fractera.ai"
+                  labels={{
+                    restoreCta: l.restoreCta, restoreRunning: l.restoreRunning,
+                    mailCta: l.adoptMailCta, mailSubject: l.adoptMailSubject,
+                    mailBody: l.adoptMailBody,
+                    failedPrefix: l.adoptFailedPrefix, slotIntact: l.adoptSlotIntact,
+                    reasons: adoptReasons,
+                  }}
+                />
+              )}
+              {cur.id === "adopt" ? (
+                <VerifyButton step="adopt" labels={verifyLabels} />
+              ) : (
+                <StepCheck
+                  step={cur.id}
+                  initial={cur.done}
+                  labels={{ label: l.checkLabel, saving: l.checkSaving, failed: l.checkFailed }}
+                />
+              )}
             </div>
           ) : cur.id === "first-change" || cur.id === "first-deploy" ? (
             // Две последние инструкции для агента. Обе задают ему режим работы

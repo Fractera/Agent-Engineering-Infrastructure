@@ -532,6 +532,21 @@ export type AdminStrings = {
     finishAskTitle: string; finishAskBody: string;
     finishStepsTitle: string; finishStepsBody: string; finishStepsPhrase: string;
     finishBye: string; finishContact: string;
+    /**
+     * Поток B — подключение чужого проекта Fractera (шаг 25-7).
+     *
+     * 🔒 Отказ обязан сказать, что слот ЦЕЛ (`adoptSlotIntact`). Без этой строки
+     * любая ошибка читается как «проект уже уничтожен», и человек не решается
+     * повторить с исправленным адресом.
+     */
+    adoptUrlLabel: string; adoptUrlPlaceholder: string; adoptCta: string;
+    adoptConfirmTitle: string; adoptConfirmBody: string;
+    adoptConfirmYes: string; adoptConfirmNo: string;
+    adoptRunning: string; adoptFailedPrefix: string; adoptSlotIntact: string;
+    restoreCta: string; restoreRunning: string;
+    adoptMailCta: string; adoptMailSubject: string; adoptMailBody: string;
+    reasonAdoptNotStarted: string; reasonSlotNotARepo: string;
+    reasonSlotHoldsOther: string; reasonBuildMissing: string; reasonSlotMissing: string;
     restart: string; restartTitle: string; restartBody: string;
     restartKeep: string; restartWithGithub: string; restartWithGithubHint: string;
     restartCancel: string; restartDone: string; restartFailed: string;
