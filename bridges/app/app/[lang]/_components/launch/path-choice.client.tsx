@@ -19,6 +19,7 @@
 // контейнера и сравнивает их, поэтому выбранный обводится, а не остаётся один.
 
 import { useState } from "react";
+import Link from "next/link";
 import { Check } from "lucide-react";
 import { PathCard } from "./path-card";
 import { Small } from "@/components/ui/typography";
@@ -50,23 +51,50 @@ type Mode = "starter" | "adopt";
 
 const fill = (t: string, v: Record<string, string>) => t.replace(/\{(\w+)\}/g, (m, k) => v[k] ?? m);
 
-export function PathChoice({ labels }: { labels: PathChoiceLabels }) {
+export function PathChoice({
+  labels,
+  hrefs,
+}: {
+  labels: PathChoiceLabels;
+  /**
+   * Адреса подстраниц путей. Заданы — кнопка ВЕДЁТ туда; не заданы — кнопка
+   * только отмечает выбор.
+   *
+   * 🔒 ДВА ПОВЕДЕНИЯ У ОДНОГО КОМПОНЕНТА — НАМЕРЕННО, И ВОТ ГРАНИЦА. На реальном
+   * разделе выбор пути обязан вести на страницы пути: это и есть выбор. На
+   * образце вести некуда — он показывает вид, а не работу, и переход уносил бы
+   * владельца со страницы, которую он рассматривает. Развести это двумя копиями
+   * компонента значило бы получить две анатомии, расходящиеся со второй правки.
+   */
+  hrefs?: { starter: string; adopt: string };
+}) {
   const [picked, setPicked] = useState<Mode | null>(null);
 
   const button = (mode: Mode, cta: string, tone: "primary" | "amber") => {
     const isPicked = picked === mode;
+    const cls = [
+      "inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg px-4",
+      "text-[length:var(--fs-small)] font-medium transition-colors",
+      tone === "primary"
+        ? "bg-primary text-primary-foreground hover:bg-primary/90"
+        : "border border-amber-500/50 bg-amber-500/10 text-amber-800 hover:bg-amber-500/20 dark:text-amber-200",
+    ].join(" ");
+
+    if (hrefs) {
+      return (
+        <Link href={hrefs[mode]} className={cls} data-path-cta={mode}>
+          {cta}
+        </Link>
+      );
+    }
+
     return (
       <button
         type="button"
         onClick={() => setPicked(mode)}
         aria-pressed={isPicked}
-        className={[
-          "inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg px-4",
-          "text-[length:var(--fs-small)] font-medium transition-colors",
-          tone === "primary"
-            ? "bg-primary text-primary-foreground hover:bg-primary/90"
-            : "border border-amber-500/50 bg-amber-500/10 text-amber-800 hover:bg-amber-500/20 dark:text-amber-200",
-        ].join(" ")}
+        data-path-cta={mode}
+        className={cls}
       >
         {isPicked && <Check size={16} className="shrink-0" />}
         {cta}

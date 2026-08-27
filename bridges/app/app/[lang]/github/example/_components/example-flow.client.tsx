@@ -21,7 +21,7 @@
 // живёт в памяти вкладки и умирает вместе с ней.
 
 import { useState } from "react";
-import { StepSection } from "./step-section";
+import { StepSection } from "../../../_components/launch/step-section";
 import { StepAction, type StepActionLabels } from "./step-action.client";
 import { Small } from "@/components/ui/typography";
 

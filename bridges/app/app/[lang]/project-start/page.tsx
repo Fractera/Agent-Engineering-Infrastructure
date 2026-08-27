@@ -27,6 +27,7 @@
 // на сборке — снимок той минуты потом висит месяцами.
 
 import { getAdminStrings } from "@/lib/i18n/admin-strings";
+import { adminHref } from "@/lib/admin-nav";
 import { PageShell } from "../_components/page-shell";
 import { PathChoice } from "../_components/launch/path-choice.client";
 import { pathChoiceStrings } from "./_strings";
@@ -51,6 +52,13 @@ export default async function ProjectStartPage({ params }: { params: Promise<{ l
           скомпилировалось бы и уехало по проводу целиком со всем, что окажется в
           объекте завтра: тип не сужает рантайм. ✗ оплачено дважды за шаг 25. */}
       <PathChoice
+        // 🔒 ЗДЕСЬ КНОПКИ ВЕДУТ, А НА ОБРАЗЦЕ ТОЛЬКО ОТМЕЧАЮТ. На реальном
+        // разделе выбор пути обязан открывать страницы этого пути — это и есть
+        // выбор; на образце вести некуда, он показывает вид, а не работу.
+        hrefs={{
+          starter: `${adminHref(lang, "project-start")}/default-template`,
+          adopt: `${adminHref(lang, "project-start")}/custom-fractera-repo`,
+        }}
         labels={{
           starterBadge: p.starterBadge,
           starterTitle: p.starterTitle,
