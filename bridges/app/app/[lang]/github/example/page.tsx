@@ -24,6 +24,7 @@ import { Breadcrumbs } from "../../_components/breadcrumbs";
 import { getAdminStrings } from "@/lib/i18n/admin-strings";
 import { ExampleHeader } from "./_components/example-header";
 import { exampleStrings } from "./_demo-strings";
+import { PathChoice } from "./_components/path-choice.client";
 import { Small } from "@/components/ui/typography";
 
 export const dynamic = "force-dynamic";
@@ -48,6 +49,34 @@ export default async function LaunchExamplePage({ params }: { params: Promise<{ 
         <div className="mt-6 rounded-md border border-dashed border-border px-4 py-3">
           <Small className="text-foreground">{x.disclaimerTitle}</Small>
           <Small className="mt-1">{x.disclaimerBody}</Small>
+        </div>
+
+        {/* 🔒 ОСТРОВКУ — ТОЛЬКО ЕГО СЛОВА, ПЕРЕЧИСЛЕННЫЕ ПОИМЁННО (28-2).
+            `labels={x.path}` скомпилировалось бы и уехало по проводу целиком со
+            всем, что в объекте окажется завтра. Тип не сужает рантайм — это
+            оплачено дважды за шаг 25. Перечисление ниже длиннее на десять строк
+            и ровно этим и ценно: добавить поле молча нельзя. */}
+        <div className="mt-10">
+          <PathChoice
+            labels={{
+              starterBadge: x.path.starterBadge,
+              starterTitle: x.path.starterTitle,
+              starterLead: x.path.starterLead,
+              starterBullets: x.path.starterBullets,
+              starterMoreLabel: x.path.starterMoreLabel,
+              starterMore: x.path.starterMore,
+              starterCta: x.path.starterCta,
+              adoptBadge: x.path.adoptBadge,
+              adoptTitle: x.path.adoptTitle,
+              adoptLead: x.path.adoptLead,
+              adoptBullets: x.path.adoptBullets,
+              adoptMoreLabel: x.path.adoptMoreLabel,
+              adoptMore: x.path.adoptMore,
+              adoptCta: x.path.adoptCta,
+              picked: x.path.picked,
+              reset: x.path.reset,
+            }}
+          />
         </div>
       </div>
     </>

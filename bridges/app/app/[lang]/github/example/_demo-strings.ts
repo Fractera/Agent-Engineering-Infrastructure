@@ -25,6 +25,28 @@ export type ExampleStrings = {
   /** Честная строка о том, что это образец, а не рабочая вкладка. */
   disclaimerTitle: string;
   disclaimerBody: string;
+
+  /** Два больших контейнера выбора пути (28-2). */
+  path: {
+    starterBadge: string;
+    starterTitle: string;
+    starterLead: string;
+    starterBullets: string[];
+    starterMoreLabel: string;
+    starterMore: string;
+    starterCta: string;
+
+    adoptBadge: string;
+    adoptTitle: string;
+    adoptLead: string;
+    adoptBullets: string[];
+    adoptMoreLabel: string;
+    adoptMore: string;
+    adoptCta: string;
+
+    picked: string;
+    reset: string;
+  };
 };
 
 const en: ExampleStrings = {
@@ -36,6 +58,39 @@ const en: ExampleStrings = {
   disclaimerTitle: "This page is a sample, not the wizard.",
   disclaimerBody:
     "The words and numbers here are fake and nothing is written to the server. It exists so the section standard can be looked at before it replaces the live tab.",
+
+  path: {
+    starterBadge: "Path one",
+    starterTitle: "Start from the starter template",
+    starterLead:
+      "You get a working project from the first minute: pages, data layer, authorisation and the panel are already wired together.",
+    starterBullets: [
+      "A repository of your own, created from the template",
+      "The site live at your address before you write a line of code",
+      "Thirteen steps, one at a time — never four demands at once",
+    ],
+    starterMoreLabel: "What this means for my code",
+    starterMore:
+      "The template is the shape the platform expects. You edit pages and logic; the doors between layers stay where they are, so an update never collides with your work.",
+    starterCta: "Start from the template",
+
+    adoptBadge: "Path two",
+    adoptTitle: "Connect a repository with a Fractera project",
+    adoptLead:
+      "You already have a project built on Fractera. Point at it, and the slot takes it in place of the template.",
+    adoptBullets: [
+      "Your repository stays yours — nothing is copied anywhere",
+      "The donor is checked BEFORE anything here is replaced",
+      "Fourteen steps: the extra one is the check of what you pointed at",
+    ],
+    adoptMoreLabel: "What is checked before the swap",
+    adoptMore:
+      "The address must answer, the project must have the shape the slot expects, and the clone must succeed into a folder next door. Only then does the swap happen — never the other way round.",
+    adoptCta: "Connect a repository",
+
+    picked: "Chosen: {path}",
+    reset: "choose again",
+  },
 };
 
 const ru: ExampleStrings = {
@@ -47,6 +102,39 @@ const ru: ExampleStrings = {
   disclaimerTitle: "Это страница-образец, а не мастер.",
   disclaimerBody:
     "Надписи и числа здесь фейковые, на сервер не пишется ничего. Она нужна, чтобы посмотреть стандарт секции до того, как он заменит живую вкладку.",
+
+  path: {
+    starterBadge: "Путь первый",
+    starterTitle: "Запуск проекта со стартового шаблона",
+    starterLead:
+      "Работающий проект с первой минуты: страницы, слой данных, авторизация и панель уже связаны между собой.",
+    starterBullets: [
+      "Свой репозиторий, созданный из шаблона",
+      "Сайт на вашем адресе раньше, чем вы напишете первую строку кода",
+      "Тринадцать шагов по одному — никогда не четыре требования разом",
+    ],
+    starterMoreLabel: "Что это значит для моего кода",
+    starterMore:
+      "Шаблон — это форма, которую платформа ожидает. Вы правите страницы и логику; двери между слоями остаются на местах, поэтому обновление не сталкивается с вашей работой.",
+    starterCta: "Начать со стартового шаблона",
+
+    adoptBadge: "Путь второй",
+    adoptTitle: "Подключение репозитория с проектом Fractera",
+    adoptLead:
+      "У вас уже есть проект на Fractera. Укажите его — и слот примет ваш проект вместо шаблона.",
+    adoptBullets: [
+      "Ваш репозиторий остаётся вашим — никуда ничего не копируется",
+      "Донор проверяется ДО того, как здесь что-либо заменяется",
+      "Четырнадцать шагов: лишний — проверка того, на что вы указали",
+    ],
+    adoptMoreLabel: "Что проверяется до замены",
+    adoptMore:
+      "Адрес обязан ответить, у проекта обязана быть форма, которую слот ожидает, и клон обязан лечь в соседнюю папку. Только тогда происходит замена — и никогда наоборот.",
+    adoptCta: "Подключить репозиторий",
+
+    picked: "Выбрано: {path}",
+    reset: "выбрать заново",
+  },
 };
 
 const DICT: Record<string, ExampleStrings> = { en, ru };
