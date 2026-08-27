@@ -2,16 +2,21 @@ import type { ReactNode } from "react";
 import { Check } from "lucide-react";
 import { H2, Lead, Small } from "@/components/ui/typography";
 import { Callout } from "./callout";
+import { StepLink } from "./step-link";
 
 // АНАТОМИЯ ОДНОГО ШАГА МАСТЕРА (шаг 28-3, 2026-08-27).
 //
 // 🔒 ПОРЯДОК СУЩНОСТЕЙ НАЗВАН ВЛАДЕЛЬЦЕМ И ЗАФИКСИРОВАН ЗДЕСЬ. Сверху вниз:
 //
 //   1 отметка «завершён», если завершён   6 голубая подсказка — информация
-//   2 «шаг X из Y» в левом верхнем углу   7 оранжевая подсказка — это важно
+//   2 «шаг X из Y» + ШКАЛА в той же строке 7 оранжевая подсказка — это важно
 //   3 область бейджа                      8 описание для действия
 //   4 заголовок второго уровня            9 немаркированный список
-//   5 описание заголовка                  затем — действие (поле, галочка, кнопка)
+//   5 описание заголовка                 10 ССЫЛКА-ДЕЙСТВИЕ, над областью ввода
+//                                          затем — действие (поле, галочка, кнопка)
+//
+// Десятая сущность и шкала добавлены 28-11 по решению владельца; обе описаны
+// подробно там, где нарисованы.
 //
 // Переставить снаружи нельзя ничего: возможность переставить и есть то, из-за
 // чего одинаковые с виду блоки расходятся. Любую сущность можно НЕ ДАТЬ — тогда
@@ -44,6 +49,7 @@ export function StepSection({
   important,
   actionLead,
   bullets,
+  link,
   children,
 }: {
   /** Номер шага, считая с единицы: человеку показывается он, а не индекс. */
@@ -63,6 +69,19 @@ export function StepSection({
   /** Описание для действия — что человек сейчас сделает. */
   actionLead?: string;
   bullets?: string[];
+  /**
+   * Ссылка-действие: КУДА идти делать то, ради чего шаг существует.
+   *
+   * 🔒 ОНА СТОИТ НАД ОБЛАСТЬЮ ВВОДА — решение владельца 2026-08-27: «располагать
+   * её надо над областью ввода, так как она по сути является главной частью
+   * информационной составляющей». Под полем её читают уже после того, как искали
+   * значение, которого ещё нет.
+   *
+   * 🔒 ЭТО НЕ ВТОРОЕ ДЕЙСТВИЕ ШАГА. Ссылка ведёт наружу, к чужому сервису;
+   * действие шага — то, что человек делает ЗДЕСЬ, вернувшись оттуда. Я спутал
+   * эти две вещи, строя шаг 2, и не перенёс ссылку из живого мастера.
+   */
+  link?: { href: string; label?: string };
   /** Само действие: поле, галочка, кнопка. Приносит островок. */
   children?: ReactNode;
 }) {
@@ -75,17 +94,46 @@ export function StepSection({
         done ? "border-emerald-500/40 bg-emerald-500/[0.04]" : "border-border",
       ].join(" ")}
     >
-      {/* 1 + 2: счётчик слева, отметка завершённости справа. Они в одной строке
-          потому, что отвечают на один вопрос — «где я и пройдено ли это». */}
-      <div className="flex items-start justify-between gap-4">
-        <Small className="font-mono uppercase tracking-wider text-muted-foreground">
+      {/* 1 + 2: счётчик слева, ШКАЛА ПРОГРЕССА в той же строке, отметка
+          завершённости справа. Все трое отвечают на один вопрос — «где я и
+          пройдено ли это», поэтому стоят вместе.
+
+          🔒 ШКАЛА В ОДНОЙ СТРОКЕ СО СЧЁТЧИКОМ — требование владельца
+          2026-08-27: «предполагается, что в одной линии с этим текстом будет
+          находиться 16 пунктирных линий, которые займут всё оставшееся
+          пространство без переноса на следующую строку, будут сжиматься и
+          окрашиваться в зелёный цвет — те шаги, которые пройдены».
+
+          🔒 КАК ЭТО НЕ ПЕРЕНОСИТСЯ. `flex-1` на каждом отрезке и `min-w-0` на
+          дорожке: отрезки делят остаток строки поровну и сжимаются, сколько бы
+          их ни было. Фиксированная ширина отрезка при шестнадцати шагах на
+          узком экране дала бы вторую строку — ровно то, что запрещено. */}
+      <div className="flex items-center gap-4">
+        <Small className="shrink-0 font-mono uppercase tracking-wider text-muted-foreground">
           {fill(stepOfTemplate, { n: index, total })}
         </Small>
+
+        <div className="flex min-w-0 flex-1 items-center gap-1" aria-hidden data-step-scale={total}>
+          {Array.from({ length: total }, (_, i) => (
+            <span
+              key={i}
+              data-scale-tick={i < index - 1 ? "done" : i === index - 1 ? "current" : "future"}
+              className={[
+                "h-0.5 min-w-0 flex-1 rounded-full",
+                i < index - 1
+                  ? "bg-emerald-500"
+                  : i === index - 1
+                    ? "bg-foreground"
+                    : "bg-border",
+              ].join(" ")}
+            />
+          ))}
+        </div>
 
         {done && (
           <span
             data-step-done
-            className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2.5 py-1 text-[length:var(--fs-eyebrow)] font-semibold text-emerald-700 dark:text-emerald-300"
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-emerald-500/15 px-2.5 py-1 text-[length:var(--fs-eyebrow)] font-semibold text-emerald-700 dark:text-emerald-300"
           >
             <Check size={13} aria-hidden className="shrink-0" />
             {doneLabel}
@@ -133,7 +181,19 @@ export function StepSection({
         </ul>
       )}
 
-      {children && <div className="mt-7 border-t border-border pt-6">{children}</div>}
+      {/* 10: ССЫЛКА-ДЕЙСТВИЕ — над областью ввода и внутри той же отделённой
+          части, что и действие: вместе они отвечают на «что делать», тогда как
+          всё выше отвечает на «что это за шаг». */}
+      {(link || children) && (
+        <div className="mt-7 border-t border-border pt-6">
+          {link && (
+            <div className="mb-5">
+              <StepLink href={link.href} label={link.label} />
+            </div>
+          )}
+          {children}
+        </div>
+      )}
     </section>
   );
 }

@@ -52,6 +52,10 @@ export default async function DefaultTemplateStepTwo(
         important={x.important}
         actionLead={x.actionLead}
         bullets={x.bullets}
+        // 🔒 ССЫЛКА-ДЕЙСТВИЕ ВЕРНУЛАСЬ — решение владельца отменило моё. Строя
+        // этот шаг, я не перенёс её из живого мастера, сочтя вторым действием.
+        // Адрес тот же, что там: раздел «Tokens (classic)».
+        link={{ href: "https://github.com/settings/tokens", label: x.linkLabel }}
       >
         {/* 🔒 Островку — только его слова, перечисленные поимённо. */}
         <StepForm

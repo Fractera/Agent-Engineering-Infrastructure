@@ -57,6 +57,10 @@ export default async function DefaultTemplateStepOne(
         important={x.important}
         actionLead={x.actionLead}
         bullets={x.bullets}
+        // 🔒 ССЫЛКА-ДЕЙСТВИЕ: КУДА идти заводить репозиторий. `github.com/new`
+        // открывает форму создания сразу — это её обычный адрес, а не наш
+        // придуманный маршрут.
+        link={{ href: "https://github.com/new", label: x.linkLabel }}
       >
         {/* 🔒 Островку — только его слова, перечисленные поимённо: тип не сужает
             рантайм, и объект целиком уехал бы по проводу со всем, что окажется в

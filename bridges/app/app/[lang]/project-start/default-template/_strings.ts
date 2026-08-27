@@ -31,6 +31,8 @@ export type StepStrings = {
   bullets: string[];
   stepOf: string;
   done: string;
+  /** Подпись ссылки-действия: слово, стоящее перед адресом. */
+  linkLabel: string;
   form: StepFormLabels;
 };
 
@@ -54,6 +56,7 @@ const ru1: StepStrings = {
   ],
   stepOf: "Шаг {n} из {total}",
   done: "Шаг завершён",
+  linkLabel: "ссылка",
 
   form: {
     inputLabel: "Адрес репозитория",
@@ -91,6 +94,7 @@ const en1: StepStrings = {
   ],
   stepOf: "Step {n} of {total}",
   done: "Step finished",
+  linkLabel: "link",
 
   form: {
     inputLabel: "Repository address",
@@ -145,6 +149,7 @@ const ru2: StepStrings = {
   ],
   stepOf: "Шаг {n} из {total}",
   done: "Шаг завершён",
+  linkLabel: "ссылка",
 
   form: {
     inputLabel: "Токен доступа (classic, область repo)",
@@ -180,6 +185,7 @@ const en2: StepStrings = {
   ],
   stepOf: "Step {n} of {total}",
   done: "Step finished",
+  linkLabel: "link",
 
   form: {
     inputLabel: "Access token (classic, repo scope)",
