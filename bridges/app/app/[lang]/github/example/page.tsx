@@ -25,6 +25,8 @@ import { getAdminStrings } from "@/lib/i18n/admin-strings";
 import { ExampleHeader } from "./_components/example-header";
 import { exampleStrings } from "./_demo-strings";
 import { PathChoice } from "./_components/path-choice.client";
+import { ExampleFlow } from "./_components/example-flow.client";
+import { exampleSteps, exampleFlowLabels } from "./_demo-steps";
 import { Small } from "@/components/ui/typography";
 
 export const dynamic = "force-dynamic";
@@ -77,6 +79,11 @@ export default async function LaunchExamplePage({ params }: { params: Promise<{ 
               reset: x.path.reset,
             }}
           />
+        </div>
+
+        {/* Скелет шагов. Слова — заполнители: их пишет владелец, не агент. */}
+        <div className="mt-12">
+          <ExampleFlow steps={exampleSteps(lang)} labels={exampleFlowLabels(lang)} />
         </div>
       </div>
     </>

@@ -139,6 +139,37 @@
   --fs-eyebrow: calc(0.75rem * var(--type-scale)); /* 12px */
 }
 
+/* ─── ДВЕ ПОДСКАЗКИ ШАГА (шаг 28-3, 2026-08-27) ──────────────────────────────
+   Владелец назвал их дословно: «контейнер голубой подсказка как информация» и
+   «контейнер оранжевый подсказка как это важно».
+
+   🔒 ТОКЕНАМИ, А НЕ КЛАССАМИ НА МЕСТЕ. `bg-blue-50` пишется один раз и через
+   месяц живёт в двенадцати файлах двенадцатью оттенками, а тёмную тему каждый
+   файл вспоминает по-своему. Здесь решение о цвете принимается в одном месте.
+
+   🔒 В ТЁМНОЙ ТЕМЕ НЕ «ТОТ ЖЕ ЦВЕТ ПОТЕМНЕЕ», А СВОЙ. Заливка светлой темы на
+   тёмном фоне даёт светящийся прямоугольник; поэтому фон уходит в прозрачность
+   от того же тона, а текст — наоборот, светлеет. */
+:root {
+  --callout-info-bg: oklch(0.97 0.02 240);
+  --callout-info-border: oklch(0.86 0.06 240);
+  --callout-info-fg: oklch(0.45 0.12 245);
+
+  --callout-important-bg: oklch(0.97 0.03 75);
+  --callout-important-border: oklch(0.85 0.09 70);
+  --callout-important-fg: oklch(0.5 0.14 55);
+}
+
+.dark {
+  --callout-info-bg: oklch(0.55 0.14 245 / 12%);
+  --callout-info-border: oklch(0.6 0.13 245 / 35%);
+  --callout-info-fg: oklch(0.85 0.07 240);
+
+  --callout-important-bg: oklch(0.65 0.15 65 / 12%);
+  --callout-important-border: oklch(0.7 0.14 65 / 35%);
+  --callout-important-fg: oklch(0.87 0.09 75);
+}
+
 :root { --app-w: 48rem; }
 html[data-app-width="wide"] { --app-w: calc(100vw - 64px - var(--app-sbw, 0px)); }
 [data-app-column] { width: 100%; max-width: var(--app-w); margin-left: auto; margin-right: auto; }
