@@ -17,7 +17,7 @@ import type { StepFormLabels } from "../../_components/launch/step-form.client";
 // шаг за шагом. Заезжать в `admin-translations.json` текст обязан тогда, когда
 // устоялся, иначе восемьдесят переводов делаются дважды. Записанный долг.
 
-export type StepOneStrings = {
+export type StepStrings = {
   /** Заголовок и подсказка страницы шага. */
   pageTitle: string;
   pageHint: string;
@@ -34,7 +34,7 @@ export type StepOneStrings = {
   form: StepFormLabels;
 };
 
-const ru: StepOneStrings = {
+const ru1: StepStrings = {
   pageTitle: "Стартовый шаблон",
   pageHint: "Путь от пустого репозитория до работающего сайта — по одному шагу за раз.",
 
@@ -62,16 +62,16 @@ const ru: StepOneStrings = {
     cta: "Сохранить адрес",
     busy: "Проверяем…",
     successTitle: "Вы завершили шаг {n} из {total}",
-    // 🔒 ОБЕЩАНИЕ ПЕРЕХОДА УБРАНО, ПОКА ПЕРЕХОДИТЬ НЕКУДА. Здесь стояло
-    // «Перейдёте к следующему шагу через несколько секунд», а шага второго ещё
-    // нет: тост обещал бы способность, которой нет.
-    successHint: "Следующий шаг — токен доступа; он появится здесь, когда будет построен",
+    // 🔒 ОБЕЩАНИЕ ВЕРНУЛОСЬ ВМЕСТЕ С ШАГОМ 2 (28-10): переходить теперь есть
+    // куда. Несколькими часами раньше здесь стояла честная строка «появится,
+    // когда будет построен» — ровно потому, что шага 2 не существовало.
+    successHint: "Перейдёте к следующему шагу — токен доступа — через несколько секунд",
     failureTitle: "Адрес не принят",
     failureFix: "Проверьте, что репозиторий существует и адрес скопирован целиком",
   },
 };
 
-const en: StepOneStrings = {
+const en1: StepStrings = {
   pageTitle: "Starter template",
   pageHint: "The way from an empty repository to a working site — one step at a time.",
 
@@ -99,16 +99,105 @@ const en: StepOneStrings = {
     cta: "Save the address",
     busy: "Checking…",
     successTitle: "You finished step {n} of {total}",
-    successHint: "The next step is the access token; it will appear here once it is built",
+    successHint: "You will move to the next step — the access token — in a few seconds",
     failureTitle: "The address was not accepted",
     failureFix: "Check that the repository exists and the address was copied in full",
   },
 };
 
-const DICT: Record<string, StepOneStrings> = { en, ru };
+const DICT1: Record<string, StepStrings> = { en: en1, ru: ru1 };
 
-export function stepOneStrings(lang: string): StepOneStrings {
-  return DICT[lang] ?? en;
+export function stepOneStrings(lang: string): StepStrings {
+  return DICT1[lang] ?? en1;
+}
+
+// ── ШАГ 2: ТОКЕН ДОСТУПА ────────────────────────────────────────────────────
+//
+// 🔒 ТЕКСТ СНОВА НЕ МОЙ. Шесть пунктов ниже — строка в строку `github.step2Steps`
+// из словаря панели: подробная инструкция по выпуску classic-токена, которую
+// владелец уже написал. Разделение на отдельный шаг — его требование, слова —
+// его же.
+//
+// 🔒 ОДНА ВЕЩЬ ИЗ ЖИВОГО МАСТЕРА СЮДА НЕ ПЕРЕЕХАЛА НАМЕРЕННО: ссылка «открыть
+// страницу токенов» (`github.step2Link`). Она ведёт на GitHub с параметрами
+// нужных прав и полезна — но это ВТОРОЕ действие на шаге, а закон «одно
+// действие — один шаг» здесь и проверяется. Ссылка вернётся тогда, когда
+// владелец скажет, считать ли её действием или частью описания.
+
+const ru2: StepStrings = {
+  pageTitle: "Стартовый шаблон",
+  pageHint: "Путь от пустого репозитория до работающего сайта — по одному шагу за раз.",
+
+  badge: "Шаг второй",
+  title: "Токен доступа",
+  lead: "Ключ, которым сервер получает право писать в ваш репозиторий.",
+  info:
+    "Токен хранится только на вашем сервере. Публичный репозиторий можно читать без токена, но запись в любой репозиторий требует токена.",
+  important:
+    "«Select scopes» — длинный список прав. Отметьте РОВНО ОДНО: «repo», первая строка, подписанная «Full control of private repositories». Пять вложенных пунктов отметятся сами. Больше не трогайте ничего: каждая лишняя галочка расширяет то, что сможет сделать украденный токен.",
+  actionLead:
+    "Выпустите classic-токен на GitHub и вставьте его ниже. Раздел называется «Tokens (classic)»: «Generate new token» → «Generate new token (classic)».",
+  bullets: [
+    "«Note» — название для себя, чтобы узнать этот токен через год. GitHub его не использует.",
+    "«Expiration» — срок жизни. Когда он истечёт, отправка просто перестанет работать. Длинный срок удобнее, короткий безопаснее.",
+    "Прокрутите вниз и нажмите «Generate token».",
+    "Скопируйте значение сразу: GitHub показывает его ОДИН раз. Уйдёте со страницы — прочитать больше нельзя, только заменить.",
+  ],
+  stepOf: "Шаг {n} из {total}",
+  done: "Шаг завершён",
+
+  form: {
+    inputLabel: "Токен доступа (classic, область repo)",
+    inputPlaceholder: "ghp_…",
+    inputHint: "Токен хранится на вашем сервере и не показывается больше нигде.",
+    cta: "Сохранить токен",
+    busy: "Проверяем…",
+    successTitle: "Вы завершили шаг {n} из {total}",
+    successHint: "Следующий шаг — проверка связи; он появится здесь, когда будет построен",
+    failureTitle: "Токен не принят",
+    failureFix: "Обычно у токена нет области repo либо он скопирован не целиком — выпустите новый",
+  },
+};
+
+const en2: StepStrings = {
+  pageTitle: "Starter template",
+  pageHint: "The way from an empty repository to a working site — one step at a time.",
+
+  badge: "Step two",
+  title: "Access token",
+  lead: "The key with which the server gets the right to write to your repository.",
+  info:
+    "The token is stored only on your server. A public repository can be read without a token, but writing to any repository requires one.",
+  important:
+    "«Select scopes» is a long list of rights. Tick EXACTLY ONE: «repo», the first line, marked «Full control of private repositories». Five nested items tick themselves. Touch nothing else: every extra tick widens what a stolen token could do.",
+  actionLead:
+    "Issue a classic token on GitHub and paste it below. The section is «Tokens (classic)»: «Generate new token» → «Generate new token (classic)».",
+  bullets: [
+    "«Note» is a name for yourself, so you recognise this token in a year. GitHub does not use it.",
+    "«Expiration» is its lifetime. When it expires, pushing simply stops working. A long term is more convenient, a short one is safer.",
+    "Scroll down and press «Generate token».",
+    "Copy the value at once: GitHub shows it ONCE. Leave the page and it can no longer be read, only replaced.",
+  ],
+  stepOf: "Step {n} of {total}",
+  done: "Step finished",
+
+  form: {
+    inputLabel: "Access token (classic, repo scope)",
+    inputPlaceholder: "ghp_…",
+    inputHint: "The token is kept on your server and shown nowhere else.",
+    cta: "Save the token",
+    busy: "Checking…",
+    successTitle: "You finished step {n} of {total}",
+    successHint: "The next step is the connection check; it will appear here once it is built",
+    failureTitle: "The token was not accepted",
+    failureFix: "Usually the token lacks the repo scope or was not copied in full — issue a new one",
+  },
+};
+
+const DICT2: Record<string, StepStrings> = { en: en2, ru: ru2 };
+
+export function stepTwoStrings(lang: string): StepStrings {
+  return DICT2[lang] ?? en2;
 }
 
 /**

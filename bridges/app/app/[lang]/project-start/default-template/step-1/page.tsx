@@ -21,6 +21,7 @@
 // положить шестнадцать пунктов в меню панели.
 
 import { getAdminStrings } from "@/lib/i18n/admin-strings";
+import { adminHref } from "@/lib/admin-nav";
 import { PageShell } from "../../../_components/page-shell";
 import { StepSection } from "../../../_components/launch/step-section";
 import { StepForm } from "../../../_components/launch/step-form.client";
@@ -74,13 +75,11 @@ export default async function DefaultTemplateStepOne(
             failureTitle: x.form.failureTitle,
             failureFix: x.form.failureFix,
           }}
-          // 🔒 ПЕРЕХОДА ПОКА НЕТ, И ЭТО НЕ ЗАБЫТЫЙ ПРОПС. Здесь стоял адрес
-          // `…/default-template/step-2`, и он вёл в 404: шаг второй ещё не
-          // построен. Тост при этом честно обещал «перейдёте к следующему шагу»
-          // — то есть страница обещала способность, которой нет, а это и есть
-          // приглашение импровизировать (первый закон `ANTI-PATTERNS.md`).
-          // Адрес вернётся сюда одной строкой, когда появится шаг 2.
-          nextHref={undefined}
+          // 🔒 ПЕРЕХОД ВЕРНУЛСЯ ВМЕСТЕ С ШАГОМ 2 (28-10). Несколькими часами
+          // раньше здесь стоял адрес шага, которого не существовало: тост обещал
+          // переход, а человек попадал в 404 — названная, но не обеспеченная
+          // возможность. Теперь маршрут есть, и обещание в тосте снова честное.
+          nextHref={`${adminHref(lang, "project-start")}/default-template/step-2`}
         />
       </StepSection>
     </PageShell>

@@ -58,12 +58,24 @@ export function StepForm({
   total,
   labels,
   nextHref,
+  secret = false,
 }: {
   index: number;
   total: number;
   labels: StepFormLabels;
-  /** Куда вести после удачи. Пусто — шаг последний, перехода нет. */
+  /** Куда вести после удачи. Пусто — шага дальше нет, и тост его не обещает. */
   nextHref?: string;
+  /**
+   * Значение — секрет (токен, ключ, пароль).
+   *
+   * 🔒 ЧТО ЭТО МЕНЯЕТ И ЧЕГО НЕ МЕНЯЕТ. Поле перестаёт показывать значение и
+   * просит браузер не сохранять и не подсказывать его: чужой глаз через плечо и
+   * автозаполнение — самые дешёвые способы утечь. Чего это НЕ делает: не
+   * защищает значение в памяти вкладки и не заменяет того, что секрет обязан
+   * уезжать телом запроса, а не строкой адреса. Признак — про экран, а не про
+   * безопасность целиком, и путать эти два уровня опасно.
+   */
+  secret?: boolean;
 }) {
   const router = useRouter();
   const [value, setValue] = useState("");
@@ -106,6 +118,10 @@ export function StepForm({
           onChange={(e) => setValue(e.target.value)}
           placeholder={labels.inputPlaceholder}
           disabled={busy}
+          type={secret ? "password" : "text"}
+          autoComplete={secret ? "off" : undefined}
+          spellCheck={secret ? false : undefined}
+          data-secret={secret ? "true" : undefined}
           className="h-11"
         />
         {labels.inputHint && <Small>{labels.inputHint}</Small>}
