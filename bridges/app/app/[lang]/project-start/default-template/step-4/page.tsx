@@ -21,7 +21,7 @@ import { VerifyStep } from "../../../_components/launch/verify-step.client";
 import { StepNav } from "../../../_components/launch/step-nav";
 import { Small } from "@/components/ui/typography";
 import { Check } from "lucide-react";
-import { flowPushed, flowPushedAt } from "@/lib/launch-flow";
+import { flowPushed, flowPushedAt, flowValue } from "@/lib/launch-flow";
 import { DEFAULT_TEMPLATE_TOTAL, DEFAULT_TEMPLATE_BUILT } from "../_strings";
 import { stepFourStrings } from "../_step4";
 
@@ -35,6 +35,7 @@ export default async function DefaultTemplateStepFour(
   const x = stepFourStrings(lang);
   const pushed = flowPushed();
   const pushedAt = flowPushedAt();
+  const repoUrl = flowValue("repo-url");
 
   return (
     <PageShell
@@ -66,6 +67,21 @@ export default async function DefaultTemplateStepFour(
             ? `${adminHref(lang, "project-start")}/default-template/step-${n}`
             : undefined
         }
+        // 🔒 ССЫЛКА ВЕДЁТ НА РЕПОЗИТОРИЙ ЧЕЛОВЕКА, А НЕ НА ФОРМУ GITHUB, и это
+        // единственное место пути, где так. На шагах 1 и 2 ссылка отвечала на
+        // вопрос «куда идти делать»; здесь — на вопрос «как убедиться, что
+        // получилось». Владелец назвал это прямо: «личный способ для того, чтобы
+        // пользователь мог проверить, добрался ли новый код до его репозитория».
+        //
+        // 🔒 АДРЕС БЕРЁТСЯ ИЗ СОХРАНЁННОГО ЗНАЧЕНИЯ ПЕРВОГО ШАГА. Собрать его
+        // заново из чего-либо ещё значило бы завести второй источник правды об
+        // одном факте; нет сохранённого адреса — нет и ссылки, а не ссылка в
+        // никуда.
+        //
+        // Открывается в новой вкладке (это делает `StepLink`): уйдя из панели в
+        // том же окне, человек теряет шаг и возвращается кнопкой «назад», если
+        // догадается.
+        link={repoUrl ? { href: repoUrl, label: x.linkLabel } : undefined}
       >
         <div className="flex flex-col gap-5">
           {pushed && (

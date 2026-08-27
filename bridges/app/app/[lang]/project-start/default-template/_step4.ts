@@ -24,6 +24,8 @@ export type StepFourStrings = {
   reasons: Record<string, string>;
   reasonUnknown: string;
   pushedAt: string;
+  /** Подпись ссылки на репозиторий человека — способ убедиться, что код доехал. */
+  linkLabel: string;
   goPrev: string;
   goNext: string;
 };
@@ -62,6 +64,7 @@ const ru: StepFourStrings = {
   },
   reasonUnknown: "Причина неизвестна. Попробуйте ещё раз; если повторится — сообщите нам.",
   pushedAt: "Отправлено:",
+  linkLabel: "ваш репозиторий",
   goPrev: "К предыдущему шагу",
   goNext: "К следующему шагу",
 };
@@ -100,6 +103,7 @@ const en: StepFourStrings = {
   },
   reasonUnknown: "The reason is unknown. Try again; if it repeats, tell us.",
   pushedAt: "Pushed:",
+  linkLabel: "your repository",
   goPrev: "To the previous step",
   goNext: "To the next step",
 };
