@@ -805,7 +805,12 @@
       "reasonNotImplemented": "This check is not built yet.",
       "reasonUnknown": "Unknown reason.",
       "createRepoCta": "Create an empty repository on GitHub",
-      "issueKeyCta": "Issue an access key"
+      "issueKeyCta": "Issue an access key",
+      "verifyRepoCta": "Check repository",
+      "verifyKeyCta": "Check the key",
+      "verifyUploadCta": "Check project",
+      "verifying": "Checking…",
+      "verifyFailed": "Check failed:"
     },
     "githubAbout": {
       "intro": "Three buttons move your project between three places: this server, your repository on GitHub, and the live application your visitors see. Here is what each one does and in which direction.",
@@ -4220,7 +4225,12 @@
       "reasonNotImplemented": "Эта проверка ещё не построена.",
       "reasonUnknown": "Причина неизвестна.",
       "createRepoCta": "Создать пустой репозиторий на GitHub",
-      "issueKeyCta": "Выдать ключ доступа"
+      "issueKeyCta": "Выдать ключ доступа",
+      "verifyRepoCta": "Проверить репозиторий",
+      "verifyKeyCta": "Проверить ключ",
+      "verifyUploadCta": "Проверить проект",
+      "verifying": "Проверяю…",
+      "verifyFailed": "Проверка не прошла:"
     },
     "githubAbout": {
       "intro": "Три кнопки перемещают ваш проект между тремя местами: этим сервером, вашим репозиторием на GitHub и работающим приложением, которое видят посетители. Вот что делает каждая и в какую сторону.",

@@ -498,6 +498,16 @@ export type AdminStrings = {
     reasonNotImplemented: string; reasonUnknown: string;
     /** Крупная переливающаяся надпись первого шага и подпись кнопки ключа. */
     createRepoCta: string; issueKeyCta: string;
+    /**
+     * Подписи кнопок ПРОВЕРКИ — у каждого машинного шага своя.
+     *
+     * ✗ Оплачено 2026-08-27 в 25-4: кнопка проверки носила `checkLabel`, то есть
+     * «Я выполнил этот шаг» — подпись ЧЕКБОКСА. Кнопка машинного шага говорила
+     * человеку ровно обратное тому, что делала: проверяет система, а надпись
+     * предлагала ему подтвердить самому.
+     */
+    verifyRepoCta: string; verifyKeyCta: string; verifyUploadCta: string;
+    verifying: string; verifyFailed: string;
     restart: string; restartTitle: string; restartBody: string;
     restartKeep: string; restartWithGithub: string; restartWithGithubHint: string;
     restartCancel: string; restartDone: string; restartFailed: string;

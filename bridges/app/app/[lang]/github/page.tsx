@@ -30,6 +30,7 @@ import { StepBeads } from "./_components/step-beads";
 import { LaunchStep } from "./_components/launch-step";
 import { ShimmerLink } from "./_components/shimmer-link";
 import { VerifyButton } from "./_components/verify-button.client";
+import { StepCheck } from "./_components/step-check.client";
 
 export const dynamic = "force-dynamic";
 
@@ -137,8 +138,18 @@ export default async function GitHubPage({ params }: { params: Promise<{ lang: s
 
   // Причины отказа проверки — плоскими ключами, собираются в карту здесь, на
   // сервере. Островку уезжают только те строки, которые ему нужны.
+  //
+  // ✗ Подпись кнопки была `checkLabel` — «Я выполнил этот шаг», то есть подпись
+  // ЧЕКБОКСА. Кнопка машинного шага говорила человеку обратное тому, что делает:
+  // проверяет система, а надпись предлагала подтвердить самому. У каждого
+  // машинного шага теперь своя подпись.
+  const verifyCta: Partial<Record<string, string>> = {
+    repo: l.verifyRepoCta, key: l.verifyKeyCta, upload: l.verifyUploadCta,
+  };
   const verifyLabels = {
-    action: l.checkLabel, checking: l.checkSaving, failedPrefix: l.checkFailed,
+    action: (cur && verifyCta[cur.id]) || l.verifyRepoCta,
+    checking: l.verifying,
+    failedPrefix: l.verifyFailed,
     reasons: {
       repo_not_set: l.reasonRepoNotSet, repo_not_found: l.reasonRepoNotFound,
       auth_failed: l.reasonAuthFailed, network: l.reasonNetwork,
@@ -289,11 +300,20 @@ export default async function GitHubPage({ params }: { params: Promise<{ lang: s
             </div>
           ) : cur.id === "upload" ? (
             <VerifyButton step="upload" labels={verifyLabels} pulse />
+          ) : cur.kind === "checked" ? (
+            // 🔒 Человеческий шаг закрывает ЧЕЛОВЕК, и отметка снимаемая. У панели
+            // нет глаз на его машине: проверить, что папка создана и подписка
+            // активирована, она не может и делать вид не будет.
+            <StepCheck
+              step={cur.id}
+              initial={cur.done}
+              labels={{ label: l.checkLabel, saving: l.checkSaving, failed: l.checkFailed }}
+            />
           ) : (
-            // ⏳ Шаги 4–13 наполняются в 25-4…25-6. До тех пор блок честно
-            // показывает суть шага прозой и не притворяется работающим.
+            // ⏳ Машинный шаг `adopt` — поток B, строится в 25-7. До тех пор блок
+            // честно показывает суть прозой и не притворяется работающим.
             <p className="rounded-md border border-dashed border-border px-3 py-2 text-[11px] text-muted-foreground">
-              {g.setupTitle}
+              {l.reasonNotImplemented}
             </p>
           )}
         </LaunchStep>
