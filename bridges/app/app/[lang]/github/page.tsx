@@ -31,6 +31,7 @@ import { LaunchStep } from "./_components/launch-step";
 import { ShimmerLink } from "./_components/shimmer-link";
 import { VerifyButton } from "./_components/verify-button.client";
 import { StepCheck } from "./_components/step-check.client";
+import { CopyBlock } from "./_components/copy-block.client";
 
 export const dynamic = "force-dynamic";
 
@@ -300,6 +301,38 @@ export default async function GitHubPage({ params }: { params: Promise<{ lang: s
             </div>
           ) : cur.id === "upload" ? (
             <VerifyButton step="upload" labels={verifyLabels} pulse />
+          ) : cur.id === "first-prompt" ? (
+            // 🔒 АДРЕС РЕПОЗИТОРИЯ ПОДСТАВЛЯЕТСЯ, А ПУСТОТА НАЗЫВАЕТСЯ ВСЛУХ.
+            // Инструкция без адреса бесполезна, но `{repoUrl}` в чате выглядит
+            // поломкой, а пустое место — недосмотром. Честная скобка говорит
+            // человеку, что вернуться надо к первому шагу.
+            <div className="space-y-3">
+              <CopyBlock
+                text={fill(l.firstPromptText, { repoUrl: launch.repoUrl || l.repoUnknown })}
+                labels={{ copy: l.copyCta, copied: l.copiedNote, failed: l.copyFailed }}
+              />
+              <StepCheck
+                step={cur.id}
+                initial={cur.done}
+                labels={{ label: l.checkLabel, saving: l.checkSaving, failed: l.checkFailed }}
+              />
+            </div>
+          ) : cur.id === "env" ? (
+            // Шаг уводит на соседнюю вкладку и обязан привести обратно: ссылка
+            // рядом с галочкой, а не вместо неё.
+            <div className="space-y-3">
+              <Link
+                href={adminHref(lang, "env")}
+                className="launch-pulse inline-flex items-center gap-2 rounded-md bg-orange-600 px-4 py-2 text-[12px] font-medium text-white hover:bg-orange-500"
+              >
+                {s.pages.env.title}
+              </Link>
+              <StepCheck
+                step={cur.id}
+                initial={cur.done}
+                labels={{ label: l.checkLabel, saving: l.checkSaving, failed: l.checkFailed }}
+              />
+            </div>
           ) : cur.kind === "checked" ? (
             // 🔒 Человеческий шаг закрывает ЧЕЛОВЕК, и отметка снимаемая. У панели
             // нет глаз на его машине: проверить, что папка создана и подписка

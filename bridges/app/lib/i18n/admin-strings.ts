@@ -508,6 +508,17 @@ export type AdminStrings = {
      */
     verifyRepoCta: string; verifyKeyCta: string; verifyUploadCta: string;
     verifying: string; verifyFailed: string;
+    /** Блок копируемой инструкции и адрес репозитория, если он ещё не назван. */
+    copyCta: string; copiedNote: string; copyFailed: string; repoUnknown: string;
+    /**
+     * Стартовая инструкция агенту — ОДНОЙ строкой словаря, а не файлом прозы.
+     *
+     * 🔒 Это текст, который человек копирует и отправляет машине: в нём нет
+     * абзацев, ссылок и разметки, зато есть подстановка `{repoUrl}`. Файл
+     * `_content/` разбирается как markdown и годится для чтения глазами; здесь
+     * важна ровно та строка, что уедет в чат, — без обёрток и без потерь.
+     */
+    firstPromptText: string;
     restart: string; restartTitle: string; restartBody: string;
     restartKeep: string; restartWithGithub: string; restartWithGithubHint: string;
     restartCancel: string; restartDone: string; restartFailed: string;

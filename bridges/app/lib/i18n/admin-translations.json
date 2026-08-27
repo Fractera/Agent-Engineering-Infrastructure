@@ -810,7 +810,12 @@
       "verifyKeyCta": "Check the key",
       "verifyUploadCta": "Check project",
       "verifying": "Checking…",
-      "verifyFailed": "Check failed:"
+      "verifyFailed": "Check failed:",
+      "copyCta": "Copy",
+      "copiedNote": "Copied",
+      "copyFailed": "The clipboard is unavailable — select the text and copy it by hand.",
+      "repoUnknown": "(repository not named yet)",
+      "firstPromptText": "We are starting development of a Fractera project.\n\nProject repository: {repoUrl}\n\nIMPORTANT, ORDER OF WORK: in the next step I will hand you the environment file .env.local.\nThe project will not start without it. DO NOT install dependencies and do not run a build\nuntil that file is with you — wait for it.\n\nFor now: read the project instruction and tell me you understand the setup and are waiting\nfor the environment."
     },
     "githubAbout": {
       "intro": "Three buttons move your project between three places: this server, your repository on GitHub, and the live application your visitors see. Here is what each one does and in which direction.",
@@ -4230,7 +4235,12 @@
       "verifyKeyCta": "Проверить ключ",
       "verifyUploadCta": "Проверить проект",
       "verifying": "Проверяю…",
-      "verifyFailed": "Проверка не прошла:"
+      "verifyFailed": "Проверка не прошла:",
+      "copyCta": "Скопировать",
+      "copiedNote": "Скопировано",
+      "copyFailed": "Буфер обмена недоступен — выделите текст и скопируйте вручную.",
+      "repoUnknown": "(репозиторий ещё не назван)",
+      "firstPromptText": "Мы начинаем разработку проекта Fractera.\n\nРепозиторий проекта: {repoUrl}\n\nВАЖНО, ПОРЯДОК: на следующем шаге я передам тебе файл переменных окружения .env.local.\nБез него проект не поднимется. НЕ УСТАНАВЛИВАЙ зависимости и не запускай сборку, пока\nфайл не окажется у тебя — дождись его.\n\nСейчас: прочитай инструкцию проекта и скажи, что понял устройство и ждёшь окружение."
     },
     "githubAbout": {
       "intro": "Три кнопки перемещают ваш проект между тремя местами: этим сервером, вашим репозиторием на GitHub и работающим приложением, которое видят посетители. Вот что делает каждая и в какую сторону.",
