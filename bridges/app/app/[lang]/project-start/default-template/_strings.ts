@@ -31,6 +31,10 @@ export type StepStrings = {
   bullets: string[];
   stepOf: string;
   done: string;
+  /** Подписи навигации пройденного шага и замены значения (28-18). */
+  goPrev: string;
+  goNext: string;
+  replace: string;
   /** Подпись ссылки-действия: слово, стоящее перед адресом. */
   linkLabel: string;
   /**
@@ -42,7 +46,16 @@ export type StepStrings = {
    */
   shotAlt?: string;
   shotCaption?: string;
-  form: StepFormLabels;
+  /**
+   * Слова формы БЕЗ подписей навигации.
+   *
+   * 🔒 `goPrev`, `goNext` и `replace` живут на уровне ШАГА, а не формы, и это не
+   * мелочь размещения. Они одинаковы у всех шагов пути: «к следующему шагу»
+   * значит одно и то же на первом и на десятом. Положи их внутрь формы — и
+   * шестнадцать шагов получат шестнадцать копий одной фразы, которые разойдутся
+   * при первой правке текста.
+   */
+  form: Omit<StepFormLabels, "goPrev" | "goNext" | "replace">;
 };
 
 const ru1: StepStrings = {
@@ -65,6 +78,9 @@ const ru1: StepStrings = {
   ],
   stepOf: "Шаг {n} из {total}",
   done: "Шаг завершён",
+  goPrev: "К предыдущему шагу",
+  goNext: "К следующему шагу",
+  replace: "Заменить значение",
   linkLabel: "ссылка",
   shotAlt:
     "Страница GitHub «Create a new repository»: слева выбор владельца, справа обязательное поле «Repository name», ниже необязательное описание и выбор видимости — публичный или приватный.",
@@ -106,6 +122,9 @@ const en1: StepStrings = {
   ],
   stepOf: "Step {n} of {total}",
   done: "Step finished",
+  goPrev: "To the previous step",
+  goNext: "To the next step",
+  replace: "Replace the value",
   linkLabel: "link",
   shotAlt:
     "The GitHub page «Create a new repository»: the owner picker on the left, the required «Repository name» field on the right, then an optional description and the visibility choice — public or private.",
@@ -164,6 +183,9 @@ const ru2: StepStrings = {
   ],
   stepOf: "Шаг {n} из {total}",
   done: "Шаг завершён",
+  goPrev: "К предыдущему шагу",
+  goNext: "К следующему шагу",
+  replace: "Заменить значение",
   linkLabel: "ссылка",
   shotAlt:
     "Страница GitHub «New personal access token (classic)»: поле Note, срок жизни «No expiration» с предупреждением, и список прав, где отмечена одна галочка «repo», а пять вложенных отметились сами.",
@@ -203,6 +225,9 @@ const en2: StepStrings = {
   ],
   stepOf: "Step {n} of {total}",
   done: "Step finished",
+  goPrev: "To the previous step",
+  goNext: "To the next step",
+  replace: "Replace the value",
   linkLabel: "link",
   shotAlt:
     "The GitHub page «New personal access token (classic)»: the Note field, «No expiration» with a warning, and the scope list where exactly one box — «repo» — is ticked, with five nested ones ticked by themselves.",

@@ -111,6 +111,9 @@ export default async function DefaultTemplateStepOne(
             successHint: x.form.successHint,
             failureTitle: x.form.failureTitle,
             failureFix: x.form.failureFix,
+            goPrev: x.goPrev,
+            goNext: x.goNext,
+            replace: x.replace,
           }}
           // 🔒 ПЕРЕХОД ВЕРНУЛСЯ ВМЕСТЕ С ШАГОМ 2 (28-10). Несколькими часами
           // раньше здесь стоял адрес шага, которого не существовало: тост обещал

@@ -26,7 +26,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Check } from "lucide-react";
+import { Loader2, Check, ArrowLeft, ArrowRight } from "lucide-react";
+import Link from "next/link";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -45,6 +46,19 @@ export type StepFormLabels = {
   failureTitle: string;
   /** Что делать — показывается, когда причины нет. */
   failureFix: string;
+  /**
+   * Подписи навигации ПРОЙДЕННОГО шага.
+   *
+   * 🔒 ЗАЧЕМ ОНИ ПОЯВИЛИСЬ (28-18, 2026-08-27). Владелец вернулся на шаг, где
+   * всё уже сохранено, и увидел неактивную кнопку «Сохранить адрес»: «горит
+   * неактивная кнопка… здесь нужно допилить логику». Он прав, и дефект глубже
+   * внешнего вида — на пройденном шаге ГЛАВНОЕ ДЕЙСТВИЕ ДРУГОЕ. Сохранять
+   * нечего: значение уже есть. Человеку нужно идти дальше или вернуться.
+   */
+  goPrev: string;
+  goNext: string;
+  /** Подпись кнопки сохранения, когда значение вводят ЗАНОВО поверх сохранённого. */
+  replace: string;
 };
 
 const ADVANCE_MS = 3000;
@@ -58,6 +72,7 @@ export function StepForm({
   total,
   labels,
   nextHref,
+  prevHref,
   secret = false,
   flowStep,
   saved = "",
@@ -82,6 +97,16 @@ export function StepForm({
   saved?: string;
   /** Куда вести после удачи. Пусто — шага дальше нет, и тост его не обещает. */
   nextHref?: string;
+  /**
+   * Адрес предыдущего шага. Пусто — шаг первый, назад идти некуда.
+   *
+   * 🔒 ТРИ ПОЛОЖЕНИЯ НАВИГАЦИИ, НАЗВАННЫЕ ВЛАДЕЛЬЦЕМ: «перейти к следующему»
+   * (первый шаг) · «к предыдущему и к следующему» (середина) · «к предыдущему»
+   * (последний). Все три получаются из наличия двух адресов, а не из отдельного
+   * признака: признак «какое положение» разошёлся бы с адресами на первой же
+   * вставке шага в середину пути.
+   */
+  prevHref?: string;
   /**
    * Значение — секрет (токен, ключ, пароль).
    *
@@ -186,16 +211,58 @@ export function StepForm({
         {labels.inputHint && <Small>{labels.inputHint}</Small>}
       </label>
 
-      <Button
-        type="button"
-        onClick={submit}
-        disabled={!ready || busy}
-        data-step-cta
-        className="h-11 w-full text-[length:var(--fs-small)]"
-      >
-        {busy && <Loader2 size={16} className="animate-spin" />}
-        {busy ? labels.busy : labels.cta}
-      </Button>
+      {/* 🔒 ЕДИНСТВЕННАЯ КНОПКА ШАГА ИМЕЕТ ДВА СОСТОЯНИЯ, И ЭТО ЧАСТЬ СТАНДАРТА,
+          А НЕ ЗАПЛАТКА НА ОДНУ СТРАНИЦУ (28-18, 2026-08-27).
+
+          Пока шаг НЕ пройден — она сохраняет. Когда пройден и человек ничего не
+          вводит — сохранять нечего, и на её месте стоит НАВИГАЦИЯ. Владелец
+          нашёл это, вернувшись на готовый шаг: «горит неактивная кнопка
+          „сохранить адрес“… здесь нужно допилить логику».
+
+          🔒 ДЕФЕКТ БЫЛ ГЛУБЖЕ ВНЕШНЕГО ВИДА. Неактивная кнопка не просто
+          некрасива — она объявляет главным действием шага то, которое на нём уже
+          невозможно. Человек читает «сохранить» и ищет, что бы сохранить, вместо
+          того чтобы идти дальше.
+
+          🔒 СТОИТ ВВЕСТИ ЗНАЧЕНИЕ — И СОХРАНЕНИЕ ВОЗВРАЩАЕТСЯ. Пройденный шаг не
+          заперт: значение можно заменить, и тогда кнопка снова становится
+          кнопкой сохранения, но подписанной иначе — «заменить», а не
+          «сохранить»: заменять и записывать впервые для человека разные вещи. */}
+      {saved && !ready ? (
+        <div className="flex flex-col gap-3 sm:flex-row" data-step-nav>
+          {prevHref && (
+            <Link
+              href={prevHref}
+              data-nav-prev
+              className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-lg border border-border px-4 text-[length:var(--fs-small)] font-medium transition-colors hover:border-foreground/30"
+            >
+              <ArrowLeft size={16} aria-hidden className="shrink-0" />
+              {labels.goPrev}
+            </Link>
+          )}
+          {nextHref && (
+            <Link
+              href={nextHref}
+              data-nav-next
+              className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-[length:var(--fs-small)] font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            >
+              {labels.goNext}
+              <ArrowRight size={16} aria-hidden className="shrink-0" />
+            </Link>
+          )}
+        </div>
+      ) : (
+        <Button
+          type="button"
+          onClick={submit}
+          disabled={!ready || busy}
+          data-step-cta
+          className="h-11 w-full text-[length:var(--fs-small)]"
+        >
+          {busy && <Loader2 size={16} className="animate-spin" />}
+          {busy ? labels.busy : saved ? labels.replace : labels.cta}
+        </Button>
+      )}
     </div>
   );
 }

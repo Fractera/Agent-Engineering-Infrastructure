@@ -106,10 +106,14 @@ export default async function DefaultTemplateStepTwo(
             successHint: x.form.successHint,
             failureTitle: x.form.failureTitle,
             failureFix: x.form.failureFix,
+            goPrev: x.goPrev,
+            goNext: x.goNext,
+            replace: x.replace,
           }}
           // 🔒 ПЕРЕХОД ПОЯВИЛСЯ ВМЕСТЕ С ШАГОМ 3 (28-16). До этого его здесь не
           // было намеренно: шага не существовало, и тост его не обещал.
           nextHref={`${adminHref(lang, "project-start")}/default-template/step-3`}
+          prevHref={`${adminHref(lang, "project-start")}/default-template/step-1`}
         />
       </StepSection>
     </PageShell>
