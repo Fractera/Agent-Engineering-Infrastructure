@@ -26,6 +26,7 @@ import translations from "./admin-translations.json";
 import { ADMIN_LANGUAGES } from "@/config/translations/admin-languages";
 import type { AdminPageSlug, NavGroup, MappedGroup } from "@/lib/admin-nav";
 import type { ProjectTypeId } from "@/lib/project-types";
+import type { LaunchStepId } from "@/lib/launch.shared";
 
 export type AdminStrings = {
   // header
@@ -458,6 +459,37 @@ export type AdminStrings = {
     helpFirstTitle: string; helpFirst: string;
     helpTokenTitle: string; helpToken: string;
     helpDataTitle: string; helpData: string;
+  };
+  // Мастер запуска проекта (шаг 25). Живёт на той же странице, что и подключение
+  // GitHub: GitHub — первые три шага пути, а не отдельная работа.
+  //
+  // 🔒 ЗАГОЛОВКИ ШАГОВ — `Record<LaunchStepId, …>`, и это единственная механическая
+  // гарантия во всём разделе: шаг, добавленный в `lib/launch.shared.ts` без слов,
+  // не соберётся. Запрет в тексте не исполняется — тип исполняется.
+  //
+  // 🔒 ДЛИННОЙ ПРОЗЫ ЗДЕСЬ НЕТ И НЕ БУДЕТ. Пояснения на три абзаца и инструкции,
+  // которые человек копирует агенту, живут файлами `_content/launch-*.<lang>.md`:
+  // их правят как текст, а не как ключи, они применяются без пересборки, и
+  // корпус на 82 языка не растёт на каждый абзац.
+  launch: {
+    // Экран выбора двери — то, что видно ВМЕСТО всего остального, пока путь не выбран.
+    chooseTitle: string; chooseLead: string;
+    starterTitle: string; starterBody: string; starterCta: string;
+    starterMoreLabel: string; starterMore: string;
+    adoptTitle: string; adoptBody: string; adoptCta: string;
+    adoptMoreLabel: string; adoptMore: string;
+    /** Третья кнопка НИЧЕГО не запускает — только объясняет, где живёт переезд. */
+    migrationCta: string; migrationTitle: string; migrationOpen: string;
+    chooseFailed: string;
+    // Общая рамка мастера: верёвочка, свёрнутый пройденный шаг, галочка, выход.
+    stepOf: string; stepDone: string; reopen: string;
+    checkLabel: string; checkSaving: string; checkFailed: string;
+    machineOnly: string;
+    restart: string; restartTitle: string; restartBody: string;
+    restartKeep: string; restartWithGithub: string; restartWithGithubHint: string;
+    restartCancel: string; restartDone: string; restartFailed: string;
+    /** Заголовок и одна строка сути — у КАЖДОГО шага обеих дверей. */
+    steps: Record<LaunchStepId, { title: string; lead: string }>;
   };
   githubAbout: {
     intro: string;

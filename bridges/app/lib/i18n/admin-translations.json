@@ -701,6 +701,102 @@
       "helpDataTitle": "It carries files, never data.",
       "helpData": "Pages, components and configuration travel through git. Rows, uploaded files and vectors stay on the server and are not in the repository at all — they are backed up separately, in Export data. Restoring a repository does not bring data back, and restoring data does not bring code back."
     },
+    "launch": {
+      "chooseTitle": "How do you want to start?",
+      "chooseLead": "Two roads lead into development, and they are not interchangeable. Pick one — the rest of this page appears after you do.",
+      "starterTitle": "Start from the Fractera starter",
+      "starterBody": "This server already carries a working starter project. You create an empty repository on GitHub, send the starter into it, and develop from there.",
+      "starterCta": "Put the Fractera starter on GitHub",
+      "starterMoreLabel": "What this means",
+      "starterMore": "Nothing is downloaded and nothing is replaced: the project you already have becomes yours on GitHub. This is also the road to take if you plan to move an existing project onto Fractera later — that migration starts from a working starter.",
+      "adoptTitle": "Connect another Fractera project",
+      "adoptBody": "You already have a project built on the Fractera architecture and kept on GitHub. This server drops its own starter and runs your project instead.",
+      "adoptCta": "Connect a repository with a Fractera project",
+      "adoptMoreLabel": "What this means",
+      "adoptMore": "The starter now on this server is destroyed, and nothing brings it back except installing it again. Your settings, your data and your uploaded files stay where they are. Connect a repository that really is built on the Fractera architecture: a project from another framework will not build, and the panel will say so rather than guess.",
+      "migrationCta": "Migrating to the Fractera architecture",
+      "migrationTitle": "Migrating to the Fractera architecture",
+      "migrationOpen": "Open “Development mode”",
+      "chooseFailed": "The choice was not saved.",
+      "stepOf": "Step {n} of {total}",
+      "stepDone": "Done",
+      "reopen": "Open again",
+      "checkLabel": "I have done this step",
+      "checkSaving": "Saving…",
+      "checkFailed": "The mark was not saved.",
+      "machineOnly": "This step closes with a check, not with a tick: the answer comes from GitHub.",
+      "restart": "Start over",
+      "restartTitle": "Start over",
+      "restartBody": "The wizard returns to the choice screen and every tick you set is cleared. Claude Code on your machine is not touched — a mark about a program you installed is not ours to erase.",
+      "restartKeep": "Start over, keep the GitHub connection",
+      "restartWithGithub": "Start over and erase the GitHub connection",
+      "restartWithGithubHint": "The repository address and the access key are deleted from this server. You will have to enter them again.",
+      "restartCancel": "Cancel",
+      "restartDone": "The wizard has been reset.",
+      "restartFailed": "The reset failed.",
+      "steps": {
+        "repo": {
+          "title": "The repository on GitHub",
+          "lead": "An empty repository is where your project will live."
+        },
+        "key": {
+          "title": "The security key",
+          "lead": "GitHub lets this server write only with a key you issue."
+        },
+        "upload": {
+          "title": "Send the project",
+          "lead": "Until this is pressed, the repository stays empty."
+        },
+        "adopt": {
+          "title": "Replace the project",
+          "lead": "The starter is destroyed and your repository takes its place."
+        },
+        "live-check": {
+          "title": "Check that it runs",
+          "lead": "Open your site and confirm the project is alive."
+        },
+        "claude-code": {
+          "title": "Claude Code",
+          "lead": "The agent that is going to write your code."
+        },
+        "folder": {
+          "title": "A folder of its own",
+          "lead": "One project, one folder — this is what makes the agent effective."
+        },
+        "open-folder": {
+          "title": "Open that folder in Claude Code",
+          "lead": "The agent works in the folder you choose at start."
+        },
+        "subscription": {
+          "title": "Sign in to your subscription",
+          "lead": "A subscription belongs to the browser it was paid in."
+        },
+        "first-prompt": {
+          "title": "The starting instruction",
+          "lead": "The first message, telling the agent where the project lives."
+        },
+        "env": {
+          "title": "Environment variables",
+          "lead": "The keys that point your local copy at this server."
+        },
+        "drop-env": {
+          "title": "Hand the file to the agent",
+          "lead": "Drag the downloaded file into the Claude Code window."
+        },
+        "install": {
+          "title": "Dependencies and localhost:3000",
+          "lead": "Install the packages and see the project in your browser."
+        },
+        "first-change": {
+          "title": "The first change",
+          "lead": "Your company name, put in by the agent through a development step."
+        },
+        "first-deploy": {
+          "title": "The first deployment",
+          "lead": "The same change, seen at your own address on the internet."
+        }
+      }
+    },
     "githubAbout": {
       "intro": "Three buttons move your project between three places: this server, your repository on GitHub, and the live application your visitors see. Here is what each one does and in which direction.",
       "pushTitle": "Push — from this server to GitHub",
@@ -1360,8 +1456,8 @@
         "hint": "The key and the models the project uses."
       },
       "github": {
-        "title": "Connect GitHub",
-        "hint": "Connect the repository this server pushes to and pulls from."
+        "title": "Project launch",
+        "hint": "From an empty repository to your first change, live at your own address."
       },
       "github-about": {
         "title": "About GitHub",
@@ -4010,6 +4106,102 @@
       "helpDataTitle": "Через него едут файлы, но не данные.",
       "helpData": "Страницы, компоненты и настройки ездят через git. Строки, загруженные файлы и векторы остаются на сервере и в репозитории отсутствуют вовсе — для них есть отдельная выгрузка данных. Восстановление репозитория не вернёт данные, а восстановление данных не вернёт код."
     },
+    "launch": {
+      "chooseTitle": "С чего вы начинаете?",
+      "chooseLead": "В разработку ведут две дороги, и они не взаимозаменяемы. Выберите одну — всё остальное на этой странице появится после выбора.",
+      "starterTitle": "Начать со стартового шаблона Fractera",
+      "starterBody": "На этом сервере уже стоит работающий стартовый проект. Вы заводите пустой репозиторий на GitHub, отправляете шаблон туда и дальше развиваете его.",
+      "starterCta": "Установить стартовый шаблон Fractera на GitHub",
+      "starterMoreLabel": "Что это значит",
+      "starterMore": "Ничего не скачивается и ничего не подменяется: проект, который у вас уже есть, становится вашим на GitHub. Этой же дорогой идут те, кто собирается позже перенести на Fractera существующий проект, — переезд начинается с работающего шаблона.",
+      "adoptTitle": "Подключить другой проект Fractera",
+      "adoptBody": "У вас уже есть проект на архитектуре Fractera, и он лежит на GitHub. Сервер расстаётся со своим стартовым шаблоном и запускает вместо него ваш проект.",
+      "adoptCta": "Подключить репозиторий с проектом Fractera",
+      "adoptMoreLabel": "Что это значит",
+      "adoptMore": "Стартовый шаблон, который сейчас стоит на сервере, уничтожается, и вернуть его можно только установив заново. Ваши настройки, ваши данные и загруженные файлы остаются на месте. Подключайте репозиторий, действительно построенный на архитектуре Fractera: проект другого фреймворка не соберётся, и панель скажет об этом прямо, а не станет гадать.",
+      "migrationCta": "Миграция на архитектуру Fractera",
+      "migrationTitle": "Миграция на архитектуру Fractera",
+      "migrationOpen": "Открыть «Режим разработки»",
+      "chooseFailed": "Выбор не сохранился.",
+      "stepOf": "Шаг {n} из {total}",
+      "stepDone": "Пройдено",
+      "reopen": "Открыть снова",
+      "checkLabel": "Я выполнил этот шаг",
+      "checkSaving": "Сохраняю…",
+      "checkFailed": "Отметка не сохранилась.",
+      "machineOnly": "Этот шаг закрывается проверкой, а не галочкой: ответ даёт GitHub.",
+      "restart": "Начать сначала",
+      "restartTitle": "Начать сначала",
+      "restartBody": "Мастер вернётся к экрану выбора, и все поставленные вами галочки будут сняты. Claude Code на вашей машине это не трогает — гасить отметку о программе, которую вы поставили сами, у нас нет оснований.",
+      "restartKeep": "Начать сначала, связь с GitHub оставить",
+      "restartWithGithub": "Начать сначала и стереть связь с GitHub",
+      "restartWithGithubHint": "Адрес репозитория и ключ доступа удаляются с этого сервера. Вводить их придётся заново.",
+      "restartCancel": "Отмена",
+      "restartDone": "Мастер сброшен.",
+      "restartFailed": "Сбросить не удалось.",
+      "steps": {
+        "repo": {
+          "title": "Репозиторий на GitHub",
+          "lead": "Пустой репозиторий — место, где будет жить ваш проект."
+        },
+        "key": {
+          "title": "Ключ безопасности",
+          "lead": "GitHub пускает сервер на запись только по ключу, который выдаёте вы."
+        },
+        "upload": {
+          "title": "Загрузить проект",
+          "lead": "Пока это не нажато, репозиторий остаётся пустым."
+        },
+        "adopt": {
+          "title": "Заменить проект",
+          "lead": "Стартовый шаблон уничтожается, на его место встаёт ваш репозиторий."
+        },
+        "live-check": {
+          "title": "Убедиться, что проект работает",
+          "lead": "Откройте свой сайт и подтвердите, что проект жив."
+        },
+        "claude-code": {
+          "title": "Claude Code",
+          "lead": "Агент, который будет писать ваш код."
+        },
+        "folder": {
+          "title": "Отдельная папка проекта",
+          "lead": "Один проект — одна папка. Именно это делает работу агента эффективной."
+        },
+        "open-folder": {
+          "title": "Открыть эту папку в Claude Code",
+          "lead": "Агент работает в той папке, которую вы выбрали при запуске."
+        },
+        "subscription": {
+          "title": "Вход в аккаунт подписки",
+          "lead": "Подписка привязана к тому браузеру, в котором её оплатили."
+        },
+        "first-prompt": {
+          "title": "Стартовая инструкция",
+          "lead": "Первое сообщение: с какого репозитория начинается разработка."
+        },
+        "env": {
+          "title": "Переменные окружения",
+          "lead": "Ключи, которыми ваша локальная копия смотрит на этот сервер."
+        },
+        "drop-env": {
+          "title": "Передать файл агенту",
+          "lead": "Перетащите скачанный файл в окно Claude Code."
+        },
+        "install": {
+          "title": "Зависимости и localhost:3000",
+          "lead": "Поставьте пакеты и увидьте проект в своём браузере."
+        },
+        "first-change": {
+          "title": "Первое изменение",
+          "lead": "Название вашей компании, внесённое агентом через шаг разработки."
+        },
+        "first-deploy": {
+          "title": "Первое развёртывание",
+          "lead": "То же изменение, увиденное на вашем собственном адресе в интернете."
+        }
+      }
+    },
     "githubAbout": {
       "intro": "Три кнопки перемещают ваш проект между тремя местами: этим сервером, вашим репозиторием на GitHub и работающим приложением, которое видят посетители. Вот что делает каждая и в какую сторону.",
       "pushTitle": "Отправить — с этого сервера в GitHub",
@@ -4669,8 +4861,8 @@
         "hint": "Ключ и модели, которыми пользуется проект."
       },
       "github": {
-        "title": "Подключить GitHub",
-        "hint": "Репозиторий, куда сервер отправляет и откуда забирает код."
+        "title": "Запуск проекта",
+        "hint": "От пустого репозитория до первого изменения, увиденного на вашем собственном адресе."
       },
       "github-about": {
         "title": "О GitHub",

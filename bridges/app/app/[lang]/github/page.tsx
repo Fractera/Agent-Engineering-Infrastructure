@@ -1,23 +1,31 @@
-// Раздел «Подключить GitHub» (шаг 501, Ф2, партия 14).
+// Раздел «Запуск проекта» — путь от пустого репозитория до первого изменения,
+// увиденного на собственном адресе (шаг 25; прежде «Подключить GitHub», шаг 501).
 //
-// Состояние читает сервер, поэтому без JS видно то, что важнее всего: связь
-// настоящая или только записана. Три состояния различаются намеренно — заполненное
-// поле легко принять за работающую связь, и тогда «почему репозиторий пустой»
-// становится загадкой.
+// 🔒 АДРЕС РАЗДЕЛА НЕ ПОМЕНЯЛСЯ (решение владельца 2026-08-26). Сюда ведут крошки,
+// меню, предупреждение подвала и руководство «Как построить этот проект»; сменить
+// slug ради нового заголовка значило бы переучивать всё это разом. Поменялось имя
+// на экране: GitHub — первые три шага пути, а не отдельная работа.
 //
-// Островок один: токен — секрет, а отправка возвращает вывод git, который надо
-// показать целиком.
+// 🔒 ЭКРАН ВЫБОРА ЗАКРЫВАЕТ СОБОЙ ВСЁ ОСТАЛЬНОЕ. Пока путь не выбран, ни полей, ни
+// кнопок, ни состояния связи на странице нет. Показанное действие читается как
+// требуемое, и четыре требования на входе — ровно то, из-за чего настройку
+// бросали.
 //
-// Динамическая: состояние связи и число неотправленных файлов — живые.
+// Динамическая: состояние связи, выбранный путь и пройденные шаги — живые.
 
 import Link from "next/link";
 import { GitBranch, CheckCircle, AlertCircle, XCircle } from "lucide-react";
 import { getAdminStrings } from "@/lib/i18n/admin-strings";
 import { adminHref } from "@/lib/admin-nav";
+import { readLaunch } from "@/lib/launch";
+import { readLocalizedContent } from "@/lib/content/localized-content";
 import { PageShell } from "../_components/page-shell";
 import { HelpDetails } from "../_components/help-details";
+import { GuideProse } from "../how-to-build/_components/guide-prose";
 import { readGitStatus } from "./_lib/git";
 import { ConnectForm } from "./_components/connect-form.client";
+import { StartChoice } from "./_components/start-choice.client";
+import { LaunchReset } from "./_components/launch-reset.client";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +35,77 @@ export default async function GitHubPage({ params }: { params: Promise<{ lang: s
   const { lang } = await params;
   const s = getAdminStrings(lang);
   const g = s.github;
+  const l = s.launch;
 
+  // 🔒 ОСТРОВКУ ОТДАЮТСЯ ТОЛЬКО ЕГО СОБСТВЕННЫЕ СЛОВА, ПЕРЕЧИСЛЕННЫЕ ПОИМЁННО.
+  //
+  // Тип `LaunchResetLabels` называет девять ключей, и `labels={l}` компилируется:
+  // лишние поля при передаче переменной TypeScript пропускает. Но тип не сужает
+  // РАНТАЙМ — по проводу уезжал весь раздел `launch` целиком, все 33 ключа,
+  // включая подписи кнопок экрана выбора. В разметке они остаются даже после
+  // того, как экран выбора сменился шагами.
+  //
+  // ✗ Поймано негативным контролем 25-1: приёмка требовала, чтобы после выбора
+  // пути подписи трёх кнопок дали 0 совпадений, а они дали 1 — из этого payload.
+  // Утечка на 33 ключа мелка рядом с законом «словарь панели серверный», и корень
+  // у неё тот же: клиенту достаётся то, чего он не просил.
+  const resetLabels = {
+    restart: l.restart, restartTitle: l.restartTitle, restartBody: l.restartBody,
+    restartKeep: l.restartKeep, restartWithGithub: l.restartWithGithub,
+    restartWithGithubHint: l.restartWithGithubHint, restartCancel: l.restartCancel,
+    restartDone: l.restartDone, restartFailed: l.restartFailed,
+  };
+
+  const launch = readLaunch();
+
+  // ── Путь ещё не выбран ─────────────────────────────────────────────────────
+  //
+  // Текст окна переезда разбирает СЕРВЕР и отдаёт островку готовым деревом:
+  // библиотека разбора markdown в браузер не уезжает. Файла нет — окно всё равно
+  // открывается, но с честной строкой вместо текста, а не пустым.
+  if (launch.mode === null) {
+    const doc = readLocalizedContent("launch-migration-modal", lang);
+
+    return (
+      <PageShell lang={lang} slug="github" s={s} title={s.pages.github.title} hint={s.pages.github.hint}>
+        <StartChoice
+          labels={{
+            chooseTitle: l.chooseTitle, chooseLead: l.chooseLead,
+            starterTitle: l.starterTitle, starterBody: l.starterBody, starterCta: l.starterCta,
+            starterMoreLabel: l.starterMoreLabel, starterMore: l.starterMore,
+            adoptTitle: l.adoptTitle, adoptBody: l.adoptBody, adoptCta: l.adoptCta,
+            adoptMoreLabel: l.adoptMoreLabel, adoptMore: l.adoptMore,
+            migrationCta: l.migrationCta, migrationTitle: l.migrationTitle,
+            migrationOpen: l.migrationOpen, chooseFailed: l.chooseFailed,
+          }}
+          migrationDoc={
+            doc.ok ? (
+              <>
+                {doc.isFallback && (
+                  <p className="mb-3 rounded-md border border-dashed border-border px-3 py-2 text-[11px] text-muted-foreground/80">
+                    {s.content.englishFallback}
+                  </p>
+                )}
+                <GuideProse markdown={doc.text} />
+              </>
+            ) : (
+              <p className="text-[11px] text-destructive">{s.howToBuild.missing}</p>
+            )
+          }
+          migrationHref={adminHref(lang, "development-mode")}
+        />
+
+        <p className="mt-4 text-[10px] leading-relaxed text-muted-foreground">
+          {g.seeAlso}{" "}
+          <Link href={adminHref(lang, "github-about")} className="underline">{s.pages["github-about"].title}</Link>
+          {" · "}
+          <Link href={adminHref(lang, "deployments")} className="underline">{s.pages.deployments.title}</Link>
+        </p>
+      </PageShell>
+    );
+  }
+
+  // ── Путь выбран ────────────────────────────────────────────────────────────
   const result = await readGitStatus();
 
   if (!result.ok) {
@@ -37,6 +115,7 @@ export default async function GitHubPage({ params }: { params: Promise<{ lang: s
           <p className="text-[12px] font-medium text-destructive">{g.unavailable}</p>
           <p className="mt-1 font-mono text-[10px] text-muted-foreground">{result.reason}</p>
         </div>
+        <div className="mt-4"><LaunchReset labels={resetLabels} /></div>
       </PageShell>
     );
   }
@@ -100,6 +179,10 @@ export default async function GitHubPage({ params }: { params: Promise<{ lang: s
           Не воскрешать: страница отвечает на «как подключить», а не «что у меня
           не сохранено». */}
 
+      {/* ⏳ ВРЕМЕННО, ДО ПОДШАГА 25-2. Здесь встанет мастер: верёвочка с бусинами
+          и шаги, открывающиеся по одному. Пока путь выбран, но мастера ещё нет,
+          страница показывает прежнюю рабочую форму подключения — половина
+          способности хуже её отсутствия, а неработающая страница хуже обеих. */}
       <div className="mt-4">
         <h2 className="mb-2 text-[12px] font-medium text-foreground">{g.setupTitle}</h2>
         <ConnectForm
@@ -124,12 +207,15 @@ export default async function GitHubPage({ params }: { params: Promise<{ lang: s
         />
       </div>
 
-      <p className="mt-3 text-[10px] leading-relaxed text-muted-foreground">
-        {g.seeAlso}{" "}
-        <Link href={adminHref(lang, "github-about")} className="underline">{s.pages["github-about"].title}</Link>
-        {" · "}
-        <Link href={adminHref(lang, "deployments")} className="underline">{s.pages.deployments.title}</Link>
-      </p>
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
+        <p className="text-[10px] leading-relaxed text-muted-foreground">
+          {g.seeAlso}{" "}
+          <Link href={adminHref(lang, "github-about")} className="underline">{s.pages["github-about"].title}</Link>
+          {" · "}
+          <Link href={adminHref(lang, "deployments")} className="underline">{s.pages.deployments.title}</Link>
+        </p>
+        <LaunchReset labels={resetLabels} />
+      </div>
 
       <HelpDetails label={g.helpLabel}>
         <p><strong>{g.helpWhyTitle}</strong> {g.helpWhy}</p>
