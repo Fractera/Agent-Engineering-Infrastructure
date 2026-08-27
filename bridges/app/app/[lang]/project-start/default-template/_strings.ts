@@ -66,6 +66,9 @@ const ru1: StepStrings = {
   stepOf: "Шаг {n} из {total}",
   done: "Шаг завершён",
   linkLabel: "ссылка",
+  shotAlt:
+    "Страница GitHub «Create a new repository»: слева выбор владельца, справа обязательное поле «Repository name», ниже необязательное описание и выбор видимости — публичный или приватный.",
+  shotCaption: "Так это выглядит на GitHub: заполняется только имя, остальное можно оставить как есть.",
 
   form: {
     inputLabel: "Адрес репозитория",
@@ -104,6 +107,9 @@ const en1: StepStrings = {
   stepOf: "Step {n} of {total}",
   done: "Step finished",
   linkLabel: "link",
+  shotAlt:
+    "The GitHub page «Create a new repository»: the owner picker on the left, the required «Repository name» field on the right, then an optional description and the visibility choice — public or private.",
+  shotCaption: "This is how it looks on GitHub: only the name is filled in, the rest can stay as it is.",
 
   form: {
     inputLabel: "Repository address",
@@ -232,3 +238,18 @@ export function stepTwoStrings(lang: string): StepStrings {
  * вернётся в `launch.shared.ts` одной правкой, когда владелец скажет.
  */
 export const DEFAULT_TEMPLATE_TOTAL = 16;
+
+/**
+ * Сколько шагов пути ПОСТРОЕНО на сегодня.
+ *
+ * 🔒 ОТДЕЛЬНОЕ ЧИСЛО, А НЕ `DEFAULT_TEMPLATE_TOTAL`, И РАЗНИЦА СОДЕРЖАТЕЛЬНАЯ.
+ * Первое говорит, сколько шагов у пути ЗАДУМАНО, второе — сколько существует
+ * страницами. Шкала прогресса рисует шестнадцать отрезков (задумано), но
+ * ссылками делает только построенные: ссылка на несуществующий шаг ведёт в 404.
+ * ✗ оплачено 2026-08-27 проверкой в браузере — нажатие на пятый отрезок увело
+ * на `step-5`, которого нет.
+ *
+ * Число растёт на единицу с каждым новым шагом. Забыть его — значит получить
+ * мёртвую ссылку, и это ловится нажатием, а не чтением.
+ */
+export const DEFAULT_TEMPLATE_BUILT = 2;

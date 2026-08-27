@@ -16,7 +16,7 @@ import type { AdminPageSlug } from "@/lib/admin-nav";
 import type { AdminStrings } from "@/lib/i18n/admin-strings";
 
 export function PageShell(
-  { title, hint, notice, children, lang, slug, s, params, wide = false }:
+  { title, hint, notice, children, lang, slug, s, params, tail, wide = false }:
   {
     title: string; hint: string; notice?: string; children?: ReactNode;
     /** Крошки рисуются, только когда переданы все три: язык, раздел и словарь. */
@@ -25,6 +25,8 @@ export function PageShell(
     s?: AdminStrings;
     /** Параметры адреса — хвост пути (открытый файл, журнал, таблица). */
     params?: Record<string, string | undefined>;
+    /** Хвост пути ССЫЛКАМИ — см. `breadcrumbs.tsx`. Задан — заменяет хвост из `params`. */
+    tail?: { label: string; href?: string }[];
     /**
      * Широкая колонка для СОДЕРЖИМОГО. Шапка остаётся на обычной ширине.
      *
@@ -49,7 +51,7 @@ export function PageShell(
     <>
       {/* Крошки ВНЕ колонки содержимого и без её полей: колонка центрируется, а
           путь обязан начинаться от левого верхнего края при любой ширине. */}
-      {lang && slug && s && <Breadcrumbs lang={lang} slug={slug} s={s} params={params} />}
+      {lang && slug && s && <Breadcrumbs lang={lang} slug={slug} s={s} params={params} tail={tail} />}
 
       {/* `data-app-column` вместо `max-w-3xl`: ширину задаёт переменная `--app-w`,
           которой управляет переключатель в подвале. Обычная ширина осталась той же

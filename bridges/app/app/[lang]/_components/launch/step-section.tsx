@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { Check } from "lucide-react";
 import { H2, Lead, Small } from "@/components/ui/typography";
 import { Callout } from "./callout";
@@ -53,6 +54,7 @@ export function StepSection({
   bullets,
   shot,
   link,
+  stepHref,
   children,
 }: {
   /** Номер шага, считая с единицы: человеку показывается он, а не индекс. */
@@ -95,6 +97,16 @@ export function StepSection({
    * эти две вещи, строя шаг 2, и не перенёс ссылку из живого мастера.
    */
   link?: { href: string; label?: string };
+  /**
+   * Адрес шага по его номеру (считая с единицы). Задан — отрезки шкалы
+   * становятся ссылками и по ней можно прыгать вперёд-назад; не задан — шкала
+   * остаётся картинкой и прячется от читалки экрана.
+   *
+   * 🔒 ФУНКЦИЯ, А НЕ ГОТОВЫЙ СПИСОК АДРЕСОВ: секция не знает, сколько шагов у
+   * пути и как они называются, и знать не должна — иначе анатомия шага начнёт
+   * зависеть от конкретного пути.
+   */
+  stepHref?: (n: number) => string | undefined;
   /** Само действие: поле, галочка, кнопка. Приносит островок. */
   children?: ReactNode;
 }) {
@@ -126,21 +138,65 @@ export function StepSection({
           {fill(stepOfTemplate, { n: index, total })}
         </Small>
 
-        <div className="flex min-w-0 flex-1 items-center gap-1" aria-hidden data-step-scale={total}>
-          {Array.from({ length: total }, (_, i) => (
-            <span
-              key={i}
-              data-scale-tick={i < index - 1 ? "done" : i === index - 1 ? "current" : "future"}
-              className={[
-                "h-0.5 min-w-0 flex-1 rounded-full",
-                i < index - 1
-                  ? "bg-emerald-500"
-                  : i === index - 1
-                    ? "bg-foreground"
-                    : "bg-border",
-              ].join(" ")}
-            />
-          ))}
+        {/* 🔒 ШКАЛА КЛИКАБЕЛЬНА — решение владельца 2026-08-27: «сделай её
+            кликабельной, чтобы можно было прыгать между шагами вперёд-назад,
+            просто нажимая на эту линию».
+
+            🔒 ОБЛАСТЬ НАЖАТИЯ ВЫШЕ САМОЙ ЛИНИИ. Отрезок толщиной в два пикселя
+            попасть мышью нельзя, а пальцем — тем более. Поэтому нажимается
+            прозрачная полоса высотой 16 пикселей, внутри которой нарисована
+            линия. Видимая толщина и попадаемая — разные вещи, и путать их
+            значит сделать кнопку, которая формально есть.
+
+            🔒 `aria-hidden` СНЯТ ВМЕСТЕ С ПРЕВРАЩЕНИЕМ В ССЫЛКИ. Пока шкала была
+            картинкой, прятать её от читалки экрана было правильно; спрятанная
+            ссылка — это ссылка, которой не существует для того, кто не видит
+            экрана. У каждой появилось имя: «Шаг N». */}
+        <div className="flex min-w-0 flex-1 items-center gap-1" data-step-scale={total}>
+          {Array.from({ length: total }, (_, i) => {
+            const state = i < index - 1 ? "done" : i === index - 1 ? "current" : "future";
+            const line = [
+              "block h-0.5 w-full rounded-full transition-colors",
+              state === "done"
+                ? "bg-emerald-500"
+                : state === "current"
+                  ? "bg-foreground"
+                  : "bg-border",
+            ].join(" ");
+
+            // 🔒 ОТРЕЗОК БЕЗ АДРЕСА НЕ СТАНОВИТСЯ ССЫЛКОЙ. `stepHref` вправе
+            // вернуть `undefined` для шага, который ещё не построен, и тогда
+            // отрезок остаётся линией.
+            //
+            // ✗ ОПЛАЧЕНО ПРЯМО ЗДЕСЬ, 2026-08-27. Первая версия делала ссылками
+            // ВСЕ шестнадцать отрезков; нажатие на пятый увело на `…/step-5` и
+            // дало 404. Проверка в браузере поймала это до показа владельцу.
+            // Механизм — первый закон `ANTI-PATTERNS.md`: названная, но не
+            // обеспеченная возможность. За день это третий его случай у меня.
+            const href = stepHref?.(i + 1);
+
+            if (!href) {
+              return (
+                <span key={i} data-scale-tick={state} className="min-w-0 flex-1" aria-hidden>
+                  <span className={line} />
+                </span>
+              );
+            }
+
+            return (
+              <Link
+                key={i}
+                href={href}
+                data-scale-tick={state}
+                aria-current={state === "current" ? "step" : undefined}
+                title={fill(stepOfTemplate, { n: i + 1, total })}
+                aria-label={fill(stepOfTemplate, { n: i + 1, total })}
+                className="group/tick flex min-w-0 flex-1 items-center py-2"
+              >
+                <span className={`${line} group-hover/tick:bg-foreground`} />
+              </Link>
+            );
+          })}
         </div>
 
         {done && (

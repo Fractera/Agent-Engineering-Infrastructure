@@ -37,13 +37,29 @@ import type { AdminStrings } from "@/lib/i18n/admin-strings";
 const PATH_PARAMS = ["product", "tab", "file", "run", "table", "edit", "col", "delete"] as const;
 
 export function Breadcrumbs(
-  { lang, slug, s, params }: {
+  { lang, slug, s, params, tail: tailProp }: {
     lang: string;
     /** Текущий раздел. Не задан — мы на холсте, и крошек нет. */
     slug?: AdminPageSlug;
     s: AdminStrings;
     /** Разобранные параметры адреса страницы. */
     params?: Record<string, string | undefined>;
+    /**
+     * Хвост пути ССЫЛКАМИ, а не текстом.
+     *
+     * 🔒 ЗАЧЕМ ОН ПОЯВИЛСЯ (28-15, 2026-08-27). Владелец: «сейчас некоторые
+     * элементы крошек работают, а некоторые нет». Так и было, и причина
+     * конструктивная: хвост из `params` — это ЗНАЧЕНИЯ (имя файла, номер
+     * запуска), у которых своего адреса нет, поэтому они и рисовались текстом.
+     * Но у страниц вроде `…/default-template/step-2` хвост — это НАСТОЯЩИЕ
+     * страницы, и текст вместо ссылки читается как сломанная навигация: путь
+     * показывает уровень, на который нельзя вернуться.
+     *
+     * Поэтому появился второй способ задать хвост — парами «подпись + адрес».
+     * Последний сегмент остаётся текстом при любом раскладе: ссылка на страницу,
+     * где стоишь, никуда не ведёт.
+     */
+    tail?: { label: string; href?: string }[];
   },
 ) {
   if (!slug) return null;
@@ -53,9 +69,14 @@ export function Breadcrumbs(
 
   // Хвост из параметров: значение показывается как есть — это имя файла или
   // идентификатора, и переводить его нельзя (правило 4г, машинные строки).
-  const tail = PATH_PARAMS
-    .map((key) => params?.[key])
-    .filter((v): v is string => typeof v === "string" && v.trim() !== "");
+  // Хвост либо задан ссылками (`tail`), либо собирается из параметров адреса.
+  // Второе — прежнее поведение: значения без собственного адреса.
+  const tail: { label: string; href?: string }[] =
+    tailProp ??
+    PATH_PARAMS
+      .map((key) => params?.[key])
+      .filter((v): v is string => typeof v === "string" && v.trim() !== "")
+      .map((label) => ({ label }));
 
   return (
     <nav
@@ -92,12 +113,24 @@ export function Breadcrumbs(
         </Link>
       )}
 
-      {tail.map((value, i) => (
-        <span key={`${value}-${i}`} className="flex min-w-0 items-center gap-1.5">
-          <span className="shrink-0 text-muted-foreground/50">/</span>
-          <span className={i === tail.length - 1 ? "truncate text-foreground" : "truncate"}>{value}</span>
-        </span>
-      ))}
+      {tail.map((item, i) => {
+        const last = i === tail.length - 1;
+        return (
+          <span key={`${item.label}-${i}`} className="flex min-w-0 items-center gap-1.5">
+            <span className="shrink-0 text-muted-foreground/50">/</span>
+            {/* 🔒 ПОСЛЕДНИЙ СЕГМЕНТ — ВСЕГДА ТЕКСТ, даже если адрес известен:
+                ссылка на страницу, где стоишь, ничего не открывает и обманывает
+                ожидание. Промежуточные — ссылки, когда адрес есть. */}
+            {item.href && !last ? (
+              <Link href={item.href} className="shrink-0 truncate hover:text-foreground">
+                {item.label}
+              </Link>
+            ) : (
+              <span className={last ? "truncate text-foreground" : "truncate"}>{item.label}</span>
+            )}
+          </span>
+        );
+      })}
     </nav>
   );
 }

@@ -17,10 +17,11 @@
 // строкой адреса.
 
 import { getAdminStrings } from "@/lib/i18n/admin-strings";
+import { adminHref } from "@/lib/admin-nav";
 import { PageShell } from "../../../_components/page-shell";
 import { StepSection } from "../../../_components/launch/step-section";
 import { StepForm } from "../../../_components/launch/step-form.client";
-import { stepTwoStrings, DEFAULT_TEMPLATE_TOTAL } from "../_strings";
+import { stepTwoStrings, DEFAULT_TEMPLATE_TOTAL, DEFAULT_TEMPLATE_BUILT } from "../_strings";
 
 export const dynamic = "force-dynamic";
 
@@ -36,7 +37,10 @@ export default async function DefaultTemplateStepTwo(
       lang={lang}
       slug="project-start"
       s={s}
-      params={{ file: "default-template", run: "step-2" }}
+      tail={[
+        { label: "default-template", href: `${adminHref(lang, "project-start")}/default-template` },
+        { label: "step-2" },
+      ]}
       title={x.pageTitle}
       hint={x.pageHint}
     >
@@ -52,6 +56,13 @@ export default async function DefaultTemplateStepTwo(
         important={x.important}
         actionLead={x.actionLead}
         bullets={x.bullets}
+        // 🔒 ШКАЛА КЛИКАБЕЛЬНА (28-15): прыжок вперёд-назад одним нажатием на
+        // отрезок. Адреса шагов знает ПУТЬ, а не анатомия шага.
+        stepHref={(n) =>
+          n <= DEFAULT_TEMPLATE_BUILT
+            ? `${adminHref(lang, "project-start")}/default-template/step-${n}`
+            : undefined
+        }
         // 🔒 СНИМОК ЧУЖОГО ЭКРАНА — его прислал владелец 2026-08-27 со словами
         // «в данный момент я показываю, где брать токен». Шаг объясняет словами
         // то, что человек ищет ГЛАЗАМИ на странице GitHub: где «Select scopes»,

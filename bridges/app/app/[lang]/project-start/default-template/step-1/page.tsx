@@ -25,7 +25,7 @@ import { adminHref } from "@/lib/admin-nav";
 import { PageShell } from "../../../_components/page-shell";
 import { StepSection } from "../../../_components/launch/step-section";
 import { StepForm } from "../../../_components/launch/step-form.client";
-import { stepOneStrings, DEFAULT_TEMPLATE_TOTAL } from "../_strings";
+import { stepOneStrings, DEFAULT_TEMPLATE_TOTAL, DEFAULT_TEMPLATE_BUILT } from "../_strings";
 
 export const dynamic = "force-dynamic";
 
@@ -41,7 +41,13 @@ export default async function DefaultTemplateStepOne(
       lang={lang}
       slug="project-start"
       s={s}
-      params={{ file: "default-template", run: "step-1" }}
+      // 🔒 ХВОСТ КРОШЕК — ССЫЛКАМИ (28-15). Здесь стоял `params`, и хвост
+      // рисовался текстом: путь показывал уровень, на который нельзя вернуться.
+      // Владелец: «некоторые элементы крошек работают, а некоторые нет».
+      tail={[
+        { label: "default-template", href: `${adminHref(lang, "project-start")}/default-template` },
+        { label: "step-1" },
+      ]}
       title={x.pageTitle}
       hint={x.pageHint}
     >
@@ -57,6 +63,24 @@ export default async function DefaultTemplateStepOne(
         important={x.important}
         actionLead={x.actionLead}
         bullets={x.bullets}
+        // 🔒 ШКАЛА КЛИКАБЕЛЬНА (28-15): прыжок вперёд-назад одним нажатием на
+        // отрезок. Адреса шагов знает ПУТЬ, а не анатомия шага.
+        stepHref={(n) =>
+          n <= DEFAULT_TEMPLATE_BUILT
+            ? `${adminHref(lang, "project-start")}/default-template/step-${n}`
+            : undefined
+        }
+        // 🔒 СНИМОК ЧУЖОГО ЭКРАНА — прислан владельцем 2026-08-27 для этого шага.
+        // Форма создания репозитория: где имя, где владелец, где видимость.
+        shot={
+          x.shotAlt && x.shotCaption
+            ? {
+                src: "/images/launch/step-1-new-repository.png",
+                alt: x.shotAlt,
+                caption: x.shotCaption,
+              }
+            : undefined
+        }
         // 🔒 ССЫЛКА-ДЕЙСТВИЕ: КУДА идти заводить репозиторий. `github.com/new`
         // открывает форму создания сразу — это её обычный адрес, а не наш
         // придуманный маршрут.
