@@ -116,3 +116,24 @@ export function flowVerified(): boolean {
 export function setFlowVerified(on: boolean): void {
   setValue(FLOW_VERIFIED_KEY, on ? new Date().toISOString() : null);
 }
+
+// ── ШАГ 4: ОТПРАВКА ПРОЕКТА ─────────────────────────────────────────────────
+//
+// 🔒 ОТМЕТКА ОТПРАВКИ НЕ ГАСНЕТ ПРИ СМЕНЕ ТОКЕНА — и это отличие от проверки
+// осознанное. Проверка утверждает про НЫНЕШНИЕ данные: сменил токен — она больше
+// ничего не утверждает. Отправка утверждает про ПРОШЛОЕ СОБЫТИЕ: файлы уехали, и
+// новый токен этого не отменяет. Погасить её значило бы соврать в другую сторону.
+
+export const FLOW_PUSHED_KEY = `${FLOW_PREFIX}PUSHED_AT`;
+
+export function flowPushedAt(): string {
+  return getValue(FLOW_PUSHED_KEY).trim();
+}
+
+export function flowPushed(): boolean {
+  return flowPushedAt() !== "";
+}
+
+export function setFlowPushed(on: boolean): void {
+  setValue(FLOW_PUSHED_KEY, on ? new Date().toISOString() : null);
+}

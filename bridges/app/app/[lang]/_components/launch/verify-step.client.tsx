@@ -12,6 +12,11 @@
 // незнакомое слово даёт общий текст, а не пустоту — иначе отказ без объяснения
 // выглядит как поломка панели.
 //
+// 🔒 ДВЕРЬ ПРИХОДИТ ПАРАМЕТРОМ (28-21): шаги «проверить связь» и «отправить
+// проект» отличаются ТОЛЬКО адресом двери и словами. Второй островок с той же
+// логикой разошёлся бы с первым на первой правке поведения — например, когда
+// понадобится не гасить кнопку после успеха.
+//
 // 🔒 ПОСЛЕ УДАЧИ — `router.refresh()`. Зелёный круг и отметка рисуются сервером
 // из состояния; без обновления страницы человек увидел бы тост об успехе рядом с
 // незакрытым шагом.
@@ -36,14 +41,14 @@ export type VerifyLabels = {
 
 const TOAST_MS = 5000;
 
-export function VerifyStep({ labels }: { labels: VerifyLabels }) {
+export function VerifyStep({ labels, endpoint = "/api/config/launch-flow/verify" }: { labels: VerifyLabels; endpoint?: string }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
 
   async function run() {
     setBusy(true);
     try {
-      const r = await fetch("/api/config/launch-flow/verify", {
+      const r = await fetch(endpoint, {
         method: "POST",
         credentials: "include",
       });

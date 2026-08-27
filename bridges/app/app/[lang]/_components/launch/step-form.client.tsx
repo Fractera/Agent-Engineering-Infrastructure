@@ -26,7 +26,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Check, ArrowLeft, ArrowRight } from "lucide-react";
+import { Loader2, Check } from "lucide-react";
+import { StepNav } from "./step-nav";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -229,28 +230,7 @@ export function StepForm({
           кнопкой сохранения, но подписанной иначе — «заменить», а не
           «сохранить»: заменять и записывать впервые для человека разные вещи. */}
       {saved && !ready ? (
-        <div className="flex flex-col gap-3 sm:flex-row" data-step-nav>
-          {prevHref && (
-            <Link
-              href={prevHref}
-              data-nav-prev
-              className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-lg border border-border px-4 text-[length:var(--fs-small)] font-medium transition-colors hover:border-foreground/30"
-            >
-              <ArrowLeft size={16} aria-hidden className="shrink-0" />
-              {labels.goPrev}
-            </Link>
-          )}
-          {nextHref && (
-            <Link
-              href={nextHref}
-              data-nav-next
-              className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-[length:var(--fs-small)] font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-            >
-              {labels.goNext}
-              <ArrowRight size={16} aria-hidden className="shrink-0" />
-            </Link>
-          )}
-        </div>
+        <StepNav prevHref={prevHref} nextHref={nextHref} labels={{ goPrev: labels.goPrev, goNext: labels.goNext }} />
       ) : (
         <Button
           type="button"

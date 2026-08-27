@@ -37,6 +37,9 @@ export type StepThreeStrings = {
   reasonUnknown: string;
   /** Строка о том, когда связь была проверена. */
   verifiedAt: string;
+  /** Подписи навигации пройденного шага — те же, что у шагов с формой. */
+  goPrev: string;
+  goNext: string;
 };
 
 const ru: StepThreeStrings = {
@@ -79,6 +82,8 @@ const ru: StepThreeStrings = {
   },
   reasonUnknown: "Причина неизвестна. Попробуйте ещё раз; если повторится — сообщите нам.",
   verifiedAt: "Проверено:",
+  goPrev: "К предыдущему шагу",
+  goNext: "К следующему шагу",
 };
 
 const en: StepThreeStrings = {
@@ -121,6 +126,8 @@ const en: StepThreeStrings = {
   },
   reasonUnknown: "The reason is unknown. Try again; if it repeats, tell us.",
   verifiedAt: "Verified:",
+  goPrev: "To the previous step",
+  goNext: "To the next step",
 };
 
 const DICT: Record<string, StepThreeStrings> = { en, ru };

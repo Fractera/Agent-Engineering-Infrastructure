@@ -27,6 +27,7 @@ import { adminHref } from "@/lib/admin-nav";
 import { PageShell } from "../../../_components/page-shell";
 import { StepSection } from "../../../_components/launch/step-section";
 import { VerifyStep } from "../../../_components/launch/verify-step.client";
+import { StepNav } from "../../../_components/launch/step-nav";
 import { Small } from "@/components/ui/typography";
 import { Check } from "lucide-react";
 import { flowVerified, flowVerifiedAt } from "@/lib/launch-flow";
@@ -91,6 +92,21 @@ export default async function DefaultTemplateStepThree(
             </div>
           )}
 
+          {/* 🔒 ПРОЙДЕННЫЙ ШАГ ПОКАЗЫВАЕТ НАВИГАЦИЮ, А НЕ ДЕЙСТВИЕ — то же
+              правило, что у шагов с формой. Здесь оно молчало: я положил его
+              внутрь `StepForm`, а у машинного шага формы нет. Владелец нашёл
+              это, нажав проверку и оставшись с той же кнопкой. */}
+          {verified ? (
+            <StepNav
+              prevHref={`${adminHref(lang, "project-start")}/default-template/step-2`}
+              nextHref={
+                DEFAULT_TEMPLATE_BUILT >= 4
+                  ? `${adminHref(lang, "project-start")}/default-template/step-4`
+                  : undefined
+              }
+              labels={{ goPrev: x.goPrev, goNext: x.goNext }}
+            />
+          ) : (
           <VerifyStep
             labels={{
               cta: x.cta,
@@ -102,6 +118,7 @@ export default async function DefaultTemplateStepThree(
               reasonUnknown: x.reasonUnknown,
             }}
           />
+          )}
         </div>
       </StepSection>
     </PageShell>
