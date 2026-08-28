@@ -154,7 +154,7 @@ export function setFlowPushed(on: boolean): void {
 // Папка заводится на машине человека, и Claude Code открывает её там же. Панель
 // не видит ни его диска, ни его окна: спросить неоткуда, значит закрывает
 // человек — и отметка остаётся снимаемой, как у Claude Code.
-export const FLOW_MARKS = ["claude-code", "folder", "open-folder"] as const;
+export const FLOW_MARKS = ["claude-code", "folder", "open-folder", "local-run"] as const;
 export type FlowMark = (typeof FLOW_MARKS)[number];
 
 export const isFlowMark = (v: unknown): v is FlowMark =>
