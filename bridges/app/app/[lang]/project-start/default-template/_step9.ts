@@ -107,9 +107,9 @@ const ru: StepNineStrings = {
   done: "Шаг завершён",
 
   shotAlt:
-    "Первый экран проекта в браузере: шапка с меню Fractera, крупный заголовок «This is your application starter», абзац о том, что всё уже установлено и связано, зелёная кнопка и снимок панели справа.",
+    "Браузер, открытый на localhost:3000. Адресная строка обведена и помечена стрелкой снизу. На странице — шапка с меню Fractera, крупный заголовок «This is your application starter», абзац о том, что всё уже установлено и связано, зелёная кнопка и снимок панели справа.",
   shotCaption:
-    "Такой первый экран вы и должны увидеть. У вас он откроется по адресу localhost:3000 — здесь показан тот же проект, уже опубликованный на сервере, поэтому в адресной строке домен. Язык и содержимое у вас могут отличаться.",
+    "Такой первый экран вы и должны увидеть — и такой же адрес в строке браузера, на него указывает стрелка. Язык и содержимое у вас могут отличаться.",
 
   promptLead: "Подсказка для агента — скопируйте её целиком:",
   promptText: PROMPT_RU,
@@ -149,9 +149,9 @@ const en: StepNineStrings = {
   done: "Step finished",
 
   shotAlt:
-    "The first screen of the project in a browser: the Fractera menu bar, a large heading reading \"This is your application starter\", a paragraph about everything being installed and wired together, a green button and a screenshot of the panel on the right.",
+    "A browser open at localhost:3000, with the address bar outlined and marked by an arrow from below. The page shows the Fractera menu bar, a large heading reading \"This is your application starter\", a paragraph about everything being installed and wired together, a green button and a screenshot of the panel on the right.",
   shotCaption:
-    "This is the first screen you should see. On your machine it opens at localhost:3000 — here the same project is already published on a server, which is why the address bar shows a domain. Your language and content may differ.",
+    "This is the first screen you should see — and the same address in the browser bar, the one the arrow points at. Your language and content may differ.",
 
   promptLead: "The prompt for your agent — copy it whole:",
   promptText: PROMPT_EN,
