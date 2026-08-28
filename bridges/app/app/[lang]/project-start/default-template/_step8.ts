@@ -35,6 +35,18 @@
 // содержал распознанные голосом обрывки («Local хост», «репетиторе»), которые
 // уехали бы в продукт дословно.
 //
+// 🔒 ПОДСКАЗКА СНИМАЕТ У АГЕНТА ПОВОД ТОРГОВАТЬСЯ, А НЕ ОТКЛЮЧАЕТ ЕГО ЗАЩИТУ.
+// ✗ владелец поймал живьём: агент увидел в окружении приватный ключ доступа к
+// серверу, решил, что от него ждут настройки root-SSH и клонирования незнакомого
+// репозитория, и остановился словами «I'd rather confirm than silently set up
+// root SSH access». Лечение — сузить задачу: сказать прямо, что доступ уже есть,
+// ключи сервера трогать не нужно и работа идёт только в папке проекта.
+// 🔒 ЧЕГО ПОДСКАЗКА СДЕЛАТЬ НЕ МОЖЕТ — и обещать это человеку нельзя: запрос
+// разрешения на `npm install` приходит от самого инструмента, а не от текста.
+// Никакая формулировка его не выключит, поэтому шаг ЧЕСТНО предупреждает о
+// паузе списком: работа встанет, нужно нажать «play». Обещание «пройдёт без
+// остановок» было бы враньём, которое человек поймает через минуту.
+//
 // 🔒 ПОДСКАЗКА ОБРЕЗАНА ПО ГРАНИЦЕ ШАГА, а не сокращена ради краткости: она
 // кончается установкой и прямо говорит «запускать пока не нужно». Иначе агент
 // поднимет проект здесь же, и девятый шаг человек откроет с уже сделанной
@@ -108,13 +120,17 @@ export function localVsPublic(lang: string, siteUrl: string | null): string {
 
 const PROMPT_RU = `Создай проект из GitHub-репозитория. Его адрес и все нужные ключи лежат в переменных окружения, которые я тебе передал файлом.
 
-Склонируй проект на эту машину, положи файл с переменными окружения в корень проекта и установи зависимости. Запускать проект пока не нужно.
+Это мой репозиторий и мой сервер, доступ у меня уже есть. Настраивать доступ по SSH, трогать ключи сервера и права не нужно — в этой задаче их не касайся. Работай только в папке проекта.
+
+Склонируй проект на эту машину по адресу из окружения, положи файл с переменными окружения в корень проекта и установи зависимости. Запускать проект пока не нужно.
 
 Когда установка закончится, ответь одной строкой: в какой папке лежит проект и сколько пакетов установлено.`;
 
 const PROMPT_EN = `Create the project from the GitHub repository. Its address and every key you need are in the environment variables I handed you as a file.
 
-Clone the project onto this machine, put the environment file in the project root and install the dependencies. Do not start the project yet.
+This is my repository and my server, and I already have access. There is no need to set up SSH access or touch server keys and permissions — leave them alone in this task. Work inside the project folder only.
+
+Clone the project onto this machine using the address from the environment, put the environment file in the project root and install the dependencies. Do not start the project yet.
 
 When the installation is over, answer in one line: which folder holds the project and how many packages were installed.`;
 
@@ -135,7 +151,8 @@ const ru: StepEightStrings = {
   bullets: [
     "Кнопка ниже отдаёт файл со всеми ключами и адресом вашего репозитория",
     "Подсказку скопируйте целиком — в ней сказано и что сделать, и чем закончить",
-    "Собирать что-либо по другим вкладкам не нужно: всё нужное уже в файле",
+    "Работа остановится сама: агент попросит разрешить установку зависимостей. Нажмите значок «play» справа от строки про установку — без этого она не начнётся",
+    "Ход установки видно в терминале; когда она закончится, агент спросит, продолжать ли дальше",
   ],
   stepOf: "Шаг {n} из {total}",
   done: "Шаг завершён",
@@ -186,7 +203,8 @@ const en: StepEightStrings = {
   bullets: [
     "The button below hands you a file with every key and your repository address",
     "Copy the prompt whole — it says both what to do and how to finish",
-    "Nothing has to be collected from other tabs: it is all in that one file",
+    "The work will pause by itself: the agent asks you to allow the install. Press the play icon next to the line about installing — without it nothing starts",
+    "The terminal shows the progress; when the install is over the agent asks whether to go on",
   ],
   stepOf: "Step {n} of {total}",
   done: "Step finished",
