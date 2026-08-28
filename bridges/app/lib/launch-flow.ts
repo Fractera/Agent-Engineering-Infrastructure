@@ -150,7 +150,11 @@ export function setFlowPushed(on: boolean): void {
 // врала бы ровно тем способом, который этот проект выкорчёвывает: подписка
 // кончается, программу сносят. Снял галочку — шаг снова открыт.
 
-export const FLOW_MARKS = ["claude-code"] as const;
+// 🔒 «folder» и «open-folder» ПРИНАДЛЕЖАТ СЮДА ЖЕ, И ПО ТОЙ ЖЕ ПРИЧИНЕ (28-26).
+// Папка заводится на машине человека, и Claude Code открывает её там же. Панель
+// не видит ни его диска, ни его окна: спросить неоткуда, значит закрывает
+// человек — и отметка остаётся снимаемой, как у Claude Code.
+export const FLOW_MARKS = ["claude-code", "folder", "open-folder"] as const;
 export type FlowMark = (typeof FLOW_MARKS)[number];
 
 export const isFlowMark = (v: unknown): v is FlowMark =>
