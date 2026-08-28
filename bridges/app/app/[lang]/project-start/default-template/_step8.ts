@@ -141,9 +141,9 @@ const ru: StepEightStrings = {
   done: "Шаг завершён",
 
   shotAlt:
-    "Слева окно загрузок, в нём свежий файл env.download. Справа окно Claude Code: этот файл перетащен прямо в поле ввода, а над ним стоит подсказка о создании проекта.",
+    "Окно Claude Code с ходом работы: агент создал проект, установил зависимости и запустил его. Две команды он выполнил только после отдельного разрешения человека, а в конце ответил ссылкой на localhost:3000.",
   shotCaption:
-    "Так это выглядит на вашей машине: скачанный файл окружения перетащен прямо в поле Claude Code, следом вставлена подсказка с этой страницы.",
+    "Так это выглядит на вашей машине: агент отчитывается о каждом шаге. Установку зависимостей и запуск он может попросить разрешить отдельно — это нормально, подтвердите.",
 
   grabLabel: "Забрать переменные окружения",
   grabToastTitle: "Файл окружения у вас",
@@ -192,9 +192,9 @@ const en: StepEightStrings = {
   done: "Step finished",
 
   shotAlt:
-    "On the left a downloads window with a fresh env.download file. On the right Claude Code: the file is dragged straight into the input field, with the project prompt above it.",
+    "A Claude Code window showing the work in progress: the agent created the project, installed the dependencies and started it. Two commands ran only after the person approved them separately, and the last line is a link to localhost:3000.",
   shotCaption:
-    "This is how it looks on your machine: the downloaded environment file dragged straight into the Claude Code input, with the prompt from this page pasted after it.",
+    "This is how it looks on your machine: the agent reports every step. It may ask you to approve the install and the start separately — that is normal, approve it.",
 
   grabLabel: "Take the environment variables",
   grabToastTitle: "The environment file is yours",
