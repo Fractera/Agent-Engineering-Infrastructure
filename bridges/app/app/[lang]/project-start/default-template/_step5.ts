@@ -37,6 +37,10 @@ export type StepFiveStrings = {
   goPrev: string;
   goNext: string;
   replace: string;
+  /** ЧТО на снимке — читается вслух тем, кто его не увидит. Не повтор подписи. */
+  shotAlt: string;
+  /** Подпись под рамкой: чей это экран и на что смотреть. */
+  shotCaption: string;
 };
 
 const ru: StepFiveStrings = {
@@ -71,6 +75,11 @@ const ru: StepFiveStrings = {
   goPrev: "К предыдущему шагу",
   goNext: "К следующему шагу",
   replace: "Изменить отметку",
+
+  shotAlt:
+    "Тёмная страница claude.com с заголовком «Download Claude» и двумя кнопками загрузки: обычная для Windows и отдельная для Windows arm64.",
+  shotCaption:
+    "Так выглядит страница загрузки на claude.com: кнопки предлагают версию под вашу машину — здесь это Windows.",
 };
 
 const en: StepFiveStrings = {
@@ -105,6 +114,11 @@ const en: StepFiveStrings = {
   goPrev: "To the previous step",
   goNext: "To the next step",
   replace: "Change the mark",
+
+  shotAlt:
+    "A dark claude.com page titled «Download Claude» with two download buttons: the plain Windows one and a separate Windows arm64 one.",
+  shotCaption:
+    "This is how the download page looks on claude.com: the buttons offer the build for your machine — here it is Windows.",
 };
 
 const DICT: Record<string, StepFiveStrings> = { en, ru };

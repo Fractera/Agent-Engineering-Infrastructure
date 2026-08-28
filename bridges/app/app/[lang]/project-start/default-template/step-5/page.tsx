@@ -64,6 +64,15 @@ export default async function DefaultTemplateStepFive(
             ? `${adminHref(lang, "project-start")}/default-template/step-${n}`
             : undefined
         }
+        // 🔒 СНИМОК ЧУЖОГО ЭКРАНА — прислан владельцем 2026-08-28 для этого шага
+        // (28-25). Страница загрузки Claude: как она выглядит и какие кнопки на
+        // ней есть. Ставится тем же вызовом, что на шагах 1 и 2, — элемент
+        // `StepShot` построен в 28-14 и не тронут ни одним байтом.
+        shot={{
+          src: "/images/launch/step-5-claude-download.png",
+          alt: x.shotAlt,
+          caption: x.shotCaption,
+        }}
         link={{ href: "https://claude.com/download", label: x.linkLabel }}
       >
         {marked ? (
