@@ -107,9 +107,9 @@ const ru: StepNineStrings = {
   done: "Шаг завершён",
 
   shotAlt:
-    "Браузер, открытый на localhost:3000. Страница показывает шапку с меню, крупный заголовок «Это стартер вашего приложения» и снимок панели ниже — это и есть только что запущенный проект.",
+    "Первый экран проекта в браузере: шапка с меню Fractera, крупный заголовок «This is your application starter», абзац о том, что всё уже установлено и связано, зелёная кнопка и снимок панели справа.",
   shotCaption:
-    "Так выглядит запущенный проект на вашей машине. Заголовок и первый экран должны совпасть; ваш язык и содержимое могут отличаться.",
+    "Такой первый экран вы и должны увидеть. У вас он откроется по адресу localhost:3000 — здесь показан тот же проект, уже опубликованный на сервере, поэтому в адресной строке домен. Язык и содержимое у вас могут отличаться.",
 
   promptLead: "Подсказка для агента — скопируйте её целиком:",
   promptText: PROMPT_RU,
@@ -149,9 +149,9 @@ const en: StepNineStrings = {
   done: "Step finished",
 
   shotAlt:
-    "A browser open at localhost:3000. The page shows a header with a menu, a large heading that reads \"This is your application starter\" and a screenshot of the panel below — this is the project that has just been started.",
+    "The first screen of the project in a browser: the Fractera menu bar, a large heading reading \"This is your application starter\", a paragraph about everything being installed and wired together, a green button and a screenshot of the panel on the right.",
   shotCaption:
-    "This is what the running project looks like on your machine. The heading and the first screen should match; your language and content may differ.",
+    "This is the first screen you should see. On your machine it opens at localhost:3000 — here the same project is already published on a server, which is why the address bar shows a domain. Your language and content may differ.",
 
   promptLead: "The prompt for your agent — copy it whole:",
   promptText: PROMPT_EN,
