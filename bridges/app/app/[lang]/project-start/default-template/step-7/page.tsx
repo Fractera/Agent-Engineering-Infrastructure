@@ -53,6 +53,10 @@ export default async function DefaultTemplateStepSeven(
         lead={x.lead}
         info={x.info}
         important={x.important}
+        // 🔒 ДВЕНАДЦАТАЯ СУЩНОСТЬ (28-27): красный контейнер — цена ошибки.
+        // Здесь она уместна как нигде: неверная папка стоит не минуты, а чужих
+        // ключей в поле зрения агента.
+        danger={x.danger}
         actionLead={x.actionLead}
         bullets={x.bullets}
         stepHref={(n) =>

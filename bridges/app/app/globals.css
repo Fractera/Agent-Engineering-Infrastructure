@@ -158,6 +158,13 @@
   --callout-important-bg: oklch(0.97 0.03 75);
   --callout-important-border: oklch(0.85 0.09 70);
   --callout-important-fg: oklch(0.5 0.14 55);
+
+  /* Красная подсказка — цена ошибки (28-27). Тот же ряд светлот, что у голубой
+     и оранжевой: рядом они обязаны читаться как один набор, а не как три разных
+     виджета. Отличает только тон. */
+  --callout-danger-bg: oklch(0.97 0.03 25);
+  --callout-danger-border: oklch(0.84 0.11 25);
+  --callout-danger-fg: oklch(0.5 0.18 27);
 }
 
 .dark {
@@ -168,6 +175,10 @@
   --callout-important-bg: oklch(0.65 0.15 65 / 12%);
   --callout-important-border: oklch(0.7 0.14 65 / 35%);
   --callout-important-fg: oklch(0.87 0.09 75);
+
+  --callout-danger-bg: oklch(0.6 0.19 27 / 14%);
+  --callout-danger-border: oklch(0.65 0.18 27 / 38%);
+  --callout-danger-fg: oklch(0.85 0.1 25);
 }
 
 /* ─── ССЫЛКА-ДЕЙСТВИЕ ШАГА (шаг 28-11, 2026-08-27) ───────────────────────────

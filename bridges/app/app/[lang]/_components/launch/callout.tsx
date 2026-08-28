@@ -1,11 +1,23 @@
 import type { ReactNode } from "react";
-import { Info, AlertTriangle } from "lucide-react";
+import { Info, AlertTriangle, OctagonAlert } from "lucide-react";
 import { Small } from "@/components/ui/typography";
 
-// ДВА КОНТЕЙНЕРА-ПОДСКАЗКИ (шаг 28-3, 2026-08-27).
+// ТРИ КОНТЕЙНЕРА-ПОДСКАЗКИ (28-3 два, 28-27 третий).
 //
 // Владелец назвал их дословно: «контейнер голубой подсказка как информация» и
-// «контейнер оранжевый подсказка как это важно».
+// «контейнер оранжевый подсказка как это важно»; 2026-08-28 добавлен третий —
+// «красный контейнер, в котором мы пишем информацию на тему что будет, если вы
+// запустите проект в папке по умолчанию».
+//
+// 🔒 КРАСНЫЙ ГОВОРИТ О ЦЕНЕ ОШИБКИ, А НЕ О СИЛЕ ГОЛОСА. Разница с оранжевым
+// содержательная, и без неё третий тон превратится в «оранжевый, но погромче»:
+// оранжевый говорит, ЧТО сделать («не пропускайте этот шаг»), красный — ЧТО
+// БУДЕТ, если сделать иначе. Поэтому красного не может быть на шаге, где цена
+// ошибки — потерянная минута.
+//
+// 🔒 ОДИН КРАСНЫЙ НА ШАГ, И ЛУЧШЕ НИ ОДНОГО. Тон, который встречается на каждом
+// шаге, перестаёт значить что-либо к третьему: человек привыкает и пролистывает
+// ровно то, ради чего этот контейнер заведён.
 //
 // 🔒 ОДИН ФАЙЛ НА ОБА, ПОТОМУ ЧТО РАЗЛИЧИЕ У НИХ ОДНО — ТОН. Всё остальное —
 // отступы, радиус, размер значка, ритм текста — обязано совпадать: две подсказки
@@ -21,37 +33,41 @@ import { Small } from "@/components/ui/typography";
 // произносящая «треугольник с восклицательным знаком», крадёт время и не добавляет
 // ничего.
 
-export type CalloutTone = "info" | "important";
+export type CalloutTone = "info" | "important" | "danger";
+
+// 🔒 ТАБЛИЦА, А НЕ ЛЕСТНИЦА ТЕРНАРНЫХ. С двумя тонами тернарный оператор читался;
+// с тремя он даёт шесть развилок на четыре места и ломается молча — четвёртый тон
+// добавили бы в трёх местах из четырёх. Здесь один тон — одна строка.
+//
+// 🔒 КЛАССЫ ЗАПИСАНЫ ЦЕЛИКОМ И БУКВАЛЬНО, а не собраны из имени токена. Tailwind
+// ищет классы в исходнике ТЕКСТОМ: `bg-[var(${x})]` он не увидит никогда, класс
+// не попадёт в css, и контейнер выйдет прозрачным — без единой ошибки сборки.
+// Отказ, который выглядит как успех.
+const TONE = {
+  info: {
+    Icon: Info,
+    box: "border-[var(--callout-info-border)] bg-[var(--callout-info-bg)]",
+    fg: "text-[var(--callout-info-fg)]",
+  },
+  important: {
+    Icon: AlertTriangle,
+    box: "border-[var(--callout-important-border)] bg-[var(--callout-important-bg)]",
+    fg: "text-[var(--callout-important-fg)]",
+  },
+  danger: {
+    Icon: OctagonAlert,
+    box: "border-[var(--callout-danger-border)] bg-[var(--callout-danger-bg)]",
+    fg: "text-[var(--callout-danger-fg)]",
+  },
+} as const;
 
 export function Callout({ tone, children }: { tone: CalloutTone; children: ReactNode }) {
-  const Icon = tone === "info" ? Info : AlertTriangle;
+  const { Icon, box, fg } = TONE[tone];
 
   return (
-    <div
-      data-callout={tone}
-      className={[
-        "flex gap-3 rounded-lg border p-4",
-        tone === "info"
-          ? "border-[var(--callout-info-border)] bg-[var(--callout-info-bg)]"
-          : "border-[var(--callout-important-border)] bg-[var(--callout-important-bg)]",
-      ].join(" ")}
-    >
-      <Icon
-        size={18}
-        aria-hidden
-        className={
-          tone === "info"
-            ? "mt-0.5 shrink-0 text-[var(--callout-info-fg)]"
-            : "mt-0.5 shrink-0 text-[var(--callout-important-fg)]"
-        }
-      />
-      <Small
-        className={
-          tone === "info" ? "text-[var(--callout-info-fg)]" : "text-[var(--callout-important-fg)]"
-        }
-      >
-        {children}
-      </Small>
+    <div data-callout={tone} className={`flex gap-3 rounded-lg border p-4 ${box}`}>
+      <Icon size={18} aria-hidden className={`mt-0.5 shrink-0 ${fg}`} />
+      <Small className={fg}>{children}</Small>
     </div>
   );
 }

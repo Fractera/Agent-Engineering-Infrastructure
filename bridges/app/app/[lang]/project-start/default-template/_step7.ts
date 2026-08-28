@@ -21,6 +21,15 @@ export type StepSevenStrings = {
   lead: string;
   info: string;
   important: string;
+  /**
+   * Красная подсказка — цена ошибки (28-27).
+   *
+   * 🔒 ТЕКСТ ВЛАДЕЛЬЦА 2026-08-28, усиленный по его прямой просьбе «от себя
+   * усилить эту беду, если ты меня поддерживаешь». Поддерживаю: два последствия
+   * он не назвал, а они хуже перечисленных — чужие ключи в поле зрения агента и
+   * правки в соседних проектах, которых никто не заметит.
+   */
+  danger: string;
   actionLead: string;
   bullets: string[];
   stepOf: string;
@@ -51,6 +60,8 @@ const ru: StepSevenStrings = {
     "Это критически важно: агент работает в той папке, которую вы ему назвали, и ни в какой другой. Всё, что он создаст, появится именно там.",
   important:
     "Убедитесь, что не промахнулись. Спросите у агента дословно: «В какой папке ты сейчас работаешь? Назови полный путь». Сверьте ответ с путём вашей папки. Совпал — всё верно. Не совпал — закройте Claude Code и откройте заново, выбрав нужную папку; продолжать в чужой папке нельзя.",
+  danger:
+    "Что будет, если открыть папку по умолчанию — ту, где лежат все ваши проекты. Агент увидит их все, и чистоту архитектуры вы больше не гарантируете: он учится на соседнем коде и начинает предлагать чужие библиотеки и приёмы как ваши, а ресурсы уходят на чтение лишних файлов. Два последствия замечают позже остальных: в поле зрения агента попадают чужие файлы окружения с ключами и токенами, и менять файлы он может в соседних проектах — там этого никто не ждёт.",
   actionLead:
     "Отметьте галочку, когда агент назвал правильный путь.",
   bullets: [
@@ -90,6 +101,8 @@ const en: StepSevenStrings = {
     "This matters: the agent works in the folder you named and in no other. Everything it creates will appear exactly there.",
   important:
     "Make sure you did not miss. Ask the agent, word for word: «Which folder are you working in right now? Give the full path». Compare the answer with your folder's path. A match means all is well. No match — close Claude Code and open it again with the right folder; carrying on in the wrong folder is not an option.",
+  danger:
+    "What happens if you open the default folder — the one holding all your projects. The agent sees every one of them, and you no longer guarantee a clean architecture: it learns from the neighbouring code and starts offering other projects' libraries and habits as yours, while resources go on reading files that have nothing to do with this project. Two consequences are noticed last: other projects' environment files, with their keys and tokens, come into the agent's view, and it can change files in those projects — where nobody is expecting it.",
   actionLead:
     "Tick the box once the agent has named the right path.",
   bullets: [
