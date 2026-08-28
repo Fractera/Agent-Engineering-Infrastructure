@@ -277,4 +277,4 @@ export const DEFAULT_TEMPLATE_TOTAL = 16;
  * Число растёт на единицу с каждым новым шагом. Забыть его — значит получить
  * мёртвую ссылку, и это ловится нажатием, а не чтением.
  */
-export const DEFAULT_TEMPLATE_BUILT = 8;
+export const DEFAULT_TEMPLATE_BUILT = 9;

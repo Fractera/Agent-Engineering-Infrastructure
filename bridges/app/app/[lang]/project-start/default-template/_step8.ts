@@ -96,28 +96,11 @@ export type StepEightStrings = {
   replace: string;
 };
 
-/**
- * Голубая подсказка про разницу «локально против опубликованного».
- *
- * 🔒 ЖИВЁТ ЗДЕСЬ ВРЕМЕННО: её дом — шаг девятый, где человек впервые видит проект
- * в браузере, и туда она переезжает подшагом 28-30 вместе со словом
- * `localhost:3000`. На восьмом шаге она больше не показывается: запуска здесь нет,
- * и объяснять разницу с опубликованным адресом ещё нечему.
- *
- * 🔒 АДРЕС ПОДСТАВЛЯЕТСЯ ЖИВОЙ, А НЕ ВЫДУМАННЫЙ, и режим определяет сервер:
- * защищённый — домен, иначе IP с портом. Написать здесь «ваш домен» вообще —
- * значит заставить человека угадывать, о чём речь; написать неверный режим —
- * пообещать `https://` тому, кто работает по IP.
- */
-export function localVsPublic(lang: string, siteUrl: string | null): string {
-  const ru = siteUrl
-    ? `Проект на localhost:3000 живёт только на вашей машине — интернет о нём не знает. По адресу ${siteUrl} по-прежнему открывается то, что развёрнуто на сервере, и ваши изменения туда пока не попали. Чтобы попали, нужна сборка проекта — это следующий шаг.`
-    : `Проект на localhost:3000 живёт только на вашей машине — интернет о нём не знает. На сервере по-прежнему работает то, что развёрнуто раньше, и ваши изменения туда пока не попали. Чтобы попали, нужна сборка проекта — это следующий шаг.`;
-  const en = siteUrl
-    ? `The project on localhost:3000 lives on your machine only — the internet knows nothing about it. At ${siteUrl} people still see what is deployed on the server, and your changes have not reached it yet. Getting them there takes a build — that is the next step.`
-    : `The project on localhost:3000 lives on your machine only — the internet knows nothing about it. The server still serves what was deployed earlier, and your changes have not reached it yet. Getting them there takes a build — that is the next step.`;
-  return lang === "ru" ? ru : en;
-}
+// 🔒 `localVsPublic()` ОТСЮДА УЕХАЛ ЦЕЛИКОМ В `_step9.ts` (28-30), а не
+// скопировался. Его место — там, где человек впервые видит проект в браузере;
+// здесь запуска нет, и объяснять разницу с опубликованным адресом ещё нечему.
+// Оставленная «на всякий случай» копия разошлась бы с оригиналом на первой же
+// правке, и соседние страницы говорили бы человеку разное.
 
 const PROMPT_RU = `Создай проект из GitHub-репозитория. Его адрес и все нужные ключи лежат в переменных окружения, которые я тебе передал файлом.
 
