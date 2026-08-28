@@ -44,8 +44,9 @@
 // 🔒 ЧЕГО ПОДСКАЗКА СДЕЛАТЬ НЕ МОЖЕТ — и обещать это человеку нельзя: запрос
 // разрешения на `npm install` приходит от самого инструмента, а не от текста.
 // Никакая формулировка его не выключит, поэтому шаг ЧЕСТНО предупреждает о
-// паузе списком: работа встанет, нужно нажать «play». Обещание «пройдёт без
-// остановок» было бы враньём, которое человек поймает через минуту.
+// паузе списком и показывает на снимке оба способа разрешить — значок запуска и
+// ответ словами. Обещание «пройдёт без остановок» было бы враньём, которое
+// человек поймает через минуту.
 //
 // 🔒 ПОДСКАЗКА ОБРЕЗАНА ПО ГРАНИЦЕ ШАГА, а не сокращена ради краткости: она
 // кончается установкой и прямо говорит «запускать пока не нужно». Иначе агент
@@ -151,16 +152,16 @@ const ru: StepEightStrings = {
   bullets: [
     "Кнопка ниже отдаёт файл со всеми ключами и адресом вашего репозитория",
     "Подсказку скопируйте целиком — в ней сказано и что сделать, и чем закончить",
-    "Работа остановится сама: агент попросит разрешить установку зависимостей. Нажмите значок «play» справа от строки про установку — без этого она не начнётся",
+    "Работа остановится сама: агент попросит разрешить установку зависимостей. Разрешите одним из двух способов со снимка — значком запуска справа от команды или ответом словами",
     "Ход установки видно в терминале; когда она закончится, агент спросит, продолжать ли дальше",
   ],
   stepOf: "Шаг {n} из {total}",
   done: "Шаг завершён",
 
   shotAlt:
-    "Окно Claude Code с ходом работы: агент создал проект, установил зависимости и запустил его. Две команды он выполнил только после отдельного разрешения человека, а в конце ответил ссылкой на localhost:3000.",
+    "Окно Claude Code: проект склонирован, файл окружения записан, а установка зависимостей остановлена запросом разрешения. Цифрой 1 отмечен значок запуска справа от строки npm install, цифрой 2 — ответ «I approve, run npm install» в поле ввода. Справа терминал показывает установку: добавлено 1155 пакетов.",
   shotCaption:
-    "Так это выглядит на вашей машине: агент отчитывается о каждом шаге. Установку зависимостей и запуск он может попросить разрешить отдельно — это нормально, подтвердите.",
+    "Так выглядит остановка на вашей машине. Разрешить можно двумя способами: 1 — нажать значок запуска справа от команды, 2 — ответить агенту согласием словами. Справа в терминале виден ход установки.",
 
   grabLabel: "Забрать переменные окружения",
   grabToastTitle: "Файл окружения у вас",
@@ -203,16 +204,16 @@ const en: StepEightStrings = {
   bullets: [
     "The button below hands you a file with every key and your repository address",
     "Copy the prompt whole — it says both what to do and how to finish",
-    "The work will pause by itself: the agent asks you to allow the install. Press the play icon next to the line about installing — without it nothing starts",
+    "The work will pause by itself: the agent asks you to allow the install. Allow it either way shown on the shot — the run icon next to the command, or a reply in words",
     "The terminal shows the progress; when the install is over the agent asks whether to go on",
   ],
   stepOf: "Step {n} of {total}",
   done: "Step finished",
 
   shotAlt:
-    "A Claude Code window showing the work in progress: the agent created the project, installed the dependencies and started it. Two commands ran only after the person approved them separately, and the last line is a link to localhost:3000.",
+    "A Claude Code window: the project is cloned, the environment file is written, and the dependency install is held back by a permission request. Marker 1 points at the run icon next to the npm install line, marker 2 at the reply \"I approve, run npm install\" in the input. The terminal on the right shows the install: 1155 packages added.",
   shotCaption:
-    "This is how it looks on your machine: the agent reports every step. It may ask you to approve the install and the start separately — that is normal, approve it.",
+    "This is what the pause looks like on your machine. Two ways to allow it: 1 — press the run icon next to the command, 2 — reply to the agent in words. The terminal on the right shows the install running.",
 
   grabLabel: "Take the environment variables",
   grabToastTitle: "The environment file is yours",
