@@ -1,19 +1,26 @@
-// ШАГ ВОСЬМОЙ: ЗАПУСК НА ЛОКАЛЬНОЙ МАШИНЕ (28-28, 2026-08-28).
+// ШАГ ВОСЬМОЙ: УСТАНОВКА ЗАВИСИМОСТЕЙ (28-29, 2026-08-28).
 //
-// 🔒 ЗДЕСЬ СХЛОПНУТА ЦЕЛАЯ ВЕРЕНИЦА ПРЕЖНИХ ШАГОВ, и это решение владельца, а не
-// упрощение по дороге: раньше человек вставлял репозиторий, разворачивал проект,
+// 🔒 ШАГ РАЗРЕЗАН НАДВОЕ РЕШЕНИЕМ ВЛАДЕЛЬЦА 2026-08-28: «мы должны разделить этот
+// шаг на два дела… это прохождение установки NPM зависимости». Здесь остаётся
+// приезд проекта и привоз материалов; запуск, слово `localhost:3000` и галочка «я
+// вижу такой же проект» уезжают в шаг девятый (28-30).
+//
+// 🔒 ЗДЕСЬ ПО-ПРЕЖНЕМУ СХЛОПНУТА ВЕРЕНИЦА ПРЕЖНИХ ШАГОВ, и это решение владельца, а
+// не упрощение по дороге: раньше человек вставлял репозиторий, разворачивал проект,
 // потом шёл за ключами в соседнюю вкладку. Сегодня `api/config/env-export` отдаёт
 // одним файлом всё — адрес слоя данных, ключи, доступ к серверу и переменные
 // слота вместе с адресом репозитория. Значит вкладок больше не нужно.
 //
-// 🔒 ГОЛУБАЯ ПОДСКАЗКА ЗНАЕТ РЕЖИМ СЕРВЕРА, А НЕ УГАДЫВАЕТ ЕГО. `publicSiteUrl()`
-// спрашивает окружение (защищённый режим) и базу (имя домена) и отдаёт либо
-// `https://домен`, либо `http://IP:3000`. Написать «ваш домен» вообще значило бы
-// заставить человека гадать, о чём речь.
+// 🔒 ГОЛУБАЯ ПОДСКАЗКА ЗДЕСЬ ОБЪЯСНЯЕТ ПРИЧИНУ, А НЕ АДРЕС. Прежняя — про разницу
+// локального и опубликованного — с этой страницы снята вместе с запуском:
+// объяснять разницу с опубликованным адресом нечему, пока проект не поднят.
+// Поэтому `publicSiteUrl()` отсюда ушёл, и вернётся он на девятом шаге, где живой
+// адрес действительно нужен.
 //
-// 🔒 ДЕЙСТВИЕ ШАГА ОДНО — ГАЛОЧКА. Кнопка выдачи и блок подсказки действиями шага
-// не являются: они дают материал, а закрывает шаг человек, увидевший проект в
-// браузере. Панель этого увидеть не может — у неё нет глаз на его машине.
+// 🔒 ДЕЙСТВИЕ ШАГА ОДНО — ГАЛОЧКА. Кнопка выдачи, блок подсказки и снимок
+// действиями шага не являются: они дают материал, а закрывает шаг человек,
+// дождавшийся конца установки. Панель этого увидеть не может — у неё нет глаз на
+// его машине.
 
 import { getAdminStrings } from "@/lib/i18n/admin-strings";
 import { adminHref } from "@/lib/admin-nav";
@@ -24,9 +31,8 @@ import { StepNav } from "../../../_components/launch/step-nav";
 import { StepGrabButton, StepCopyBlock } from "../../../_components/launch/step-grab.client";
 import { Small } from "@/components/ui/typography";
 import { flowMarked } from "@/lib/launch-flow";
-import { publicSiteUrl } from "@/lib/public-site-url";
 import { DEFAULT_TEMPLATE_TOTAL, DEFAULT_TEMPLATE_BUILT } from "../_strings";
-import { stepEightStrings, localVsPublic } from "../_step8";
+import { stepEightStrings } from "../_step8";
 
 export const dynamic = "force-dynamic";
 
@@ -36,8 +42,10 @@ export default async function DefaultTemplateStepEight(
   const { lang } = await params;
   const s = getAdminStrings(lang);
   const x = stepEightStrings(lang);
+  // 🔒 ОТМЕТКА ОСТАЁТСЯ `local-run` И ПЕРЕИМЕНОВАНИЮ НЕ ПОДЛЕЖИТ: у тех, кто уже
+  // прошёл прежний восьмой шаг, она проставлена в окружении слота, и смена имени
+  // погасила бы пройденное. Девятому шагу даётся СВОЯ отметка (28-30).
   const marked = flowMarked("local-run");
-  const site = publicSiteUrl();
 
   return (
     <PageShell
@@ -60,11 +68,16 @@ export default async function DefaultTemplateStepEight(
         badge={x.badge}
         title={x.title}
         lead={x.lead}
-        // Голубая — чем локальный просмотр отличается от того, что видят люди.
-        info={localVsPublic(lang, site.url)}
+        // Голубая — почему проект нельзя открыть сразу и что такое зависимости.
+        info={x.info}
         important={x.important}
         actionLead={x.actionLead}
         bullets={x.bullets}
+        shot={{
+          src: "/images/launch/step-8-install-deps.png",
+          alt: x.shotAlt,
+          caption: x.shotCaption,
+        }}
         stepHref={(n) =>
           n <= DEFAULT_TEMPLATE_BUILT
             ? `${adminHref(lang, "project-start")}/default-template/step-${n}`
