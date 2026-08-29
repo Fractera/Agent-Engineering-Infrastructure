@@ -15,7 +15,7 @@
 // панель. Раньше первыми стояли настройки приложения — список работы, которую
 // ещё предстоит сделать. Теперь первым идёт список того, что уже работает без
 // него: до того, как просить о настройке, стоит показать полученную ценность.
-export const NAV_GROUPS = ["visibility", "design", "application", "products", "data", "tools", "backup", "access", "project", "help"] as const;
+export const NAV_GROUPS = ["visibility", "design", "application", "products", "data", "backup", "access", "project", "help"] as const;
 export type NavGroup = (typeof NAV_GROUPS)[number];
 
 // Порядок внутри группы = порядок в меню. Он повторяет порядок сегодняшнего
@@ -97,17 +97,20 @@ export const NAV = [
   { slug: "agentic-rag",     group: "data" },
   { slug: "map",             group: "data" },
 
-  // Микро-инструменты: маленькие переиспользуемые куски, которые панель
-  // применяет для себя и отдаёт продуктовому слою. Заканчивается «Добавить
-  // инструмент» — она переехала сюда из данных, где оказалась лишь потому, что
-  // раздела инструментов не существовало.
-  { slug: "tools",           group: "tools" },
-  { slug: "tool-image-crop", group: "tools" },
-  { slug: "tool-video-trim", group: "tools" },
-  { slug: "tool-voice-input", group: "tools" },
-  { slug: "tool-code-view",  group: "tools" },
-  { slug: "tool-translations-dialog", group: "tools" },
-  { slug: "add-tool",        group: "tools" },
+  // 🔒 ГРУППА «ИНСТРУМЕНТЫ» УБРАНА ИЗ НАВИГАЦИИ 2026-08-29 (решение владельца,
+  // дословно: «этот факт не несёт никакой смысловой ценности, единственное что
+  // делает — нагружает административную панель»).
+  //
+  // Здесь стояли семь пунктов: сам раздел, пять витрин отдельных инструментов и
+  // «Добавить инструмент». Витрина инструмента ничего не настраивает: она
+  // показывает, что инструмент есть, — а он и так есть, и живёт в репозитории
+  // пользователя (`_tools/`), где им пользуется его агент. Семь пунктов меню ради
+  // сообщения «у вас есть обрезка изображений» — это плата вниманием за факт,
+  // который ничего не решает.
+  //
+  // 🔒 САМИ ИНСТРУМЕНТЫ НЕ ТРОНУТЫ. Убрана ВИТРИНА в панели, а не способность:
+  // `_tools/` в проекте и зеркало в панели работают как работали. Это правка
+  // навигации, и ничего кроме.
 
   { slug: "map-backup",       group: "backup" },
   { slug: "export",          group: "backup" },
@@ -171,7 +174,6 @@ export const GROUP_INDEX = {
   visibility: "visibility",
   data: "map-data",
   design: "map-design",
-  tools: "tools",
   backup: "map-backup",
   access: "map-access",
   project: "map-project",
