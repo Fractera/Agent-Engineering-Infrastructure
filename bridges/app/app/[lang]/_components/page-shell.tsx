@@ -61,7 +61,8 @@ export function PageShell(
         {/* 🔒 ЗАГОЛОВОК И ОПИСАНИЕ — ПРИМИТИВЫ, А НЕ КЕГЛИ НА МЕСТЕ (шаг 28-7,
             2026-08-27). Здесь стояло `text-base font-semibold` (16px) и
             подсказка `text-[12px]`. Владелец, увидев образец на
-            `/[lang]/github/example`, отменил своё утреннее решение «только
+            `/[lang]/project-start/example` (адрес того дня — `/[lang]/github/example`,
+            вкладка удалена 2026-08-29), отменил своё утреннее решение «только
             образец» и распространил стандарт на все разделы:
             «to do all pages in admin to this h1 + description standart».
 

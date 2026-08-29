@@ -63,7 +63,7 @@ export default async function GitHubAboutPage({ params }: { params: Promise<{ la
 
       <p className="mt-3 text-[10px] leading-relaxed text-muted-foreground">
         {a.seeAlso}{" "}
-        <Link href={adminHref(lang, "github")} className="underline">{s.pages.github.title}</Link>
+        <Link href={adminHref(lang, "project-start")} className="underline">{s.pages["project-start"].title}</Link>
         {" · "}
         <Link href={adminHref(lang, "how-to-build")} className="underline">{s.pages["how-to-build"].title}</Link>
       </p>

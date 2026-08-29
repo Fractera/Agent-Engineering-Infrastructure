@@ -40,7 +40,7 @@ export default async function LaunchExamplePage({ params }: { params: Promise<{ 
     <>
       {/* Крошки — общий компонент панели, а не своя копия его разметки. Хвост
           пути показывает, что мы на уровень глубже вкладки запуска. */}
-      <Breadcrumbs lang={lang} slug="github" s={s} params={{ file: x.crumb }} />
+      <Breadcrumbs lang={lang} slug="project-start" s={s} params={{ file: x.crumb }} />
 
       <div data-app-column className="px-4 py-6">
         <ExampleHeader eyebrow={x.eyebrow} title={x.title} subtitle={x.subtitle} />

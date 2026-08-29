@@ -228,7 +228,7 @@ export function collectWarnings(): AdminWarning[] {
   // в двух местах по-разному, предупреждение горело, а кнопки «Забрать» и
   // «Отправить» выглядели рабочими (владелец 2026-08-13).
   if (!envHas(APP_ENV, "USER_GITHUB_REPO_URL") || !envHas(APP_ENV, "USER_GITHUB_VERIFIED_AT")) {
-    out.push({ id: "github", level: "blocking", slug: "github" });
+    out.push({ id: "github", level: "blocking", slug: "project-start" });
   }
   //
   // 🔒 ПЕРЕНОС `.env.local` — ОТДЕЛЬНЫЙ ШАГ, И БЕЗ НЕГО ЛОКАЛЬНАЯ РАБОТА НЕ

@@ -61,7 +61,6 @@ const ICONS: Record<AdminPageSlug, LucideIcon> = {
   channels: MessagesSquare,
   openai: Sparkles,
   "project-start": Rocket,
-  github: GitBranch,
   "github-about": Info,
   deployments: History,
   // Инструменты разработки: экран с телефоном — то, на чём агент СМОТРИТ

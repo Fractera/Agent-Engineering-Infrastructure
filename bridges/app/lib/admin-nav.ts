@@ -124,7 +124,17 @@ export const NAV = [
 
   { slug: "map-project",      group: "project" },
   { slug: "project-start",   group: "project" },
-  { slug: "github",          group: "project" },
+  // 🪦 ВКЛАДКА «GITHUB» УДАЛЕНА 2026-08-29 РЕШЕНИЕМ ВЛАДЕЛЬЦА, дословно: «мы уже
+  // переехали на первую вкладку запуск проекта, а вторую нужно немедленно удалить».
+  // Здесь стояло `{ slug: "github", group: "project" }` — старый мастер запуска
+  // (шаг 25). Его страница, компоненты и `_lib/git.ts` удалены целиком: половинчатого
+  // удаления в этом списке не бывает, `AdminPageSlug` выводится отсюда.
+  //
+  // 🔒 ТРЕВОГА О НЕПОДКЛЮЧЁННОМ GITHUB НЕ ОТМЕНЕНА, У НЕЁ СМЕНИЛСЯ АДРЕС.
+  // `admin-warnings.ts` по-прежнему говорит «требуется соединить с GitHub», но
+  // ведёт на `project-start`. Тревога, ведущая на удалённую страницу, — тупик.
+  //
+  // 🔒 ОБРАЗЕЦ ПЕРЕЕХАЛ, А НЕ ПОГИБ: `/[lang]/github/example` → `/[lang]/project-start/example`.
   { slug: "github-about",    group: "project" },
   { slug: "deployments",     group: "project" },
   { slug: "env",             group: "project" },
