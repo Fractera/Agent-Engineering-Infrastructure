@@ -45,16 +45,9 @@ const ICONS: Record<AdminPageSlug, LucideIcon> = {
   "map-access": Compass,
   "map-project": Compass,
   "map-help": Compass,
-  "app-settings": Palette,
-  languages: Languages,
   // Радар, а не лупа: раздел не про поиск ПО сайту, а про то, чем сайт виден
   // снаружи — поисковикам, моделям, устройствам.
   visibility: Radar,
-  "parallel-routing": Columns3,
-  "app-features": SlidersHorizontal,
-  "top-menu": PanelTop,
-  "footer-pages": PanelBottom,
-  "cookie-banner": Cookie,
   users: Users,
   media: ImagePlus,
   database: Database,

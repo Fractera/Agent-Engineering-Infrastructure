@@ -1556,8 +1556,8 @@
         "hint": "Show source code with real syntax colouring."
       },
       "map-application": {
-        "title": "Application map",
-        "hint": "Everything that shapes the app itself: identity, languages, layout, capabilities."
+        "title": "Products and migration",
+        "hint": "What this server carries and where it came from. The settings of the application itself now live inside the project — its own architect layer."
       },
       "map-data": {
         "title": "Data map",
@@ -1630,7 +1630,7 @@
     },
     "breadcrumbHome": "Panel",
     "groupMaps": {
-      "application": "These settings shape the application itself — what it is called, which languages it speaks, how its pages are laid out and which capabilities are switched on. They apply without a rebuild unless a section says otherwise.",
+      "application": "Two things live here: the products this server carries, and the move of a project that already exists elsewhere. Everything that defines the application itself — its name, languages, layout, capabilities, menus and the cookie banner — moved into the project and is edited there, at /architect/app-config.",
       "data": "Everything the project knows lives here: accounts, uploaded files, rows, meaning-based search and the map. One store, shared with the running app — never a second copy beside it.",
       "backup": "Taking the whole project out and bringing it back. Not a store but an operation over all of them at once, which is why it stands apart from the data sections.",
       "access": "How people and services reach the project, and how it reaches out: your own domain, sign-in methods, communication channels and the OpenAI key.",
@@ -5016,8 +5016,8 @@
         "hint": "Показать исходный код с настоящей подсветкой синтаксиса."
       },
       "map-application": {
-        "title": "Карта приложения",
-        "hint": "Всё, что определяет само приложение: имя, языки, раскладка, возможности."
+        "title": "Продукты и миграции",
+        "hint": "Что несёт этот сервер и откуда он это взял. Настройки самого приложения переехали внутрь проекта — в его собственный слой архитектора."
       },
       "map-data": {
         "title": "Карта данных",
@@ -5090,7 +5090,7 @@
     },
     "breadcrumbHome": "Панель",
     "groupMaps": {
-      "application": "Эти настройки определяют само приложение: как оно называется, на каких языках говорит, как разложены его страницы и какие возможности включены. Применяются без пересборки, если раздел не сказал обратного.",
+      "application": "Здесь живут две вещи: продукты, которые несёт этот сервер, и переезд проекта, который уже существует в другом месте. Всё, что определяет само приложение — имя, языки, раскладка, возможности, меню и куки-баннер, — переехало в проект и правится там, на /architect/app-config.",
       "data": "Здесь живёт всё, что проект знает: учётные записи, загруженные файлы, строки, поиск по смыслу и карта. Один склад, общий с работающим приложением, — второй копии рядом с ним быть не должно.",
       "backup": "Забрать проект целиком и вернуть обратно. Это не склад, а операция над всеми складами сразу, поэтому она стоит отдельно от разделов данных.",
       "access": "Как люди и службы добираются до проекта и как он выходит наружу: свой домен, способы входа, каналы связи и ключ OpenAI.",
