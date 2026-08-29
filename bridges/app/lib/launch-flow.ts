@@ -161,7 +161,24 @@ export function setFlowPushed(on: boolean): void {
 // Папка заводится на машине человека, и Claude Code открывает её там же. Панель
 // не видит ни его диска, ни его окна: спросить неоткуда, значит закрывает
 // человек — и отметка остаётся снимаемой, как у Claude Code.
-export const FLOW_MARKS = ["claude-code", "folder", "open-folder", "local-run", "project-seen"] as const;
+//
+// 🔒 «deployed-seen» — ОТМЕТКА ДЕСЯТОГО ШАГА, И ОНА НЕ СВОДИТСЯ К «project-seen»
+// (28-31). Девятый спрашивает «вижу ли я проект на СВОЕЙ машине», десятый —
+// «вижу ли я его В ИНТЕРНЕТЕ, по своему адресу». Это разные факты, разделённые
+// развёртыванием; заимствовать одну отметку на оба значило бы поздравить с
+// развёртыванием того, кто всего лишь открыл localhost:3000.
+//
+// 🔒 И ЗДЕСЬ ОНА ТЕМ БОЛЕЕ СНИМАЕМАЯ. Развёртывание не разовое событие: человек
+// будет повторять его каждый рабочий день. Отметка говорит «я это видел», а не
+// «сервер навсегда таков».
+export const FLOW_MARKS = [
+  "claude-code",
+  "folder",
+  "open-folder",
+  "local-run",
+  "project-seen",
+  "deployed-seen",
+] as const;
 export type FlowMark = (typeof FLOW_MARKS)[number];
 
 export const isFlowMark = (v: unknown): v is FlowMark =>
