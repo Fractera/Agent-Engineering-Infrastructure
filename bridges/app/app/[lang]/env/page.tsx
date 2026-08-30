@@ -18,11 +18,12 @@ import { keyIssued } from "@/lib/ssh-access";
 import { publicAppUrl } from "@/lib/public-app-url";
 import { PageShell } from "../_components/page-shell";
 import { HelpDetails } from "../_components/help-details";
-import { readEnv } from "./_lib/env";
+import { readEnv, readServiceSecrets } from "./_lib/env";
 import { EnvEditor } from "./_components/env-editor.client";
 import { TransferCheck } from "./_components/transfer-check.client";
 import { SshAccess } from "./_components/ssh-access.client";
 import { ExportButton } from "./_components/export-button.client";
+import { ServiceSecrets } from "./_components/service-secrets.client";
 
 export const dynamic = "force-dynamic";
 
@@ -32,6 +33,7 @@ export default async function EnvPage({ params }: { params: Promise<{ lang: stri
   const e = s.env;
 
   const result = await readEnv();
+  const serviceSecrets = await readServiceSecrets();
   const transferred = hasMark(ENV_TRANSFERRED_KEY);
 
   // 🔒 ВЫДАН ЛИ КЛЮЧ АГЕНТУ (владелец 2026-08-24). ✗ Оплачено часом поисков:
@@ -160,6 +162,28 @@ export default async function EnvPage({ params }: { params: Promise<{ lang: stri
             <Lock size={10} className="mt-0.5 shrink-0" />
             <span>{e.lockedHint}</span>
           </p>
+
+          {/* ЗНАЧЕНИЯ СЛУЖБ (шаг 47, 2026-08-30). Стоят ПОД редактором намеренно:
+              их нельзя править здесь, а редактор — то, ради чего на страницу
+              приходят. Раздел отвечает на вопрос сверки, а не правки. */}
+          <div className="mt-6">
+            <h2 className="text-xs font-semibold text-foreground">{e.servicesTitle}</h2>
+            <p className="mb-2 mt-1 text-[10px] leading-relaxed text-muted-foreground">{e.servicesLead}</p>
+            <ServiceSecrets
+              rows={serviceSecrets.map(row => ({
+                ...row,
+                label:
+                  row.name === "telegramBot" ? e.telegramBot
+                  : row.name === "telegramChatId" ? e.telegramChatId
+                  : row.name === "telegramToken" ? e.telegramToken
+                  : e.openaiKey,
+              }))}
+              words={{
+                notSet: e.notSet, show: e.show, hide: e.hide,
+                copy: e.copy, copied: e.copied, failed: e.copyFailed,
+              }}
+            />
+          </div>
         </div>
       )}
 

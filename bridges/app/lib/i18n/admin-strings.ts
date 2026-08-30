@@ -598,6 +598,11 @@ export type AdminStrings = {
     sshAllowedTitle: string; sshAllowed: string;
     sshForbiddenTitle: string; sshForbidden: string;
     sshHowTitle: string; sshHow: string;
+    // Значения, которые живут в службах, а не в файле окружения (шаг 47).
+    servicesTitle: string; servicesLead: string;
+    telegramBot: string; telegramChatId: string; telegramToken: string; openaiKey: string;
+    notSet: string; show: string; hide: string;
+    copy: string; copied: string; copyFailed: string;
   };
   // Верхняя область меню: всё красное и оранжевое в одном месте. Ключи предметные
   // (github / use-cases / …), а не «warning1» — запись обязана называть причину.

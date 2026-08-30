@@ -916,7 +916,19 @@
       "sshForbiddenTitle": "What must not be changed — and why it is not a prohibition.",
       "sshForbidden": "Everything in /opt/fractera outside app/ is the platform: authorisation, the data layer, this control panel, the services. Reading its code is useful and encouraged — a service answered oddly, open its handler. Editing it changes nothing that lasts: deployment runs rm -rf /opt/fractera and installs the platform again, so the edit does not survive the next deployment and is stored nowhere.",
       "sshHowTitle": "How to change what cannot be changed.",
-      "sshHow": "Ask us. Name the service, the file and the line, and say whether a workaround exists. The button below writes the letter for you, with this server's address already in it — send it from your own mail."
+      "sshHow": "Ask us. Name the service, the file and the line, and say whether a workaround exists. The button below writes the letter for you, with this server's address already in it — send it from your own mail.",
+      "servicesTitle": "Values that live in the services",
+      "servicesLead": "These do not sit in the environment file: the Telegram token and chat id belong to the channels service, the OpenAI key to the knowledge service. Shown here so you can check them without leaving the page.",
+      "telegramBot": "Telegram bot",
+      "telegramChatId": "Telegram chat id",
+      "telegramToken": "Telegram token",
+      "openaiKey": "OpenAI key",
+      "notSet": "not set",
+      "show": "Show",
+      "hide": "Hide",
+      "copy": "Copy",
+      "copied": "Copied",
+      "copyFailed": "The browser refused the clipboard"
     },
     "appFeatures": {
       "intro": "These switches apply without a rebuild — the app reads them on the next page load. Some of them also open and close a settings section of their own; each such switch says below it which section, and where in the menu to find it.",
@@ -4376,7 +4388,19 @@
       "sshForbiddenTitle": "Что менять нельзя — и почему это не запрет.",
       "sshForbidden": "Всё в /opt/fractera за пределами app/ — платформа: авторизация, слой данных, эта панель, службы. Читать её код полезно и нужно: служба ответила не тем — откройте её обработчик. А вот править бессмысленно: развёртывание делает rm -rf /opt/fractera и ставит платформу заново, поэтому правка не переживает следующего развёртывания и не хранится нигде.",
       "sshHowTitle": "Как изменить то, что менять нельзя.",
-      "sshHow": "Попросите нас. Назовите службу, файл и строку и скажите, есть ли обход. Кнопка ниже соберёт письмо сама — адрес этого сервера уже будет в нём, останется отправить со своей почты."
+      "sshHow": "Попросите нас. Назовите службу, файл и строку и скажите, есть ли обход. Кнопка ниже соберёт письмо сама — адрес этого сервера уже будет в нём, останется отправить со своей почты.",
+      "servicesTitle": "Значения, которые живут в службах",
+      "servicesLead": "Их нет в файле окружения: токен Telegram и идентификатор чата принадлежат службе каналов, ключ OpenAI — службе знаний. Показаны здесь, чтобы сверять их, не уходя со страницы.",
+      "telegramBot": "Бот Telegram",
+      "telegramChatId": "Идентификатор чата",
+      "telegramToken": "Токен Telegram",
+      "openaiKey": "Ключ OpenAI",
+      "notSet": "не задано",
+      "show": "Показать",
+      "hide": "Скрыть",
+      "copy": "Копировать",
+      "copied": "Скопировано",
+      "copyFailed": "Браузер отказал в буфере обмена"
     },
     "appFeatures": {
       "intro": "Эти переключатели применяются без пересборки — приложение читает их на следующей загрузке страницы. Часть из них вдобавок открывает и закрывает собственный раздел настроек: у такого переключателя ниже написано, какой это раздел и в какой группе меню его искать.",

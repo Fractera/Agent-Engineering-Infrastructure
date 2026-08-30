@@ -80,3 +80,63 @@ export async function readEnv(): Promise<EnvResult> {
     return { ok: false, reason: String(e) };
   }
 }
+
+// ── ЗНАЧЕНИЯ, КОТОРЫЕ ЖИВУТ НЕ В ФАЙЛЕ ОКРУЖЕНИЯ (шаг 47, 2026-08-30) ─────────
+//
+// 🔒 ЗАЧЕМ ОНИ ЗДЕСЬ. Владелец сверял токен бота и ключ OpenAI, уходя в другие
+// разделы панели и копируя значения оттуда. Причина не в интерфейсе, а в том, где
+// они лежат: токен и `chatId` — в конфиге службы каналов, ключ OpenAI — в `.env`
+// службы RAG. Файл окружения слота их не содержит и содержать не будет.
+//
+// 🔒 ЗДЕСЬ ТОЛЬКО МАСКА. Само значение приезжает отдельным запросом по нажатию
+// глазика (`api/config/env-reveal`) и в разметку страницы не попадает никогда.
+
+export type ServiceSecret = {
+  /** Имя для двери показа — из её закрытого списка. */
+  name: "telegramToken" | "telegramBot" | "telegramChatId" | "openaiKey";
+  /** Маска либо пустая строка, если значения нет. */
+  shown: string;
+  empty: boolean;
+  /** Имя бота и `chatId` секретами не являются: их показываем сразу. */
+  secret: boolean;
+};
+
+export async function readServiceSecrets(): Promise<ServiceSecret[]> {
+  const cookie = (await headers()).get("cookie") ?? "";
+  const names: ServiceSecret["name"][] = [
+    "telegramBot",
+    "telegramChatId",
+    "telegramToken",
+    "openaiKey",
+  ];
+  const secretNames = new Set(["telegramToken", "openaiKey"]);
+
+  const out: ServiceSecret[] = [];
+  for (const name of names) {
+    let value = "";
+    try {
+      const r = await fetch(`${ADMIN}/api/config/env-reveal`, {
+        method: "POST",
+        headers: { cookie, "Content-Type": "application/json" },
+        body: JSON.stringify({ name }),
+        cache: "no-store",
+        signal: AbortSignal.timeout(8000),
+      });
+      const d = await r.json().catch(() => ({}));
+      value = r.ok ? String(d?.value ?? "") : "";
+    } catch {
+      value = "";
+    }
+    const secret = secretNames.has(name);
+    out.push({
+      name,
+      // 🔒 Секрет уходит в браузер ТОЛЬКО маской; несекретное — как есть, потому
+      // что прятать имя бота под точками значит заставлять нажимать глазик ради
+      // того, что и так написано на кнопке в Telegram.
+      shown: value ? (secret ? mask(value) : value) : "",
+      empty: value === "",
+      secret,
+    });
+  }
+  return out;
+}
