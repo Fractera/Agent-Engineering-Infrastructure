@@ -44,6 +44,7 @@ export type StepNineStrings = {
   copyLabel: string;
   copiedLabel: string;
   copyToast: string;
+  copyFailed: string;
 
   checkLabel: string;
   cta: string;
@@ -116,6 +117,7 @@ const ru: StepNineStrings = {
   copyLabel: "Скопировать",
   copiedLabel: "Скопировано",
   copyToast: "Подсказка скопирована",
+  copyFailed: "Скопировать не удалось — браузер не даёт доступ к буферу на незашифрованном адресе. Текст выделен: нажмите Ctrl+C.",
 
   checkLabel: "Я вижу такой же проект",
   cta: "Отметить шаг пройденным",
@@ -158,6 +160,7 @@ const en: StepNineStrings = {
   copyLabel: "Copy",
   copiedLabel: "Copied",
   copyToast: "The prompt is copied",
+  copyFailed: "Copying failed — the browser blocks clipboard access on an unencrypted address. The text is selected: press Ctrl+C.",
 
   checkLabel: "I see the same project",
   cta: "Mark the step as done",

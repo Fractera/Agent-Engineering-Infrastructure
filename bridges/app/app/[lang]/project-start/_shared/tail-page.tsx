@@ -58,6 +58,13 @@ export type TailPathConfig = {
    */
   pageTitle: string;
   pageHint: string;
+  /**
+   * Адрес репозитория ЭТОГО пути. Подставляется в подсказку агенту.
+   *
+   * 🔒 У путей он разный по существу: у первого это его пустой репозиторий, у
+   * второго — его форк. Пусто — подсказка честно отсылает к окружению.
+   */
+  repoUrl: string;
   /** Корень пути с языком: `${adminHref(lang,'project-start')}/${slug}`. */
   base: string;
   /** Сколько шагов у пути ЗАДУМАНО — знаменатель шкалы. */
@@ -109,6 +116,9 @@ export async function TailStepPage({
   // между «вижу у себя» и «видят люди». Остальным он не передаётся вовсе.
   const info = step.infoFromSite ? step.infoFromSite(lang, publicSiteUrl().url) : x.info;
 
+  // Подсказка агенту: с адресом репозитория этого пути внутри (75-9).
+  const promptText = step.promptFromRepo ? step.promptFromRepo(lang, path.repoUrl) : x.promptText;
+
   return (
     <PageShell lang={lang} slug="project-start" s={s} tail={tail} title={path.pageTitle} hint={path.pageHint}>
       <StepSection
@@ -147,14 +157,15 @@ export async function TailStepPage({
             />
           )}
 
-          {step.hasPrompt && x.promptText && (
+          {step.hasPrompt && promptText && (
             <div className="flex flex-col gap-2">
               <Small className="text-[var(--muted-foreground)]">{x.promptLead}</Small>
               <StepCopyBlock
-                text={x.promptText}
+                text={promptText}
                 label={x.copyLabel ?? ""}
                 copiedLabel={x.copiedLabel ?? ""}
                 toastTitle={x.copyToast ?? ""}
+                failureLabel={x.copyFailed ?? ""}
               />
             </div>
           )}

@@ -55,6 +55,8 @@ export type StepTenStrings = {
   copyLabel: string;
   copiedLabel: string;
   copyToast: string;
+  /** Что сказать, если скопировать не удалось ничем. */
+  copyFailed: string;
 
   checkLabel: string;
   cta: string;
@@ -118,6 +120,7 @@ const ru: StepTenStrings = {
   copyLabel: "Скопировать",
   copiedLabel: "Скопировано",
   copyToast: "Подсказка скопирована",
+  copyFailed: "Скопировать не удалось — браузер не даёт доступ к буферу на незашифрованном адресе. Текст выделен: нажмите Ctrl+C.",
 
   checkLabel: "Я вижу Hello Fractera по своему адресу",
   cta: "Отметить шаг пройденным",
@@ -160,6 +163,7 @@ const en: StepTenStrings = {
   copyLabel: "Copy",
   copiedLabel: "Copied",
   copyToast: "The prompt is copied",
+  copyFailed: "Copying failed — the browser blocks clipboard access on an unencrypted address. The text is selected: press Ctrl+C.",
 
   checkLabel: "I see Hello Fractera at my address",
   cta: "Mark the step as done",

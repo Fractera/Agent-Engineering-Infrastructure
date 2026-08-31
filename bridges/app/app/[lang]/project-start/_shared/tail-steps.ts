@@ -1,7 +1,7 @@
 import { stepFiveStrings } from "./_step5";
 import { stepSixStrings } from "./_step6";
 import { stepSevenStrings } from "./_step7";
-import { stepEightStrings } from "./_step8";
+import { stepEightStrings, installPrompt } from "./_step8";
 import { stepNineStrings, localVsPublic } from "./_step9";
 import type { FlowMark } from "@/lib/launch-flow";
 
@@ -49,6 +49,13 @@ export type TailStep = {
    * что видит человек, и тем, что видят люди, — а для этого нужен живой адрес.
    */
   infoFromSite?: (lang: string, siteUrl: string | null) => string;
+  /**
+   * Подсказка агенту считается от АДРЕСА РЕПОЗИТОРИЯ этого пути (75-9).
+   *
+   * 🔒 Только у шага зависимостей: он единственный, где агенту надо назвать, ЧТО
+   * клонировать. Остальным адрес не передаётся вовсе.
+   */
+  promptFromRepo?: (lang: string, repoUrl: string) => string;
 };
 
 /**
@@ -80,6 +87,7 @@ export type TailStrings = {
   copyLabel?: string;
   copiedLabel?: string;
   copyToast?: string;
+  copyFailed?: string;
   checkLabel: string;
   cta: string;
   busy: string;
@@ -114,6 +122,7 @@ export const TAIL_STEPS: readonly TailStep[] = [
     shot: { src: "/images/launch/step-8-install-deps.png" },
     grabHref: "/api/config/env-export",
     hasPrompt: true,
+    promptFromRepo: installPrompt,
   },
   {
     mark: "project-seen",

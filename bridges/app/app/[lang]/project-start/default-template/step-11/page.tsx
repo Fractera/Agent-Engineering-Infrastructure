@@ -109,6 +109,7 @@ export default async function DefaultTemplateStepEleven(
               label={x.copyLabel}
               copiedLabel={x.copiedLabel}
               toastTitle={x.copyToast}
+              failureLabel={x.copyFailed}
             />
           </div>
 

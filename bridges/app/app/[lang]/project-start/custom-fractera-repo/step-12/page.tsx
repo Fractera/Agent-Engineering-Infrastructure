@@ -100,6 +100,7 @@ export default async function CustomFracteraRepoStepFourteen(
               label={x.copyLabel}
               copiedLabel={x.copiedLabel}
               toastTitle={x.copyToast}
+              failureLabel={x.copyFailed}
             />
           </div>
 
