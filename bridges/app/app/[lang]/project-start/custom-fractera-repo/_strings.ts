@@ -39,7 +39,7 @@ export const ADOPT_PATH_TOTAL = 14;
  * 🔒 ИСТОЧНИК ОДИН. Шкала, навигация «вперёд/назад» и ссылки крошек читают эту
  * же строку: второй список разошёлся бы с первым в тот день, когда появятся 4–7.
  */
-export const ADOPT_BUILT_STEPS: readonly number[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+export const ADOPT_BUILT_STEPS: readonly number[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
 
 /** Построен ли шаг под этим номером. */
 export const adoptStepBuilt = (n: number): boolean => ADOPT_BUILT_STEPS.includes(n);

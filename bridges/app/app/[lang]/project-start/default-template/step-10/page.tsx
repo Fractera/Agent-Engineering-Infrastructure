@@ -39,7 +39,8 @@ import { Small } from "@/components/ui/typography";
 import { flowMarked } from "@/lib/launch-flow";
 import { publicSiteUrl } from "@/lib/public-site-url";
 import { DEFAULT_TEMPLATE_TOTAL, DEFAULT_TEMPLATE_BUILT } from "../_strings";
-import { stepTenStrings, whatDeployMeans } from "../_step10";
+import { stepTenStrings } from "../_step10";
+import { whatDeployMeans } from "../../_shared/deploy-words";
 
 export const dynamic = "force-dynamic";
 
