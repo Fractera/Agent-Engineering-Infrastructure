@@ -1,30 +1,18 @@
-// ШАГ ШЕСТОЙ ПУТИ «СТАРТОВЫЙ ШАБЛОН»: ОТДЕЛЬНАЯ ПАПКА (28-26, 2026-08-28).
+// ШАГ 6 ПЕРВОГО ПУТИ — ОБЩИЙ ХВОСТ (переехал в _shared 35-5, 2026-08-31).
 //
-// 🔒 ПОРЯДОК ВЗЯТ ИЗ ЖИВОГО МАСТЕРА, А НЕ ВЫДУМАН. В `lib/launch.shared.ts`
-// после `claude-code` идёт `folder`, за ним `open-folder`. Владелец спросил:
-// «следующий шаг посвящён подключению папки, не так ли?» — и он прав, но
-// подключений здесь ДВА, и живой мастер их уже различает: сначала завести папку,
-// потом открыть её в Claude Code. Мы это различение сохраняем.
+// 🔒 ФАЙЛ ОСТАЛСЯ, А ТЕЛО УЕХАЛО, И ЭТО НЕ ФОРМАЛЬНОСТЬ. Маршрут Next задаётся
+// расположением файла, поэтому страница обязана лежать здесь. Всё, что она
+// делает, — называет СВОЙ номер и СВОИ правила запрета; сама секция шага и все
+// его слова живут в `_shared/`, общие со вторым путём.
 //
-// 🔒 ЭТОТ ШАГ ЗАКРЫВАЕТ ЧЕЛОВЕК. Папка живёт на его диске; у панели, работающей
-// на сервере, нет ни глаз, ни канала, чтобы это проверить. Рисовать зелёное от
-// собственной догадки — дефект, оплаченный в шаге 25.
-//
-// 🔒 НИ ССЫЛКИ, НИ СНИМКА — и то и другое объяснено в `_step6.ts`. Коротко: у
-// действия «создать папку» нет адреса, а чужой проводник ничего не объясняет.
+// 🔒 ЗАЩИТА ОТ ПРЫЖКА СЧИТАЕТСЯ ЗДЕСЬ (28-13), потому что читает перечисление
+// шагов ЭТОГО пути. Открыт шаг, у которого закрыты все предыдущие; пройденный
+// остаётся открытым — вернуться и заменить значение человек вправе (28-18).
 
-import { getAdminStrings } from "@/lib/i18n/admin-strings";
 import { adminHref } from "@/lib/admin-nav";
-import { PageShell } from "../../../_components/page-shell";
-import { StepSection } from "../../../_components/launch/step-section";
+import { TailStepPage } from "../../_shared/tail-page";
 import { pathSteps, stepOpen, currentStep } from "../_steps";
-import { pathMapStrings } from "../_strings";
-import { StepLocked } from "../../../_components/launch/step-locked";
-import { StepCheck } from "../../../_components/launch/step-check.client";
-import { StepNav } from "../../../_components/launch/step-nav";
-import { flowMarked } from "@/lib/launch-flow";
-import { DEFAULT_TEMPLATE_TOTAL, DEFAULT_TEMPLATE_BUILT } from "../_strings";
-import { stepSixStrings } from "../_step6";
+import { pathMapStrings, DEFAULT_TEMPLATE_TOTAL, DEFAULT_TEMPLATE_BUILT } from "../_strings";
 
 export const dynamic = "force-dynamic";
 
@@ -32,99 +20,32 @@ export default async function DefaultTemplateStepSix(
   { params }: { params: Promise<{ lang: string }> },
 ) {
   const { lang } = await params;
-  const s = getAdminStrings(lang);
-  const x = stepSixStrings(lang);
+  const base = `${adminHref(lang, "project-start")}/default-template`;
 
-  // 🔒 ЗАЩИТА ОТ ПРЫЖКА ВПЕРЁД (28-13). Открыт шаг, у которого закрыты все
-  // предыдущие. Пройденный шаг остаётся открытым: вернуться и заменить значение
-  // человек вправе (28-18), и запертая дорога назад превратила бы путь в допрос.
   const flowSteps = pathSteps(lang);
-  if (!stepOpen(flowSteps, 6)) {
-    const back = currentStep(flowSteps);
-    const m = pathMapStrings(lang);
-    const backN = back ? back.n : 1;
-    return (
-      <PageShell
-        lang={lang}
-        slug="project-start"
-        s={s}
-        tail={[
-          { label: "default-template", href: `${adminHref(lang, "project-start")}/default-template` },
-          { label: "step-6" },
-        ]}
-        title={x.pageTitle}
-        hint={x.pageHint}
-      >
-        <StepLocked
-          title={x.title}
-          message={m.lockedMessage.replace("{n}", String(backN))}
-          backHref={`${adminHref(lang, "project-start")}/default-template/step-${backN}`}
-          backLabel={m.lockedBack.replace("{n}", String(backN))}
-        />
-      </PageShell>
-    );
-  }
-  const marked = flowMarked("folder");
+  const open = stepOpen(flowSteps, 6);
+  const back = currentStep(flowSteps);
+  const backN = back ? back.n : 1;
+  const m = pathMapStrings(lang);
 
   return (
-    <PageShell
+    <TailStepPage
       lang={lang}
-      slug="project-start"
-      s={s}
-      tail={[
-        { label: "default-template", href: `${adminHref(lang, "project-start")}/default-template` },
-        { label: "step-6" },
-      ]}
-      title={x.pageTitle}
-      hint={x.pageHint}
-    >
-      <StepSection
-        index={6}
-        total={DEFAULT_TEMPLATE_TOTAL}
-        stepOfTemplate={x.stepOf}
-        doneLabel={x.done}
-        done={marked}
-        badge={x.badge}
-        title={x.title}
-        lead={x.lead}
-        info={x.info}
-        important={x.important}
-        actionLead={x.actionLead}
-        bullets={x.bullets}
-        stepHref={(n) =>
-          n <= DEFAULT_TEMPLATE_BUILT
-            ? `${adminHref(lang, "project-start")}/default-template/step-${n}`
-            : undefined
-        }
-      >
-        {marked ? (
-          <StepNav
-            prevHref={`${adminHref(lang, "project-start")}/default-template/step-5`}
-            nextHref={
-              DEFAULT_TEMPLATE_BUILT >= 7
-                ? `${adminHref(lang, "project-start")}/default-template/step-7`
-                : undefined
-            }
-            labels={{ goPrev: x.goPrev, goNext: x.goNext }}
-          />
-        ) : (
-          <StepCheck
-            index={6}
-            total={DEFAULT_TEMPLATE_TOTAL}
-            mark="folder"
-            marked={marked}
-            labels={{
-              checkLabel: x.checkLabel,
-              cta: x.cta,
-              busy: x.busy,
-              successTitle: x.successTitle,
-              successHint: x.successHint,
-              failureTitle: x.failureTitle,
-              failureFix: x.failureFix,
-            }}
-          />
-        )}
-      </StepSection>
-    </PageShell>
+      index={6}
+      tailIndex={1}
+      path={{
+        slug: "default-template",
+        base,
+        total: DEFAULT_TEMPLATE_TOTAL,
+        isBuilt: (k) => k >= 1 && k <= DEFAULT_TEMPLATE_BUILT,
+        locked: open
+          ? null
+          : {
+              message: m.lockedMessage.replace("{n}", String(backN)),
+              backHref: `${base}/step-${backN}`,
+              backLabel: m.lockedBack.replace("{n}", String(backN)),
+            },
+      }}
+    />
   );
 }

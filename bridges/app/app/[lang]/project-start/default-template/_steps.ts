@@ -4,11 +4,11 @@ import { flowDone, flowVerified, flowPushed, flowMarked } from "@/lib/launch-flo
 import { stepOneStrings, stepTwoStrings, DEFAULT_TEMPLATE_BUILT } from "./_strings";
 import { stepThreeStrings } from "./_step3";
 import { stepFourStrings } from "./_step4";
-import { stepFiveStrings } from "./_step5";
-import { stepSixStrings } from "./_step6";
-import { stepSevenStrings } from "./_step7";
-import { stepEightStrings } from "./_step8";
-import { stepNineStrings } from "./_step9";
+import { stepFiveStrings } from "../_shared/_step5";
+import { stepSixStrings } from "../_shared/_step6";
+import { stepSevenStrings } from "../_shared/_step7";
+import { stepEightStrings } from "../_shared/_step8";
+import { stepNineStrings } from "../_shared/_step9";
 import { stepTenStrings } from "./_step10";
 import { stepElevenStrings } from "./_step11";
 
