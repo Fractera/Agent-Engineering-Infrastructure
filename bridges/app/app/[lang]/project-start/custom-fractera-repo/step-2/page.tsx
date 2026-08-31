@@ -25,6 +25,7 @@ import { StepLocked } from "../../../_components/launch/step-locked";
 import { adoptLockedFor } from "../_steps";
 import { StepSection } from "../../../_components/launch/step-section";
 import { AdoptConfirm } from "../../../_components/launch/adopt-confirm.client";
+import { StepNav } from "../../../_components/launch/step-nav";
 import { flowAdopted, flowValue } from "@/lib/launch-flow";
 import { ADOPT_PATH_TOTAL, adoptStepBuilt } from "../_strings";
 import { adoptStepTwoStrings } from "../_step2";
@@ -102,11 +103,26 @@ export default async function CustomFracteraRepoStepTwo(
             этой самой двери, однажды в разметку уехала форма замены слота с
             кнопкой «Да, заменить» на экран, где её быть не должно. Поэтому едет
             `x.action` — ровно словарь действия, а не `x` целиком. */}
-        <AdoptConfirm
-          donorUrl={flowValue("donor-url")}
-          email={SUPPORT_EMAIL}
-          labels={x.action}
-        />
+        {/* ✗ 🔒 НАВИГАЦИИ ЗДЕСЬ НЕ БЫЛО ВОВСЕ, И ЭТО ОСТАВЛЯЛО ЧЕЛОВЕКА БЕЗ
+            ДОРОГИ В КОНЦЕ САМОГО ВАЖНОГО ДЕЙСТВИЯ ПУТИ (35-10): замена прошла,
+            шаг горит зелёным, а идти дальше не с чего.
+
+            🔒 ПРАВИЛО ОБЩЕЕ, А НЕ ЗАПЛАТА НА ЭТУ СТРАНИЦУ: действие уступает
+            место навигации, когда шаг закрыт. Так устроены все остальные шаги
+            обоих путей; здесь его просто не позвали. */}
+        {flowAdopted() ? (
+          <StepNav
+            prevHref={adoptStepBuilt(1) ? `${base}/step-1` : undefined}
+            nextHref={adoptStepBuilt(3) ? `${base}/step-3` : undefined}
+            labels={{ goPrev: x.goPrev, goNext: x.goNext }}
+          />
+        ) : (
+          <AdoptConfirm
+            donorUrl={flowValue("donor-url")}
+            email={SUPPORT_EMAIL}
+            labels={x.action}
+          />
+        )}
       </StepSection>
     </PageShell>
   );

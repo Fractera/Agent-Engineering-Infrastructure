@@ -117,6 +117,17 @@ export default async function CustomFracteraRepoStepOne(
           total={ADOPT_PATH_TOTAL}
           flowStep="donor-url"
           saved={flowShown("donor-url")}
+          // ✗ 🔒 ЭТОГО ЗДЕСЬ НЕ БЫЛО, И ДЫРА БЫЛА ХУЖЕ ОТСУТСТВИЯ КНОПОК (35-10).
+          // `StepForm` на закрытом шаге показывает навигацию ВМЕСТО кнопки
+          // сохранения, а `StepNav` без единого адреса возвращает `null`. Человек,
+          // сохранивший адрес донора, видел внизу ПУСТОТУ: кнопки уже нет,
+          // навигации ещё нет, и дорога дальше оставалась только через шкалу
+          // вверху — то есть там, куда не смотрят.
+          //
+          // 🔒 `prevHref` НЕ ПЕРЕДАЁТСЯ НАМЕРЕННО: шаг первый, назад идти некуда.
+          // Три положения навигации выводятся из наличия адресов, а не из
+          // отдельного признака (28-20).
+          nextHref={adoptStepBuilt(2) ? `${adminHref(lang, "project-start")}/custom-fractera-repo/step-2` : undefined}
           labels={{
             inputLabel: x.form.inputLabel,
             inputPlaceholder: x.form.inputPlaceholder,
