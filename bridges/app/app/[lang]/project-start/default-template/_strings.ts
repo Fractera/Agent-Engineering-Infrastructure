@@ -278,6 +278,8 @@ export type PathMapStrings = {
   lead: string;
   stepWord: string;
   doneWord: string;
+  /** Бейдж незакрытого шага на карте пути (73). */
+  todoWord: string;
   continueLabel: string;
   startLabel: string;
   allDone: string;
@@ -290,6 +292,7 @@ const ruMap: PathMapStrings = {
   lead: "Одиннадцать шагов. Открыт следующий незакрытый — остальные ждут своей очереди.",
   stepWord: "Шаг",
   doneWord: "закрыт",
+  todoWord: "не начат",
   continueLabel: "Продолжить",
   startLabel: "Начать с первого шага",
   allDone: "Все построенные шаги закрыты.",
@@ -301,6 +304,7 @@ const enMap: PathMapStrings = {
   lead: "Eleven steps. The next unfinished one is open; the rest wait their turn.",
   stepWord: "Step",
   doneWord: "done",
+  todoWord: "not started",
   continueLabel: "Continue",
   startLabel: "Start from step one",
   allDone: "Every built step is done.",

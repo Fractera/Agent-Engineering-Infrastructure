@@ -49,7 +49,7 @@ export default async function DefaultTemplateIndex(
     >
       <Lead>{m.lead}</Lead>
 
-      <StepMap base={base} steps={steps} labels={{ stepWord: m.stepWord, doneWord: m.doneWord }} />
+      <StepMap base={base} steps={steps} labels={{ stepWord: m.stepWord, doneWord: m.doneWord, todoWord: m.todoWord }} />
 
       {/* Кнопка ведёт на первый НЕЗАКРЫТЫЙ шаг: «продолжить» честнее, чем
           «начать сначала», у того, кто уже прошёл половину. Все закрыты —
