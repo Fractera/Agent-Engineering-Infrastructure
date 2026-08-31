@@ -3,6 +3,9 @@ import {
   flowDone, flowMarked, flowVerified, flowPushed, flowAdopted,
 } from "@/lib/launch-flow";
 import { TAIL_STEPS } from "../_shared/tail-steps";
+// 🔒 Слова карты и заглушки — одни на оба пути. Живут они в папке первого пути
+// по историческим причинам; второй экземпляр здесь был бы хуже чужого адреса.
+import { pathMapStrings } from "../default-template/_strings";
 import { ADOPT_BUILT_STEPS, adoptStepOneStrings } from "./_strings";
 import { adoptStepTwoStrings } from "./_step2";
 import { adoptStepThreeStrings } from "./_step3";
@@ -11,6 +14,7 @@ import { adoptStepFiveStrings } from "./_step5";
 import { adoptStepSixStrings } from "./_step6";
 import { adoptStepSevenStrings } from "./_step7";
 import { adoptStepThirteenStrings } from "./_step13";
+import { stepElevenStrings } from "../_shared/_step11";
 
 // ПЕРЕЧИСЛЕНИЕ ШАГОВ ВТОРОГО ПУТИ И ЗАЩИТА ОТ ПРЫЖКА (35-6, 2026-08-31).
 //
@@ -58,6 +62,8 @@ export function adoptSteps(lang: string): AdoptStep[] {
     })),
     // 13: присвоение и развёртывание — последний рабочий шаг пути.
     { n: 13, slug: "step-13", title: adoptStepThirteenStrings(lang).title, done: flowMarked("adopt-deployed-seen") },
+    // 14: прощание. Слова общие с одиннадцатым шагом первого пути, отметка своя.
+    { n: 14, slug: "step-14", title: stepElevenStrings(lang).title, done: flowMarked("adopt-path-finished") },
   ];
 
   // Карта показывает то, что ПОСТРОЕНО, а не то, что задумано.
@@ -81,16 +87,11 @@ export function adoptCurrentStep(steps: AdoptStep[]): AdoptStep | undefined {
 
 export type AdoptLocked = { message: string; backHref: string; backLabel: string };
 
-const LOCKED: Record<string, { message: string; back: string }> = {
-  en: {
-    message: "This step is not open yet: step {n} comes first.",
-    back: "Go to step {n}",
-  },
-  ru: {
-    message: "Этот шаг ещё не открыт: сначала шаг {n}.",
-    back: "Перейти к шагу {n}",
-  },
-};
+// ✗ 🔒 ЗДЕСЬ СТОЯЛА МОЯ СОБСТВЕННАЯ ТАБЛИЦА СЛОВ ЗАГЛУШКИ, И ЭТО БЫЛ ВТОРОЙ
+// ЭКЗЕМПЛЯР ТОГО ЖЕ (заведён в 35-6, убран в 35-8). Слова «до этого шага вы ещё
+// не добрались» уже написаны у первого пути и принадлежат не пути, а самой
+// заглушке: она одна на оба. Две редакции разошлись бы на первой же правке
+// текста — и разошлись бы в том пути, который реже открывают.
 
 /**
  * Решение о запрете для шага `n`, готовое к передаче в страницу.
@@ -104,10 +105,10 @@ export function adoptLockedFor(lang: string, n: number): AdoptLocked | null {
 
   const back = adoptCurrentStep(steps);
   const backN = back ? back.n : 1;
-  const w = LOCKED[lang] ?? LOCKED.en;
+  const w = pathMapStrings(lang);
   return {
-    message: w.message.replace("{n}", String(backN)),
+    message: w.lockedMessage.replace("{n}", String(backN)),
     backHref: `${adminHref(lang, "project-start")}/custom-fractera-repo/step-${backN}`,
-    backLabel: w.back.replace("{n}", String(backN)),
+    backLabel: w.lockedBack.replace("{n}", String(backN)),
   };
 }
