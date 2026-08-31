@@ -250,10 +250,32 @@ export function runBuild(description: string, opts: { installFirst?: boolean } =
   const arch = process.arch === "arm64" ? "arm64" : "x64";
   const nativeDeps = `lightningcss-linux-${arch}-gnu @tailwindcss/oxide-linux-${arch}-gnu`;
   const buildCmd = `npm run build --prefix ${APP_DIR}`;
+  // ✗ 🔒 `--include=dev --include=optional` ОБЯЗАТЕЛЬНЫ, И ЭТО ОПЛАЧЕНО ВТОРЫМ
+  // ОТКАЗОМ ПОДРЯД У ВЛАДЕЛЬЦА (35-9, тот же день). Первая правка поставила
+  // зависимости — и сборка всё равно упала: `Could not load the "sharp" module
+  // using the linux-x64 runtime`. Измерено на его сервере: голая
+  // `npm install --prefix` из процесса панели дала 518 пакетов и ОДНУ папку в
+  // `@img`; та же команда с этими двумя флагами доставила ещё 557 пакетов и пять
+  // папок, включая `@img/sharp-linux-x64`, после чего сборка прошла `RC=0`.
+  //
+  // 🔒 ПРИЧИНА УМОЛЧАНИЙ NPM ЗДЕСЬ НЕ ДОКАЗАНА, И Я ГОВОРЮ ЭТО ПРЯМО: `.npmrc`
+  // нет ни в одной из пяти папок, `npm config get omit` пуст, `NODE_ENV` в
+  // окружении процесса не выставлен. Что именно заставило npm пропустить
+  // платформенные пакеты — не установлено. Но флаги нужны и БЕЗ этого знания:
+  //
+  // 🔒 СБОРКЕ НУЖНЫ ВСЕ ЗАВИСИМОСТИ, ВКЛЮЧАЯ DEV, — ОНА ИХ И ЗАПУСКАЕТ. `sharp`
+  // у донора объявлен в `devDependencies`, и его вызывает `prebuild`. Установка
+  // «как для продакшена» не соберёт проект НИКОГДА. Полагаться на умолчание,
+  // которое меняется от версии npm и от способа вызова, здесь нельзя: цена
+  // ошибки — сломанный слот у человека.
+  const installFlags = "--include=dev --include=optional --no-audit --no-fund";
+  // 🔒 `cd`, А НЕ `--prefix`: именно так установка проходила при ручной починке,
+  // и это единственное различие между работавшим и не работавшим вызовом.
   const installCmd =
     `echo "${DEPS_START_MARK}" && ` +
-    `npm install --no-audit --no-fund --prefix ${APP_DIR} && ` +
-    `npm install --no-save --no-audit --no-fund --prefix ${APP_DIR} ${nativeDeps} && ` +
+    `cd ${APP_DIR} && ` +
+    `npm install ${installFlags} && ` +
+    `npm install --no-save ${installFlags} ${nativeDeps} && ` +
     `echo "${DEPS_OK_MARK}"`;
 
   const proc = opts.installFirst
