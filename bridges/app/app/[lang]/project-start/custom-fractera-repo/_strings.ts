@@ -45,11 +45,11 @@ export type AdoptStepStrings = Omit<StepStrings, "badge">;
 /**
  * Сколько шагов у пути ЗАДУМАНО.
  *
- * 🔒 ЧЕТЫРНАДЦАТЬ, А НЕ ОДИННАДЦАТЬ, И РАЗНИЦА НЕ В ДЛИНЕ. У второго пути есть
+ * 🔒 ДВЕНАДЦАТЬ, А НЕ ОДИННАДЦАТЬ, И РАЗНИЦА НЕ В ДЛИНЕ. У второго пути есть
  * то, чего у первого нет вовсе: принять донора, отвязать его от чужого
  * репозитория, присвоить проект себе. Общий хвост при этом тот же.
  */
-export const ADOPT_PATH_TOTAL = 14;
+export const ADOPT_PATH_TOTAL = 12;
 
 /**
  * Какие шаги ПОСТРОЕНЫ на сегодня.
@@ -95,7 +95,7 @@ export function stepBadge(lang: string, n: number): string | undefined {
   return lang === "ru" ? `Шаг ${word}` : `Step ${word}`;
 }
 
-export const ADOPT_BUILT_STEPS: readonly number[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
+export const ADOPT_BUILT_STEPS: readonly number[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 
 /** Построен ли шаг под этим номером. */
 export const adoptStepBuilt = (n: number): boolean => ADOPT_BUILT_STEPS.includes(n);

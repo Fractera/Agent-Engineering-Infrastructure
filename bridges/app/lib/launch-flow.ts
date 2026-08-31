@@ -40,7 +40,10 @@ export const FLOW_PREFIX = "USER_FLOW_";
  */
 export const FLOW_STEPS = [
   "repo-url", "token",
-  "fork-url", "adopt-repo-url", "adopt-token",
+  // 🪦 `adopt-repo-url` УДАЛЁН 75-4 вместе с шагом, который его спрашивал.
+  // Значение, которого не спрашивает ни один шаг, — приглашение однажды его
+  // прочитать и поверить. На развёрнутых серверах ключ остаётся осиротевшим.
+  "fork-url", "adopt-token",
 ] as const
 
 // 🔒 `fork-url` ПРИНАДЛЕЖИТ ВТОРОМУ ПУТИ, И КЛЮЧ У НЕГО СВОЙ (35-1, уточнён 75-1).
@@ -91,7 +94,12 @@ export const isLaunchPath = (v: unknown): v is LaunchPath =>
 /** Какие ДВА значения питают проверку связи и отправку у каждого пути. */
 export const PATH_INPUTS: Record<LaunchPath, { url: FlowStep; token: FlowStep }> = {
   starter: { url: "repo-url", token: "token" },
-  adopt: { url: "adopt-repo-url", token: "adopt-token" },
+  // 🔒 У ВТОРОГО ПУТИ ПРОВЕРЯЕТСЯ ФОРК (75-4). Здесь стоял `adopt-repo-url` —
+  // адрес отдельного пустого репозитория, который человек заводил пятым шагом.
+  // С моделью форка такого репозитория нет: проверять надо тот, что он назвал
+  // первым шагом. Оставить прежнее значение значило бы спрашивать GitHub о том,
+  // чего человек никогда не называл.
+  adopt: { url: "fork-url", token: "adopt-token" },
 };
 
 export const isFlowStep = (v: unknown): v is FlowStep =>

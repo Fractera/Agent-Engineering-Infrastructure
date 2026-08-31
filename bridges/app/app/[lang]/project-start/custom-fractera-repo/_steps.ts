@@ -1,6 +1,6 @@
 import { adminHref } from "@/lib/admin-nav";
 import {
-  flowDone, flowMarked, flowVerified, flowPushed, flowAdopted,
+  flowDone, flowMarked, flowVerified, flowAdopted,
 } from "@/lib/launch-flow";
 import { TAIL_STEPS } from "../_shared/tail-steps";
 // 🔒 Слова карты и заглушки — одни на оба пути. Живут они в папке первого пути
@@ -9,10 +9,8 @@ import { pathMapStrings } from "../default-template/_strings";
 import { ADOPT_BUILT_STEPS, adoptStepOneStrings } from "./_strings";
 import { adoptSwapStrings } from "./_swap";
 import { adoptLiveStrings } from "./_live";
-import { adoptOwnRepoStrings } from "./_own-repo";
 import { adoptTokenStrings } from "./_token";
 import { adoptVerifyStrings } from "./_verify";
-import { adoptPushStrings } from "./_push";
 import { adoptAssignStrings } from "./_assign";
 import { stepElevenStrings } from "../_shared/_step11";
 
@@ -55,20 +53,21 @@ export function adoptSteps(lang: string): AdoptStep[] {
     { n: 2, slug: "step-2", title: adoptTokenStrings(lang).title, done: flowDone("adopt-token") },
     { n: 3, slug: "step-3", title: adoptSwapStrings(lang).title, done: flowAdopted() },
     { n: 4, slug: "step-4", title: adoptLiveStrings(lang).title, done: flowMarked("adopt-live-seen") },
-    // 🪦 Пятый шаг «адрес пустого репозитория» уходит в 75-4: форк уже свой.
-    { n: 5, slug: "step-5", title: adoptOwnRepoStrings(lang).title, done: flowDone("adopt-repo-url") },
-    { n: 6, slug: "step-6", title: adoptVerifyStrings(lang).title, done: flowVerified("adopt") },
-    { n: 7, slug: "step-7", title: adoptPushStrings(lang).title, done: flowPushed("adopt") },
+    // 🪦 ДВА ШАГА УДАЛЕНЫ 75-4, И ОБА — СЛЕДСТВИЕ МОДЕЛИ ФОРКА.
+    // «Адрес вашего пустого репозитория»: форк УЖЕ репозиторий человека.
+    // «Отправка проекта»: код УЖЕ в его репозитории.
+    // Это и есть «убрать придётся немало» из слов владельца.
+    { n: 5, slug: "step-5", title: adoptVerifyStrings(lang).title, done: flowVerified("adopt") },
     ...tail.map((title, i) => ({
-      n: 8 + i,
-      slug: `step-${8 + i}`,
+      n: 6 + i,
+      slug: `step-${6 + i}`,
       title,
       done: flowMarked(TAIL_STEPS[i].mark),
     })),
     // 13: присвоение и развёртывание — последний рабочий шаг пути.
-    { n: 13, slug: "step-13", title: adoptAssignStrings(lang).title, done: flowMarked("adopt-deployed-seen") },
+    { n: 11, slug: "step-11", title: adoptAssignStrings(lang).title, done: flowMarked("adopt-deployed-seen") },
     // 14: прощание. Слова общие с одиннадцатым шагом первого пути, отметка своя.
-    { n: 14, slug: "step-14", title: stepElevenStrings(lang).title, done: flowMarked("adopt-path-finished") },
+    { n: 12, slug: "step-12", title: stepElevenStrings(lang).title, done: flowMarked("adopt-path-finished") },
   ];
 
   // Карта показывает то, что ПОСТРОЕНО, а не то, что задумано.
