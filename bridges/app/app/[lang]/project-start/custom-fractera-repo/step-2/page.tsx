@@ -1,0 +1,83 @@
+// ШАГ ВТОРОЙ ВТОРОГО ПУТИ: ЗАМЕНА СЛОТА СОДЕРЖИМЫМ ДОНОРА (35-3, 2026-08-31).
+//
+// 🔒 ЭТО САМЫЙ РАЗРУШИТЕЛЬНЫЙ ШАГ ОБОИХ ПУТЕЙ, И СТРАНИЦА УСТРОЕНА ПОД ЭТО.
+// Красная врезка стоит ровно одна и живёт внутри подтверждения, то есть на втором
+// движении: до него ещё ничего не решено, и тревожить нечем. Закон «один цвет
+// тревоги на шаг, и лучше ни одного» здесь исполняется буквально.
+//
+// 🔒 ТРЕТИЙ РОД ДЕЙСТВИЯ — И ЕГО ЗДЕСЬ НЕТ. Три рода: форма сохраняет введённое ·
+// кнопка проверки спрашивает сервер · отметка сообщает факт, которого панель не
+// видит. Замена слота — вторая: панель делает работу сама и сама же видит итог.
+// Отметки человека на этом шаге быть не может в принципе.
+//
+// 🔒 ОТМЕТКА ШАГА РИСУЕТСЯ ОТ ФАКТА НА СЕРВЕРЕ (`flowAdopted()`), а не от того,
+// что человек побывал на странице и нажал кнопку.
+//
+// 🔒 ЗАЩИТЫ ОТ ПРЫЖКА ЗДЕСЬ ПОКА НЕТ, как и на шаге 1: она читает перечисление
+// шагов пути, которого у второго пути ещё не существует (35-6). Но донора шаг
+// требует по-настоящему: без сохранённого адреса действие не рисуется вовсе, и
+// вместо него сказано, куда вернуться.
+
+import { getAdminStrings } from "@/lib/i18n/admin-strings";
+import { adminHref } from "@/lib/admin-nav";
+import { PageShell } from "../../../_components/page-shell";
+import { StepSection } from "../../../_components/launch/step-section";
+import { AdoptConfirm } from "../../../_components/launch/adopt-confirm.client";
+import { flowAdopted, flowValue } from "@/lib/launch-flow";
+import { ADOPT_PATH_TOTAL, ADOPT_PATH_BUILT } from "../_strings";
+import { adoptStepTwoStrings } from "../_step2";
+
+export const dynamic = "force-dynamic";
+
+/** Куда писать, когда сборка не прошла. Тот же адрес, что у запроса консультации. */
+const SUPPORT_EMAIL = "admin@fractera.ai";
+
+export default async function CustomFracteraRepoStepTwo(
+  { params }: { params: Promise<{ lang: string }> },
+) {
+  const { lang } = await params;
+  const s = getAdminStrings(lang);
+  const x = adoptStepTwoStrings(lang);
+  const base = `${adminHref(lang, "project-start")}/custom-fractera-repo`;
+
+  return (
+    <PageShell
+      lang={lang}
+      slug="project-start"
+      s={s}
+      tail={[
+        { label: "custom-fractera-repo", href: base },
+        { label: "step-2" },
+      ]}
+      title={x.pageTitle}
+      hint={x.pageHint}
+    >
+      <StepSection
+        index={2}
+        total={ADOPT_PATH_TOTAL}
+        stepOfTemplate={x.stepOf}
+        doneLabel={x.done}
+        done={flowAdopted()}
+        badge={x.badge}
+        title={x.title}
+        lead={x.lead}
+        info={x.info}
+        important={x.important}
+        actionLead={x.actionLead}
+        bullets={x.bullets}
+        stepHref={(n) => (n <= ADOPT_PATH_BUILT ? `${base}/step-${n}` : undefined)}
+      >
+        {/* 🔒 ОСТРОВКУ — ТОЛЬКО ЕГО СЛОВА, И ЗДЕСЬ ЭТО ВАЖНЕЕ ОБЫЧНОГО. По проводу
+            уезжает всё переданное, даже неотрисованное; в этом самом месте, на
+            этой самой двери, однажды в разметку уехала форма замены слота с
+            кнопкой «Да, заменить» на экран, где её быть не должно. Поэтому едет
+            `x.action` — ровно словарь действия, а не `x` целиком. */}
+        <AdoptConfirm
+          donorUrl={flowValue("donor-url")}
+          email={SUPPORT_EMAIL}
+          labels={x.action}
+        />
+      </StepSection>
+    </PageShell>
+  );
+}
