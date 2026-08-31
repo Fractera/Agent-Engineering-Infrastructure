@@ -5,14 +5,14 @@
 // только номер и знаменатель шкалы. Правка текста доезжает до обоих путей сразу
 // или не доезжает ни до одного — третьего исхода нет.
 //
-// 🔒 ЗАЩИТЫ ОТ ПРЫЖКА У ВТОРОГО ПУТИ ПОКА НЕТ, и это не забыто: она читает
-// перечисление шагов пути, которого ещё не существует (придёт в 35-6). Пока
-// путь передаёт `locked: null` — то есть говорит честно «я не запираю», а не
-// притворяется, что проверил.
+// 🔒 ЗАЩИТА ОТ ПРЫЖКА ПРИШЛА В 35-6, КАК И БЫЛО ОБЕЩАНО. Решение считает путь —
+// он и знает своё перечисление шагов, — а конструктор его только исполняет:
+// общий файл не имеет права знать про один из путей больше, чем про другой.
 
 import { adminHref } from "@/lib/admin-nav";
 import { TailStepPage } from "../../_shared/tail-page";
 import { ADOPT_PATH_TOTAL, adoptStepBuilt } from "../_strings";
+import { adoptLockedFor } from "../_steps";
 
 export const dynamic = "force-dynamic";
 
@@ -32,7 +32,7 @@ export default async function CustomFracteraRepoStepEight(
         base,
         total: ADOPT_PATH_TOTAL,
         isBuilt: adoptStepBuilt,
-        locked: null,
+        locked: adoptLockedFor(lang, 8),
       }}
     />
   );

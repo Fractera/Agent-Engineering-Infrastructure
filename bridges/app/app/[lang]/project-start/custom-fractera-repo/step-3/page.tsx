@@ -23,6 +23,8 @@
 import { getAdminStrings } from "@/lib/i18n/admin-strings";
 import { adminHref } from "@/lib/admin-nav";
 import { PageShell } from "../../../_components/page-shell";
+import { StepLocked } from "../../../_components/launch/step-locked";
+import { adoptLockedFor } from "../_steps";
 import { StepSection } from "../../../_components/launch/step-section";
 import { StepCheck } from "../../../_components/launch/step-check.client";
 import { StepNav } from "../../../_components/launch/step-nav";
@@ -44,6 +46,34 @@ export default async function CustomFracteraRepoStepThree(
 
   const marked = flowMarked("adopt-live-seen");
   const site = publicSiteUrl();
+
+  // 🔒 ЗАЩИТА ОТ ПРЫЖКА ВПЕРЁД (35-6). Открыт шаг, у которого закрыты все
+  // предыдущие; пройденный остаётся открытым — вернуться человек вправе (28-18).
+  // Заголовок показывается и у запертого: страница без заголовка читается как
+  // поломка, а не как «рано» (решение владельца, 28-13).
+  const locked = adoptLockedFor(lang, 3);
+  if (locked) {
+    return (
+      <PageShell
+        lang={lang}
+        slug="project-start"
+        s={s}
+        tail={[
+          { label: "custom-fractera-repo", href: `${adminHref(lang, "project-start")}/custom-fractera-repo` },
+          { label: "step-3" },
+        ]}
+        title={x.pageTitle}
+        hint={x.pageHint}
+      >
+        <StepLocked
+          title={x.title}
+          message={locked.message}
+          backHref={locked.backHref}
+          backLabel={locked.backLabel}
+        />
+      </PageShell>
+    );
+  }
 
   return (
     <PageShell

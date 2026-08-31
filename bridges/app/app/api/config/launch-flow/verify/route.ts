@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/require-auth";
-import { flowValue, setFlowVerified, flowVerifiedAt } from "@/lib/launch-flow";
+import { flowValue, setFlowVerified, flowVerifiedAt, isLaunchPath, PATH_INPUTS } from "@/lib/launch-flow";
+import type { LaunchPath } from "@/lib/launch-flow";
 
 // ПРОВЕРКА СВЯЗИ С GITHUB — ШАГ 3 НОВОГО ПУТИ (28-19, 2026-08-27).
 //
@@ -35,8 +36,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const url = flowValue("repo-url");
-  const token = flowValue("token");
+  // 🔒 ПУТЬ ПРИХОДИТ ТЕЛОМ, А УМОЛЧАНИЕ — ПЕРВЫЙ (35-6). Механика вопроса к
+  // GitHub одна на оба пути; отличается только пара значений, о которой
+  // спрашивают. Второй экземпляр этой двери разошёлся бы с первым молча.
+  const body = (await req.json().catch(() => null)) as { path?: unknown } | null;
+  const launchPath: LaunchPath = isLaunchPath(body?.path) ? body.path : "starter";
+  const inputs = PATH_INPUTS[launchPath];
+
+  const url = flowValue(inputs.url);
+  const token = flowValue(inputs.token);
 
   // Проверять нечего — и это не отказ GitHub, а незакрытый предыдущий шаг.
   if (!url) return NextResponse.json({ ok: false, reason: "no-url" }, { status: 422 });
@@ -63,18 +71,18 @@ export async function POST(req: NextRequest) {
   }
 
   if (res.status === 401) {
-    setFlowVerified(false);
+    setFlowVerified(false, launchPath);
     return NextResponse.json({ ok: false, reason: "bad-token" }, { status: 422 });
   }
   if (res.status === 404) {
     // 404 у GitHub означает и «нет такого», и «нет доступа»: приватный
     // репозиторий чужому токену не показывают вовсе. Поэтому причина одна и
     // названа честно — «репозиторий не найден ЭТИМ токеном».
-    setFlowVerified(false);
+    setFlowVerified(false, launchPath);
     return NextResponse.json({ ok: false, reason: "no-repo" }, { status: 422 });
   }
   if (!res.ok) {
-    setFlowVerified(false);
+    setFlowVerified(false, launchPath);
     return NextResponse.json({ ok: false, reason: "github-error", status: res.status }, { status: 502 });
   }
 
@@ -83,16 +91,16 @@ export async function POST(req: NextRequest) {
     | null;
 
   if (!data?.permissions?.push) {
-    setFlowVerified(false);
+    setFlowVerified(false, launchPath);
     return NextResponse.json({ ok: false, reason: "no-push" }, { status: 422 });
   }
 
-  setFlowVerified(true);
+  setFlowVerified(true, launchPath);
 
   return NextResponse.json({
     ok: true,
     repo: data.full_name ?? path,
     private: data.private ?? null,
-    verifiedAt: flowVerifiedAt(),
+    verifiedAt: flowVerifiedAt(launchPath),
   });
 }

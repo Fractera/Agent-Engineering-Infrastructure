@@ -38,7 +38,10 @@ export const FLOW_PREFIX = "USER_FLOW_";
  * 🔒 СПИСОК ЗДЕСЬ, А НЕ В СТРАНИЦАХ: он нужен и странице шага, и карте пути, и
  * сбросу. Три копии разошлись бы на первой же правке.
  */
-export const FLOW_STEPS = ["repo-url", "token", "donor-url"] as const
+export const FLOW_STEPS = [
+  "repo-url", "token",
+  "donor-url", "adopt-repo-url", "adopt-token",
+] as const
 
 // 🔒 `donor-url` ПРИНАДЛЕЖИТ ВТОРОМУ ПУТИ, И КЛЮЧ У НЕГО СВОЙ (35-1, 2026-08-31).
 // Второй путь ведёт человека не к пустому репозиторию, а к ЧУЖОМУ проекту: он
@@ -50,6 +53,35 @@ export const FLOW_STEPS = ["repo-url", "token", "donor-url"] as const
 // ЗНАЧЕНИЯ, а не последовательность; последовательность знает `_steps.ts` своего
 // пути. Второе перечисление значений разошлось бы с первым при первой правке.
 export type FlowStep = (typeof FLOW_STEPS)[number];
+
+// ── ДВА ПУТИ, ОДНА МЕХАНИКА, РАЗНОЕ СОСТОЯНИЕ (35-6, 2026-08-31) ────────────
+//
+// 🔒 ПОЧЕМУ У ВТОРОГО ПУТИ СВОИ КЛЮЧИ, А НЕ ОБЩИЕ С ПЕРВЫМ. Вопрос шага звучит
+// одинаково — «адрес вашего пустого репозитория» — но смысл разный: у первого
+// пути человек отправляет туда СТАРТОВЫЙ ШАБЛОН, у второго — ЧУЖОЙ ПРОЕКТ,
+// который стал его. Общий ключ означал бы, что прошедший один путь видит
+// загоревшиеся шаги другого, то есть поздравление с тем, чего он не делал.
+// ✗ ровно этим оплачен шаг 25.
+//
+// 🔒 ПОЧЕМУ МЕХАНИКА ОБЩАЯ. Форма поля, вопрос к GitHub, отправка — одно и то
+// же; второй экземпляр этого кода разошёлся бы с первым молча. Двери берут
+// ПАРУ значений по имени пути, а не хранят её у себя.
+//
+// 🔒 УМОЛЧАНИЕ — ПЕРВЫЙ ПУТЬ. Он работает и написан раньше; заставить его
+// страницы называть себя по имени значило бы тронуть их без нужды. Новое
+// приходит с именем, старое молчит и получает прежнее поведение.
+
+export const LAUNCH_PATHS = ["starter", "adopt"] as const;
+export type LaunchPath = (typeof LAUNCH_PATHS)[number];
+
+export const isLaunchPath = (v: unknown): v is LaunchPath =>
+  typeof v === "string" && (LAUNCH_PATHS as readonly string[]).includes(v);
+
+/** Какие ДВА значения питают проверку связи и отправку у каждого пути. */
+export const PATH_INPUTS: Record<LaunchPath, { url: FlowStep; token: FlowStep }> = {
+  starter: { url: "repo-url", token: "token" },
+  adopt: { url: "adopt-repo-url", token: "adopt-token" },
+};
 
 export const isFlowStep = (v: unknown): v is FlowStep =>
   typeof v === "string" && (FLOW_STEPS as readonly string[]).includes(v);
@@ -79,7 +111,13 @@ export function setFlowValue(step: FlowStep, value: string | null): void {
   // первый путь, терял зелёную отметку оттого, что заглянул во второй. Это ровно
   // тот дефект, которым оплачен шаг 25, только повёрнутый другой стороной: там
   // отметка загоралась незаслуженно, здесь — гасла незаслуженно.
-  if (changed && VERIFIED_INPUTS.includes(step)) setValue(FLOW_VERIFIED_KEY, null);
+  // Гаснет проверка ТОГО пути, чьё значение сменилось, и только его.
+  if (changed) {
+    for (const path of LAUNCH_PATHS) {
+      const { url, token } = PATH_INPUTS[path];
+      if (step === url || step === token) setValue(verifiedKey(path), null);
+    }
+  }
 }
 
 /** Пройден ли шаг. Один источник правды — наличие значения. */
@@ -97,7 +135,13 @@ export function flowDone(step: FlowStep): boolean {
  */
 export function flowShown(step: FlowStep): string {
   const v = flowValue(step);
-  if (v === "" || step !== "token") return v;
+  // 🔒 СЕКРЕТ ОПОЗНАЁТСЯ ПО РОЛИ, А НЕ ПО ОДНОМУ ИМЕНИ (35-6). Здесь стояло
+  // `step !== "token"`, и это работало, пока токен был один. С появлением
+  // `adopt-token` такая проверка показала бы второй токен целиком — на экране,
+  // который открывают при коллегах и в записи экрана. Роль берётся у
+  // `PATH_INPUTS`, то есть там же, где заведена пара значений.
+  const isSecret = LAUNCH_PATHS.some((p) => PATH_INPUTS[p].token === step);
+  if (v === "" || !isSecret) return v;
   return `••••••••${v.slice(-4)}`;
 }
 
@@ -127,26 +171,29 @@ export function flowDoneCount(): number {
 export const FLOW_VERIFIED_KEY = `${FLOW_PREFIX}VERIFIED_AT`;
 
 /**
- * Значения, о которых проверка связи что-то утверждает.
+ * Ключ отметки проверки для пути.
  *
- * 🔒 ПЕРЕЧИСЛЕНИЕ, А НЕ «ВСЕ ЗНАЧЕНИЯ». Проверка спрашивает GitHub про репозиторий
- * и токен ПЕРВОГО пути; про адрес донора она не знает ничего и потому не имеет
- * права от него гаснуть. Перечислять надо здесь, у самой отметки: список «что её
- * питает» и сама отметка обязаны жить рядом, иначе третий путь добавит своё
- * значение и снова погасит чужое.
+ * 🔒 У ПЕРВОГО ПУТИ ИМЯ ОСТАЛОСЬ ПРЕЖНИМ, и это не небрежность. На развёрнутых
+ * серверах в `.env.local` уже лежит `USER_FLOW_VERIFIED_AT`; переименовать его
+ * значило бы погасить проверку у всех, кто её прошёл, — молча и без причины.
  */
-const VERIFIED_INPUTS: readonly FlowStep[] = ["repo-url", "token"];
+const verifiedKey = (path: LaunchPath): string =>
+  path === "starter" ? FLOW_VERIFIED_KEY : `${FLOW_PREFIX}ADOPT_VERIFIED_AT`;
 
-export function flowVerifiedAt(): string {
-  return getValue(FLOW_VERIFIED_KEY).trim();
+// 🪦 `VERIFIED_INPUTS` УДАЛЁН 35-6: список «что питает проверку» переехал в
+// `PATH_INPUTS`, где он живёт вместе с самой парой значений. Две таблицы об
+// одном разошлись бы на третьем пути.
+
+export function flowVerifiedAt(path: LaunchPath = "starter"): string {
+  return getValue(verifiedKey(path)).trim();
 }
 
-export function flowVerified(): boolean {
-  return flowVerifiedAt() !== "";
+export function flowVerified(path: LaunchPath = "starter"): boolean {
+  return flowVerifiedAt(path) !== "";
 }
 
-export function setFlowVerified(on: boolean): void {
-  setValue(FLOW_VERIFIED_KEY, on ? new Date().toISOString() : null);
+export function setFlowVerified(on: boolean, path: LaunchPath = "starter"): void {
+  setValue(verifiedKey(path), on ? new Date().toISOString() : null);
 }
 
 // ── ШАГ 4: ОТПРАВКА ПРОЕКТА ─────────────────────────────────────────────────
@@ -158,16 +205,20 @@ export function setFlowVerified(on: boolean): void {
 
 export const FLOW_PUSHED_KEY = `${FLOW_PREFIX}PUSHED_AT`;
 
-export function flowPushedAt(): string {
-  return getValue(FLOW_PUSHED_KEY).trim();
+/** Имя первого пути сохранено по той же причине, что и у проверки. */
+const pushedKey = (path: LaunchPath): string =>
+  path === "starter" ? FLOW_PUSHED_KEY : `${FLOW_PREFIX}ADOPT_PUSHED_AT`;
+
+export function flowPushedAt(path: LaunchPath = "starter"): string {
+  return getValue(pushedKey(path)).trim();
 }
 
-export function flowPushed(): boolean {
-  return flowPushedAt() !== "";
+export function flowPushed(path: LaunchPath = "starter"): boolean {
+  return flowPushedAt(path) !== "";
 }
 
-export function setFlowPushed(on: boolean): void {
-  setValue(FLOW_PUSHED_KEY, on ? new Date().toISOString() : null);
+export function setFlowPushed(on: boolean, path: LaunchPath = "starter"): void {
+  setValue(pushedKey(path), on ? new Date().toISOString() : null);
 }
 
 // ── ВТОРОЙ ПУТЬ, ШАГ 2: ДОНОР ПОДКЛЮЧЁН ─────────────────────────────────────
