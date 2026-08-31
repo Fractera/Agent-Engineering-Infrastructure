@@ -1,19 +1,24 @@
-// ПОДСТРАНИЦА ПУТИ «СВОЙ РЕПОЗИТОРИЙ FRACTERA» (шаг 28-9, 2026-08-27).
+// ПОДСТРАНИЦА ПУТИ «СВОЙ РЕПОЗИТОРИЙ FRACTERA» (28-9, 2026-08-27; путь начат 35-1, 2026-08-31).
 //
-// 🔒 ОНА ЗАВЕДЕНА ПУСТОЙ НАМЕРЕННО, И ЭТО СКАЗАНО НА НЕЙ ЖЕ. Владелец назвал две
-// подстраницы и велел начинать с первого шага дефолтного пути. Шагов у этого
-// пути пока нет — и страница честно говорит, что их нет, вместо того чтобы
-// показывать кнопку, которая никуда не ведёт.
+// 🪦 ЗДЕСЬ СТОЯЛА ЧЕСТНАЯ ЗАГЛУШКА, И ОНА СВОЁ ОТСЛУЖИЛА. Текст был: «шаги этого
+// пути ещё не построены» плюс обещание, что тут будет проверка донора и клон в
+// соседнюю папку. Заглушка была правильной ровно до того дня, когда шаги
+// появились: названная, но не обеспеченная возможность — приглашение
+// импровизировать, а пустая страница с честной строкой лучше живой на вид кнопки,
+// которая никуда не ведёт.
 //
-// ✗ Названная, но не обеспеченная возможность — приглашение импровизировать
-// (первый закон `ANTI-PATTERNS.md`). Пустая страница с честной строкой лучше
-// живой на вид кнопки: отсутствие вызывает вопрос, обещание вызывает выдумку.
+// 🔒 ВХОД ПОКАЗЫВАЕТ ОДНУ КНОПКУ, А НЕ СПИСОК ИЗ ЧЕТЫРНАДЦАТИ ПУНКТОВ. У первого
+// пути карта появилась решением владельца (28-13) и отвечает на вопрос «где я»,
+// показывая ПРОЙДЕННОЕ. Здесь пройденного пока нет: построен один шаг, и карта из
+// одной строки была бы не картой, а кнопкой с лишней рамкой. Карта придёт вместе
+// с шагами (35-6), а не раньше них.
 
 import Link from "next/link";
 import { getAdminStrings } from "@/lib/i18n/admin-strings";
 import { adminHref } from "@/lib/admin-nav";
 import { PageShell } from "../../_components/page-shell";
-import { Lead, Small } from "@/components/ui/typography";
+import { Lead } from "@/components/ui/typography";
+import { adoptPathStrings, adoptStepOneStrings } from "./_strings";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +27,8 @@ export default async function CustomFracteraRepoIndex(
 ) {
   const { lang } = await params;
   const s = getAdminStrings(lang);
-  const ru = lang === "ru";
+  const x = adoptStepOneStrings(lang);
+  const p = adoptPathStrings(lang);
 
   return (
     <PageShell
@@ -30,28 +36,17 @@ export default async function CustomFracteraRepoIndex(
       slug="project-start"
       s={s}
       params={{ file: "custom-fractera-repo" }}
-      title={ru ? "Свой репозиторий Fractera" : "Your own Fractera repository"}
-      hint={
-        ru
-          ? "Путь для проекта, который уже построен на Fractera: слот принимает его вместо шаблона."
-          : "The way for a project already built on Fractera: the slot takes it in place of the template."
-      }
+      title={x.pageTitle}
+      hint={x.pageHint}
     >
-      <Lead>
-        {ru ? "Шаги этого пути ещё не построены." : "The steps of this way are not built yet."}
-      </Lead>
-
-      <Small className="mt-4 block">
-        {ru
-          ? "Здесь будет проверка донора: адрес обязан ответить, у проекта обязана быть форма, которую слот ожидает, и клон обязан лечь в соседнюю папку — только тогда происходит замена."
-          : "The donor check will live here: the address must answer, the project must have the shape the slot expects, and the clone must land in a folder next door — only then does the swap happen."}
-      </Small>
+      <Lead>{p.lead}</Lead>
 
       <Link
-        href={adminHref(lang, "project-start")}
-        className="mt-8 inline-flex h-11 items-center justify-center rounded-lg border border-border px-6 text-[length:var(--fs-small)] transition-colors hover:border-foreground/30"
+        href={`${adminHref(lang, "project-start")}/custom-fractera-repo/step-1`}
+        data-adopt-start
+        className="mt-8 inline-flex h-11 items-center justify-center rounded-lg bg-primary px-6 text-[length:var(--fs-small)] font-medium text-primary-foreground transition-colors hover:bg-primary/90"
       >
-        {ru ? "Вернуться к выбору пути" : "Back to the choice of path"}
+        {p.startLabel}
       </Link>
     </PageShell>
   );
