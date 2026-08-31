@@ -22,6 +22,12 @@ import { runBuild } from "@/app/api/deploy/route";
 // 🔒 МЫ НЕ ПРОВЕРЯЕМ, ЧТО РЕПОЗИТОРИЙ — FRACTERA (решение владельца 2026-08-26):
 // «это будет находиться в зоне его ответственности». Отвечает отказ сборки, и
 // он же ведёт человека к миграции.
+//
+// 🔒 ПОДКЛЮЧЁННЫЙ ПРОЕКТ ОТВЯЗЫВАЕТСЯ ОТ ДОНОРА СРАЗУ, В ТОЙ ЖЕ ОПЕРАЦИИ
+// (шаг 35-2). Клон доезжает в слот вместе с чужим `.git`, и без отвязки слот
+// несёт remote чужого проекта: первая отправка ушла бы туда или упала бы по
+// правам. Отвязку делает `detachSlotHistory()`, она включена по умолчанию, и её
+// исход виден в ответе полем `detached` — молчаливой она быть не имеет права.
 
 const SLOT_DIR = process.env.APP_DIR ?? resolve(process.cwd(), "../../app");
 
@@ -66,28 +72,48 @@ export async function POST(req: NextRequest) {
   // ответ её не ждёт: за ходом человек следит через `api/deploy/status`.
   const jobId = runBuild(restore ? "restore starter template" : `adopt ${repoUrl}`);
 
-  return NextResponse.json({ ok: true, head: result.head, jobId, restored: restore });
+  // `detached: false` при `ok: true` — не мелочь и не шум: проект подключён и
+  // соберётся, но история чужая осталась, и отправка из такого слота ушла бы не
+  // туда. Человеку это говорится, а не заминается.
+  return NextResponse.json({
+    ok: true, head: result.head, jobId, restored: restore, detached: result.detached,
+  });
 }
 
 // Состояние подключения: что стоит в слоте прямо сейчас — по его собственному
-// remote, а не по нашей записи. Запись говорит, что мы просили; remote — что
-// получилось, и расходятся они ровно тогда, когда что-то пошло не так.
+// репозиторию, а не по нашей записи. Запись говорит, что мы просили; слот — что
+// получилось.
+//
+// 🔒 ПУСТОЙ `slotRemote` ПОСЛЕ 35-2 ЕСТЬ НОРМА, А НЕ ПОЛОМКА, и читать его как
+// «связи нет» было бы ложью. Подключённый проект отвязан от донора намеренно:
+// свой репозиторий, один коммит, ноль remote — ровно то состояние, в котором
+// `bootstrap.sh` оставляет слот на свежем сервере. Поэтому рядом едет
+// `detached`: репозиторий у слота есть, а remote у него нет. Отличить это от
+// «слота нет вовсе» нельзя по одному пустому значению — потому и полей два.
 export async function GET(req: NextRequest) {
   if (!(await requireAuth(req.headers.get("cookie") ?? ""))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  let slotRemote = "";
-  try {
-    const { execFileSync } = await import("child_process");
-    slotRemote = execFileSync("git", ["-C", SLOT_DIR, "remote", "get-url", "origin"], {
-      encoding: "utf8", timeout: 10_000,
-    }).toString().trim().replace(/x-access-token:[^@]*@/, "");
-  } catch { /* слота нет или он не репозиторий — честное пустое значение */ }
+  const { execFileSync } = await import("child_process");
+  const git = (args: string[]): string => {
+    try {
+      // `safe.directory` обязателен: слот принадлежит несуществующему UID, и без
+      // исключения git отказывает — а отказ здесь ловится и выглядит как пустой
+      // ответ. Измерено на сервере 35-2: без него `detached` врал «false».
+      return execFileSync("git", ["-c", `safe.directory=${SLOT_DIR}`, "-C", SLOT_DIR, ...args], {
+        encoding: "utf8", timeout: 10_000,
+      }).toString().trim();
+    } catch { return ""; }
+  };
+
+  const isRepo = git(["rev-parse", "--is-inside-work-tree"]) === "true";
+  const slotRemote = git(["remote", "get-url", "origin"]).replace(/x-access-token:[^@]*@/, "");
 
   return NextResponse.json({
     requested: getValue(ADOPT_URL_KEY),
     slotRemote,
+    detached: isRepo && !slotRemote,
     built: fs.existsSync(resolve(SLOT_DIR, ".next")),
   });
 }
