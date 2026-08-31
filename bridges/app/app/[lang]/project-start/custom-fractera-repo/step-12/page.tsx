@@ -31,7 +31,7 @@ import { StepCopyBlock } from "../../../_components/launch/step-grab.client";
 import { Small } from "@/components/ui/typography";
 import { flowMarked } from "@/lib/launch-flow";
 import { stepElevenStrings } from "../../_shared/_step11";
-import { ADOPT_PATH_TOTAL, adoptStepBuilt, stepBadge, ADOPT_PATH_TITLE, ADOPT_PATH_HINT } from "../_strings";
+import { ADOPT_PATH_TOTAL, adoptStepBuilt, stepBadge, adoptPathName } from "../_strings";
 import { adoptLockedFor } from "../_steps";
 
 export const dynamic = "force-dynamic";
@@ -52,8 +52,8 @@ export default async function CustomFracteraRepoStepFourteen(
         slug="project-start"
         s={s}
         tail={[{ label: "custom-fractera-repo", href: base }, { label: "step-12" }]}
-        title={ADOPT_PATH_TITLE}
-        hint={ADOPT_PATH_HINT}
+        title={adoptPathName(lang).title}
+        hint={adoptPathName(lang).hint}
       >
         <StepLocked
           title={x.title}
@@ -73,8 +73,8 @@ export default async function CustomFracteraRepoStepFourteen(
       slug="project-start"
       s={s}
       tail={[{ label: "custom-fractera-repo", href: base }, { label: "step-12" }]}
-      title={ADOPT_PATH_TITLE}
-      hint={ADOPT_PATH_HINT}
+      title={adoptPathName(lang).title}
+      hint={adoptPathName(lang).hint}
     >
       <StepSection
         index={12}

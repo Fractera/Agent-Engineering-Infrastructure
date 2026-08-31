@@ -322,9 +322,20 @@ export function pathMapStrings(lang: string): PathMapStrings {
  * 🔒 ЗНАЧЕНИЯ ВЗЯТЫ ИЗ ОБЩИХ СЛОВ ДОСЛОВНО (75-5): раньше заголовок шагов хвоста
  * приходил оттуда, и путь обязан остаться прежним до байта.
  */
-export const DEFAULT_TEMPLATE_TITLE = "Стартовый шаблон";
-export const DEFAULT_TEMPLATE_HINT =
-  "Путь от пустого репозитория до работающего сайта — по одному шагу за раз.";
+const PATH_NAME: Record<string, { title: string; hint: string }> = {
+  ru: {
+    title: "Стартовый шаблон",
+    hint: "Путь от пустого репозитория до работающего сайта — по одному шагу за раз.",
+  },
+  en: {
+    title: "Starter template",
+    hint: "The way from an empty repository to a working site — one step at a time.",
+  },
+};
+
+export function defaultTemplatePathName(lang: string): { title: string; hint: string } {
+  return PATH_NAME[lang] ?? PATH_NAME.en;
+}
 
 export const DEFAULT_TEMPLATE_TOTAL = 11;
 
