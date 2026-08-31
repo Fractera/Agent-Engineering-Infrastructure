@@ -10,6 +10,7 @@ import { adoptStepFourStrings } from "./_step4";
 import { adoptStepFiveStrings } from "./_step5";
 import { adoptStepSixStrings } from "./_step6";
 import { adoptStepSevenStrings } from "./_step7";
+import { adoptStepThirteenStrings } from "./_step13";
 
 // ПЕРЕЧИСЛЕНИЕ ШАГОВ ВТОРОГО ПУТИ И ЗАЩИТА ОТ ПРЫЖКА (35-6, 2026-08-31).
 //
@@ -55,6 +56,8 @@ export function adoptSteps(lang: string): AdoptStep[] {
       title,
       done: flowMarked(TAIL_STEPS[i].mark),
     })),
+    // 13: присвоение и развёртывание — последний рабочий шаг пути.
+    { n: 13, slug: "step-13", title: adoptStepThirteenStrings(lang).title, done: flowMarked("adopt-deployed-seen") },
   ];
 
   // Карта показывает то, что ПОСТРОЕНО, а не то, что задумано.
