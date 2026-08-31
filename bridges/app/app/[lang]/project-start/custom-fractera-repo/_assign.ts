@@ -19,10 +19,9 @@
 // Это единственное, что человек унесёт с собой и будет повторять сам; два
 // объяснения одного слова разошлись бы.
 
-export type StepThirteenStrings = {
+export type AssignStrings = {
   pageTitle: string;
   pageHint: string;
-  badge: string;
   title: string;
   lead: string;
   important: string;
@@ -68,11 +67,10 @@ Do not touch the design, the layout or the contents of the pages: they are exact
 
 When you are done, deploy this to my server. When the deployment finishes, answer in one line: at what address the project opens on the internet.`;
 
-const ru: StepThirteenStrings = {
+const ru: AssignStrings = {
   pageTitle: "Присвоение проекта",
   pageHint: "Чужие реквизиты заменяются вашими, и проект уезжает в интернет.",
 
-  badge: "Шаг тринадцатый",
   title: "Сделайте проект своим",
   lead: "Проект работает и лежит в вашем репозитории, но представляется он всё ещё прежним владельцем. Отдайте агенту подсказку ниже — он найдёт чужие реквизиты и заменит их вашими, а потом развернёт проект.",
   important:
@@ -109,11 +107,10 @@ const ru: StepThirteenStrings = {
   goNext: "Следующий шаг",
 };
 
-const en: StepThirteenStrings = {
+const en: AssignStrings = {
   pageTitle: "Making the project yours",
   pageHint: "Someone else's details are replaced by yours, and the project goes online.",
 
-  badge: "Step thirteen",
   title: "Make the project yours",
   lead: "The project runs and sits in your repository, but it still introduces itself as the previous owner. Give the agent the prompt below — it will find the stranger's details, replace them with yours, and then deploy the project.",
   important:
@@ -150,8 +147,8 @@ const en: StepThirteenStrings = {
   goNext: "Next step",
 };
 
-const DICT: Record<string, StepThirteenStrings> = { en, ru };
+const DICT: Record<string, AssignStrings> = { en, ru };
 
-export function adoptStepThirteenStrings(lang: string): StepThirteenStrings {
+export function adoptAssignStrings(lang: string): AssignStrings {
   return DICT[lang] ?? en;
 }

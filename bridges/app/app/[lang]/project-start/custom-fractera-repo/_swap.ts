@@ -18,11 +18,10 @@ import type { AdoptConfirmLabels } from "../../_components/launch/adopt-confirm.
 // безвозвратно уничтоженный проект. Он стоит внутри подтверждения, то есть на
 // втором движении, а не на входе в шаг: на входе ещё ничего не решено.
 
-const ru: StepTwoStrings = {
+const ru: SwapStrings = {
   pageTitle: "Замена проекта в слоте",
   pageHint: "Содержимое слота будет заменено проектом из репозитория-донора.",
 
-  badge: "Шаг второй",
   title: "Заменить проект содержимым донора",
   lead:
     "Панель скачает названный вами проект и поставит его на место стартового шаблона. Это и есть то, ради чего вы выбрали этот путь.",
@@ -88,11 +87,10 @@ const ru: StepTwoStrings = {
   },
 };
 
-const en: StepTwoStrings = {
+const en: SwapStrings = {
   pageTitle: "Replacing the project in the slot",
   pageHint: "The contents of the slot will be replaced by the project from the donor repository.",
 
-  badge: "Step two",
   title: "Replace the project with the donor's contents",
   lead:
     "The panel will download the project you named and put it in place of the starter template. This is what you chose this path for.",
@@ -158,10 +156,9 @@ const en: StepTwoStrings = {
   },
 };
 
-export type StepTwoStrings = {
+export type SwapStrings = {
   pageTitle: string;
   pageHint: string;
-  badge: string;
   title: string;
   lead: string;
   info: string;
@@ -175,8 +172,8 @@ export type StepTwoStrings = {
   action: AdoptConfirmLabels;
 };
 
-const DICT: Record<string, StepTwoStrings> = { en, ru };
+const DICT: Record<string, SwapStrings> = { en, ru };
 
-export function adoptStepTwoStrings(lang: string): StepTwoStrings {
+export function adoptSwapStrings(lang: string): SwapStrings {
   return DICT[lang] ?? en;
 }

@@ -1,4 +1,4 @@
-import type { StepStrings } from "../default-template/_strings";
+import type { AdoptStepStrings } from "./_strings";
 
 // ШАГ ЧЕТВЁРТЫЙ ВТОРОГО ПУТИ: АДРЕС СВОЕГО ПУСТОГО РЕПОЗИТОРИЯ (35-6).
 //
@@ -10,11 +10,10 @@ import type { StepStrings } from "../default-template/_strings";
 //
 // 🔒 ТИП БЕРЁТСЯ У ПЕРВОГО ПУТИ, А НЕ ПИШЕТСЯ ЗАНОВО: анатомия шага одна.
 
-const ru: StepStrings = {
+const ru: AdoptStepStrings = {
   pageTitle: "Свой репозиторий для проекта",
   pageHint: "Место, где проект будет жить между развёртываниями.",
 
-  badge: "Шаг четвёртый",
   title: "Адрес вашего пустого репозитория",
   lead: "Заведите на GitHub пустой репозиторий и назовите его адрес. Туда уедет проект, который сейчас работает на вашем сервере.",
   info:
@@ -47,11 +46,10 @@ const ru: StepStrings = {
   },
 };
 
-const en: StepStrings = {
+const en: AdoptStepStrings = {
   pageTitle: "Your own repository for the project",
   pageHint: "The place where the project will live between deployments.",
 
-  badge: "Step four",
   title: "The address of your empty repository",
   lead: "Create an empty repository on GitHub and name its address. The project now running on your server will go there.",
   info:
@@ -84,8 +82,8 @@ const en: StepStrings = {
   },
 };
 
-const DICT: Record<string, StepStrings> = { en, ru };
+const DICT: Record<string, AdoptStepStrings> = { en, ru };
 
-export function adoptStepFourStrings(lang: string): StepStrings {
+export function adoptOwnRepoStrings(lang: string): AdoptStepStrings {
   return DICT[lang] ?? en;
 }

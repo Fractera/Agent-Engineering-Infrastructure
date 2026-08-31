@@ -1,4 +1,4 @@
-// ШАГ 5 ВТОРОГО ПУТИ (35-6, 2026-08-31).
+// ШАГ 4 ВТОРОГО ПУТИ (35-6, 2026-08-31).
 //
 // 🔒 МЕХАНИКА ВЗЯТА У ПЕРВОГО ПУТИ ЦЕЛИКОМ: та же форма, та же дверь, тот же
 // островок. Отличаются СОСТОЯНИЕ (свои ключи) и СЛОВА. Второй экземпляр этой
@@ -13,17 +13,17 @@ import { StepSection } from "../../../_components/launch/step-section";
 import { StepForm } from "../../../_components/launch/step-form.client";
 import { StepLink } from "../../../_components/launch/step-link";
 import { flowDone, flowShown } from "@/lib/launch-flow";
-import { ADOPT_PATH_TOTAL, adoptStepBuilt } from "../_strings";
-import { adoptStepFiveStrings } from "../_step5";
+import { ADOPT_PATH_TOTAL, adoptStepBuilt, stepBadge } from "../_strings";
+import { adoptOwnRepoStrings } from "../_own-repo";
 
 export const dynamic = "force-dynamic";
 
-export default async function CustomFracteraRepoStepFive(
+export default async function CustomFracteraRepoStepFour(
   { params }: { params: Promise<{ lang: string }> },
 ) {
   const { lang } = await params;
   const s = getAdminStrings(lang);
-  const x = adoptStepFiveStrings(lang);
+  const x = adoptOwnRepoStrings(lang);
   const base = `${adminHref(lang, "project-start")}/custom-fractera-repo`;
 
   // 🔒 ЗАЩИТА ОТ ПРЫЖКА ВПЕРЁД (35-6). Открыт шаг, у которого закрыты все
@@ -68,25 +68,25 @@ export default async function CustomFracteraRepoStepFive(
         total={ADOPT_PATH_TOTAL}
         stepOfTemplate={x.stepOf}
         doneLabel={x.done}
-        done={flowDone("adopt-token")}
-        badge={x.badge}
+        done={flowDone("adopt-repo-url")}
+        badge={stepBadge(lang, 5)}
         title={x.title}
         lead={x.lead}
         info={x.info}
         important={x.important}
         actionLead={x.actionLead}
         bullets={x.bullets}
-        link={{ href: "https://github.com/settings/personal-access-tokens", label: x.linkLabel }}
+        link={{ href: "https://github.com/new", label: x.linkLabel }}
         stepHref={(k) => (adoptStepBuilt(k) ? `${base}/step-${k}` : undefined)}
       >
         {/* Островку — только его слова, перечисленные поимённо. */}
         <StepForm
           index={5}
           total={ADOPT_PATH_TOTAL}
-          flowStep="adopt-token"
-          saved={flowShown("adopt-token")}
-          secret={true}
-          prevHref={adoptStepBuilt(4) ? `${base}/step-4` : undefined}
+          flowStep="adopt-repo-url"
+          saved={flowShown("adopt-repo-url")}
+          secret={false}
+          prevHref={adoptStepBuilt(5) ? `${base}/step-5` : undefined}
           nextHref={adoptStepBuilt(6) ? `${base}/step-6` : undefined}
           labels={{
             inputLabel: x.form.inputLabel,

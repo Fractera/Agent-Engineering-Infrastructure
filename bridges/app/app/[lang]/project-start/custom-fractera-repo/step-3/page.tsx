@@ -1,24 +1,22 @@
-// ШАГ ТРЕТИЙ ВТОРОГО ПУТИ: ПРОЕКТ ОТКРЫВАЕТСЯ ПО ВАШЕМУ АДРЕСУ (35-4).
+// ШАГ ВТОРОЙ ВТОРОГО ПУТИ: ЗАМЕНА СЛОТА СОДЕРЖИМЫМ ДОНОРА (35-3, 2026-08-31).
 //
-// 🔒 ТРЕТИЙ РОД ДЕЙСТВИЯ — ОТМЕТКА ЧЕЛОВЕКА, И ЗДЕСЬ ОН ЕДИНСТВЕННО ВОЗМОЖЕН.
-// Форма сохраняет введённое — вводить нечего. Кнопка проверки спрашивает сервер —
-// сервер и так знает, что сборка прошла, но не знает главного: увидел ли человек
-// то, за чем пришёл. Страница могла открыться пустой, чужой, не на том языке.
-// Глаз на его браузере у панели нет, и делать вид, что есть, — ложь.
+// 🔒 ЭТО САМЫЙ РАЗРУШИТЕЛЬНЫЙ ШАГ ОБОИХ ПУТЕЙ, И СТРАНИЦА УСТРОЕНА ПОД ЭТО.
+// Красная врезка стоит ровно одна и живёт внутри подтверждения, то есть на втором
+// движении: до него ещё ничего не решено, и тревожить нечем. Закон «один цвет
+// тревоги на шаг, и лучше ни одного» здесь исполняется буквально.
 //
-// 🔒 ОТМЕТКА СВОЯ (`adopt-live-seen`), ЗАИМСТВОВАНИЕ ЗАПРЕЩЕНО. Ближайшая чужая —
-// `deployed-seen` десятого шага первого пути, и вопрос там звучит почти так же.
-// Но там человек развернул СВОИ правки со своей машины, здесь он смотрит на
-// чужой проект, ставший его. Общая отметка зажигала бы этот шаг всем, кто прошёл
-// первый путь.
+// 🔒 ТРЕТИЙ РОД ДЕЙСТВИЯ — И ЕГО ЗДЕСЬ НЕТ. Три рода: форма сохраняет введённое ·
+// кнопка проверки спрашивает сервер · отметка сообщает факт, которого панель не
+// видит. Замена слота — вторая: панель делает работу сама и сама же видит итог.
+// Отметки человека на этом шаге быть не может в принципе.
 //
-// 🔒 ССЫЛКА ПОЯВЛЯЕТСЯ, ТОЛЬКО ЕСЛИ СЕРВЕР ЗНАЕТ СВОЙ АДРЕС. Не знает — вместо
-// ссылки сказано словами, чего не хватает и куда идти. Ссылка в никуда хуже её
-// отсутствия (✗ оплачено шагом 34), а пустая ссылка ещё и выглядит поломкой.
+// 🔒 ОТМЕТКА ШАГА РИСУЕТСЯ ОТ ФАКТА НА СЕРВЕРЕ (`flowAdopted()`), а не от того,
+// что человек побывал на странице и нажал кнопку.
 //
-// 🔒 ИЛЛЮСТРАЦИИ НЕТ, И ЭТО НЕ ЗАБЫВЧИВОСТЬ. Экран этого шага у каждого свой —
-// это чужой проект, который человек выбрал сам. Нарисовать образец значило бы
-// показать выдумку как то, что он должен увидеть.
+// 🔒 ЗАЩИТЫ ОТ ПРЫЖКА ЗДЕСЬ ПОКА НЕТ, как и на шаге 1: она читает перечисление
+// шагов пути, которого у второго пути ещё не существует (35-6). Но донора шаг
+// требует по-настоящему: без сохранённого адреса действие не рисуется вовсе, и
+// вместо него сказано, куда вернуться.
 
 import { getAdminStrings } from "@/lib/i18n/admin-strings";
 import { adminHref } from "@/lib/admin-nav";
@@ -26,26 +24,24 @@ import { PageShell } from "../../../_components/page-shell";
 import { StepLocked } from "../../../_components/launch/step-locked";
 import { adoptLockedFor } from "../_steps";
 import { StepSection } from "../../../_components/launch/step-section";
-import { StepCheck } from "../../../_components/launch/step-check.client";
+import { AdoptConfirm } from "../../../_components/launch/adopt-confirm.client";
 import { StepNav } from "../../../_components/launch/step-nav";
-import { Callout } from "../../../_components/launch/callout";
-import { flowMarked } from "@/lib/launch-flow";
-import { publicSiteUrl } from "@/lib/public-site-url";
-import { ADOPT_PATH_TOTAL, adoptStepBuilt } from "../_strings";
-import { adoptStepThreeStrings, whatYourAddressMeans } from "../_step3";
+import { flowAdopted, flowValue } from "@/lib/launch-flow";
+import { ADOPT_PATH_TOTAL, adoptStepBuilt, stepBadge } from "../_strings";
+import { adoptSwapStrings } from "../_swap";
 
 export const dynamic = "force-dynamic";
 
-export default async function CustomFracteraRepoStepThree(
+/** Куда писать, когда сборка не прошла. Тот же адрес, что у запроса консультации. */
+const SUPPORT_EMAIL = "admin@fractera.ai";
+
+export default async function CustomFracteraRepoStepTwo(
   { params }: { params: Promise<{ lang: string }> },
 ) {
   const { lang } = await params;
   const s = getAdminStrings(lang);
-  const x = adoptStepThreeStrings(lang);
+  const x = adoptSwapStrings(lang);
   const base = `${adminHref(lang, "project-start")}/custom-fractera-repo`;
-
-  const marked = flowMarked("adopt-live-seen");
-  const site = publicSiteUrl();
 
   // 🔒 ЗАЩИТА ОТ ПРЫЖКА ВПЕРЁД (35-6). Открыт шаг, у которого закрыты все
   // предыдущие; пройденный остаётся открытым — вернуться человек вправе (28-18).
@@ -92,48 +88,41 @@ export default async function CustomFracteraRepoStepThree(
         total={ADOPT_PATH_TOTAL}
         stepOfTemplate={x.stepOf}
         doneLabel={x.done}
-        done={marked}
-        badge={x.badge}
+        done={flowAdopted()}
+        badge={stepBadge(lang, 3)}
         title={x.title}
         lead={x.lead}
-        // Голубая: чей это адрес и почему прежний владелец к нему отношения не имеет.
-        info={whatYourAddressMeans(lang, site.url)}
+        info={x.info}
         important={x.important}
         actionLead={x.actionLead}
         bullets={x.bullets}
-        link={site.url ? { href: site.url, label: x.linkLabel } : undefined}
         stepHref={(n) => (adoptStepBuilt(n) ? `${base}/step-${n}` : undefined)}
       >
-        <div className="flex flex-col gap-4">
-          {/* Сервер своего адреса не знает — говорим это словами на месте
-              действия, а не молчим: молчание человек читает как «шаг сломан». */}
-          {!site.url && <Callout tone="info">{x.noAddress}</Callout>}
+        {/* 🔒 ОСТРОВКУ — ТОЛЬКО ЕГО СЛОВА, И ЗДЕСЬ ЭТО ВАЖНЕЕ ОБЫЧНОГО. По проводу
+            уезжает всё переданное, даже неотрисованное; в этом самом месте, на
+            этой самой двери, однажды в разметку уехала форма замены слота с
+            кнопкой «Да, заменить» на экран, где её быть не должно. Поэтому едет
+            `x.action` — ровно словарь действия, а не `x` целиком. */}
+        {/* ✗ 🔒 НАВИГАЦИИ ЗДЕСЬ НЕ БЫЛО ВОВСЕ, И ЭТО ОСТАВЛЯЛО ЧЕЛОВЕКА БЕЗ
+            ДОРОГИ В КОНЦЕ САМОГО ВАЖНОГО ДЕЙСТВИЯ ПУТИ (35-10): замена прошла,
+            шаг горит зелёным, а идти дальше не с чего.
 
-          {marked ? (
-            <StepNav
-              prevHref={`${base}/step-2`}
-              nextHref={adoptStepBuilt(4) ? `${base}/step-4` : undefined}
-              labels={{ goPrev: x.goPrev, goNext: x.goNext }}
-            />
-          ) : (
-            /* 🔒 Островку — только его слова, перечисленные поимённо. */
-            <StepCheck
-              index={3}
-              total={ADOPT_PATH_TOTAL}
-              mark="adopt-live-seen"
-              marked={marked}
-              labels={{
-                checkLabel: x.checkLabel,
-                cta: x.cta,
-                busy: x.busy,
-                successTitle: x.successTitle,
-                successHint: x.successHint,
-                failureTitle: x.failureTitle,
-                failureFix: x.failureFix,
-              }}
-            />
-          )}
-        </div>
+            🔒 ПРАВИЛО ОБЩЕЕ, А НЕ ЗАПЛАТА НА ЭТУ СТРАНИЦУ: действие уступает
+            место навигации, когда шаг закрыт. Так устроены все остальные шаги
+            обоих путей; здесь его просто не позвали. */}
+        {flowAdopted() ? (
+          <StepNav
+            prevHref={adoptStepBuilt(3) ? `${base}/step-3` : undefined}
+            nextHref={adoptStepBuilt(4) ? `${base}/step-4` : undefined}
+            labels={{ goPrev: x.goPrev, goNext: x.goNext }}
+          />
+        ) : (
+          <AdoptConfirm
+            donorUrl={flowValue("fork-url")}
+            email={SUPPORT_EMAIL}
+            labels={x.action}
+          />
+        )}
       </StepSection>
     </PageShell>
   );

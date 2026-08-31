@@ -7,13 +7,13 @@ import { TAIL_STEPS } from "../_shared/tail-steps";
 // по историческим причинам; второй экземпляр здесь был бы хуже чужого адреса.
 import { pathMapStrings } from "../default-template/_strings";
 import { ADOPT_BUILT_STEPS, adoptStepOneStrings } from "./_strings";
-import { adoptStepTwoStrings } from "./_step2";
-import { adoptStepThreeStrings } from "./_step3";
-import { adoptStepFourStrings } from "./_step4";
-import { adoptStepFiveStrings } from "./_step5";
-import { adoptStepSixStrings } from "./_step6";
-import { adoptStepSevenStrings } from "./_step7";
-import { adoptStepThirteenStrings } from "./_step13";
+import { adoptSwapStrings } from "./_swap";
+import { adoptLiveStrings } from "./_live";
+import { adoptOwnRepoStrings } from "./_own-repo";
+import { adoptTokenStrings } from "./_token";
+import { adoptVerifyStrings } from "./_verify";
+import { adoptPushStrings } from "./_push";
+import { adoptAssignStrings } from "./_assign";
 import { stepElevenStrings } from "../_shared/_step11";
 
 // ПЕРЕЧИСЛЕНИЕ ШАГОВ ВТОРОГО ПУТИ И ЗАЩИТА ОТ ПРЫЖКА (35-6, 2026-08-31).
@@ -47,13 +47,18 @@ export function adoptSteps(lang: string): AdoptStep[] {
   const all: AdoptStep[] = [
     // 1–3: свой проект в слоте. 4–5: сохранённое значение. 6: ответ GitHub.
     // 7: коммит на удалённой `main`. 8–12: отметки человека (общий хвост).
+    // 🔒 ТОКЕН ИДЁТ ВТОРЫМ, А НЕ ПЯТЫМ (75-2). Форк может быть приватным, и
+    // панель обязана иметь ключ ДО того, как полезет его клонировать, — а не
+    // через два шага после отказа. Порядок здесь и есть единственное место, где
+    // живёт номер: слова о номере больше не знают, бейдж считается от позиции.
     { n: 1, slug: "step-1", title: adoptStepOneStrings(lang).title, done: flowDone("fork-url") },
-    { n: 2, slug: "step-2", title: adoptStepTwoStrings(lang).title, done: flowAdopted() },
-    { n: 3, slug: "step-3", title: adoptStepThreeStrings(lang).title, done: flowMarked("adopt-live-seen") },
-    { n: 4, slug: "step-4", title: adoptStepFourStrings(lang).title, done: flowDone("adopt-repo-url") },
-    { n: 5, slug: "step-5", title: adoptStepFiveStrings(lang).title, done: flowDone("adopt-token") },
-    { n: 6, slug: "step-6", title: adoptStepSixStrings(lang).title, done: flowVerified("adopt") },
-    { n: 7, slug: "step-7", title: adoptStepSevenStrings(lang).title, done: flowPushed("adopt") },
+    { n: 2, slug: "step-2", title: adoptTokenStrings(lang).title, done: flowDone("adopt-token") },
+    { n: 3, slug: "step-3", title: adoptSwapStrings(lang).title, done: flowAdopted() },
+    { n: 4, slug: "step-4", title: adoptLiveStrings(lang).title, done: flowMarked("adopt-live-seen") },
+    // 🪦 Пятый шаг «адрес пустого репозитория» уходит в 75-4: форк уже свой.
+    { n: 5, slug: "step-5", title: adoptOwnRepoStrings(lang).title, done: flowDone("adopt-repo-url") },
+    { n: 6, slug: "step-6", title: adoptVerifyStrings(lang).title, done: flowVerified("adopt") },
+    { n: 7, slug: "step-7", title: adoptPushStrings(lang).title, done: flowPushed("adopt") },
     ...tail.map((title, i) => ({
       n: 8 + i,
       slug: `step-${8 + i}`,
@@ -61,7 +66,7 @@ export function adoptSteps(lang: string): AdoptStep[] {
       done: flowMarked(TAIL_STEPS[i].mark),
     })),
     // 13: присвоение и развёртывание — последний рабочий шаг пути.
-    { n: 13, slug: "step-13", title: adoptStepThirteenStrings(lang).title, done: flowMarked("adopt-deployed-seen") },
+    { n: 13, slug: "step-13", title: adoptAssignStrings(lang).title, done: flowMarked("adopt-deployed-seen") },
     // 14: прощание. Слова общие с одиннадцатым шагом первого пути, отметка своя.
     { n: 14, slug: "step-14", title: stepElevenStrings(lang).title, done: flowMarked("adopt-path-finished") },
   ];

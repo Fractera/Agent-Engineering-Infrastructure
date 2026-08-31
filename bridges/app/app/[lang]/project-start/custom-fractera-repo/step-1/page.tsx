@@ -26,7 +26,7 @@ import { adoptLockedFor } from "../_steps";
 import { StepSection } from "../../../_components/launch/step-section";
 import { StepForm } from "../../../_components/launch/step-form.client";
 import { flowDone, flowShown } from "@/lib/launch-flow";
-import { ADOPT_PATH_TOTAL, adoptStepBuilt, adoptStepOneStrings, adoptPickerStrings } from "../_strings";
+import { ADOPT_PATH_TOTAL, adoptStepBuilt, adoptStepOneStrings, adoptPickerStrings, stepBadge } from "../_strings";
 import { DONOR_EXAMPLES, exampleNote, forkHref } from "../_examples";
 
 export const dynamic = "force-dynamic";
@@ -100,7 +100,7 @@ export default async function CustomFracteraRepoStepOne(
         // Отметка рисуется от СОХРАНЁННОГО факта, а не от того, что человек
         // побывал на странице.
         done={flowDone("fork-url")}
-        badge={x.badge}
+        badge={stepBadge(lang, 1)}
         title={x.title}
         lead={x.lead}
         info={x.info}
