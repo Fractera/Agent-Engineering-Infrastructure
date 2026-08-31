@@ -29,7 +29,7 @@ import { StepNav } from "../../../_components/launch/step-nav";
 import { Callout } from "../../../_components/launch/callout";
 import { flowMarked } from "@/lib/launch-flow";
 import { publicSiteUrl } from "@/lib/public-site-url";
-import { ADOPT_PATH_TOTAL, ADOPT_PATH_BUILT } from "../_strings";
+import { ADOPT_PATH_TOTAL, adoptStepBuilt } from "../_strings";
 import { adoptStepThreeStrings, whatYourAddressMeans } from "../_step3";
 
 export const dynamic = "force-dynamic";
@@ -72,7 +72,7 @@ export default async function CustomFracteraRepoStepThree(
         actionLead={x.actionLead}
         bullets={x.bullets}
         link={site.url ? { href: site.url, label: x.linkLabel } : undefined}
-        stepHref={(n) => (n <= ADOPT_PATH_BUILT ? `${base}/step-${n}` : undefined)}
+        stepHref={(n) => (adoptStepBuilt(n) ? `${base}/step-${n}` : undefined)}
       >
         <div className="flex flex-col gap-4">
           {/* Сервер своего адреса не знает — говорим это словами на месте
@@ -82,7 +82,7 @@ export default async function CustomFracteraRepoStepThree(
           {marked ? (
             <StepNav
               prevHref={`${base}/step-2`}
-              nextHref={ADOPT_PATH_BUILT >= 4 ? `${base}/step-4` : undefined}
+              nextHref={adoptStepBuilt(4) ? `${base}/step-4` : undefined}
               labels={{ goPrev: x.goPrev, goNext: x.goNext }}
             />
           ) : (

@@ -24,7 +24,7 @@ import { PageShell } from "../../../_components/page-shell";
 import { StepSection } from "../../../_components/launch/step-section";
 import { AdoptConfirm } from "../../../_components/launch/adopt-confirm.client";
 import { flowAdopted, flowValue } from "@/lib/launch-flow";
-import { ADOPT_PATH_TOTAL, ADOPT_PATH_BUILT } from "../_strings";
+import { ADOPT_PATH_TOTAL, adoptStepBuilt } from "../_strings";
 import { adoptStepTwoStrings } from "../_step2";
 
 export const dynamic = "force-dynamic";
@@ -65,7 +65,7 @@ export default async function CustomFracteraRepoStepTwo(
         important={x.important}
         actionLead={x.actionLead}
         bullets={x.bullets}
-        stepHref={(n) => (n <= ADOPT_PATH_BUILT ? `${base}/step-${n}` : undefined)}
+        stepHref={(n) => (adoptStepBuilt(n) ? `${base}/step-${n}` : undefined)}
       >
         {/* 🔒 ОСТРОВКУ — ТОЛЬКО ЕГО СЛОВА, И ЗДЕСЬ ЭТО ВАЖНЕЕ ОБЫЧНОГО. По проводу
             уезжает всё переданное, даже неотрисованное; в этом самом месте, на

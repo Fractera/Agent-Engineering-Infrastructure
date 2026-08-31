@@ -24,7 +24,7 @@ import { PageShell } from "../../../_components/page-shell";
 import { StepSection } from "../../../_components/launch/step-section";
 import { StepForm } from "../../../_components/launch/step-form.client";
 import { flowDone, flowShown } from "@/lib/launch-flow";
-import { ADOPT_PATH_TOTAL, ADOPT_PATH_BUILT, adoptStepOneStrings, adoptPickerStrings } from "../_strings";
+import { ADOPT_PATH_TOTAL, adoptStepBuilt, adoptStepOneStrings, adoptPickerStrings } from "../_strings";
 import { DONOR_EXAMPLES, exampleNote } from "../_examples";
 
 export const dynamic = "force-dynamic";
@@ -74,7 +74,7 @@ export default async function CustomFracteraRepoStepOne(
         // Шкала кликабельна только по ПОСТРОЕННЫМ шагам: ссылка на несуществующий
         // ведёт в 404 (оплачено 28-11).
         stepHref={(n) =>
-          n <= ADOPT_PATH_BUILT
+          adoptStepBuilt(n)
             ? `${adminHref(lang, "project-start")}/custom-fractera-repo/step-${n}`
             : undefined
         }

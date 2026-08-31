@@ -1,31 +1,18 @@
-// ШАГ ПЯТЫЙ ПУТИ «СТАРТОВЫЙ ШАБЛОН»: CLAUDE CODE (28-23, 2026-08-27).
+// ШАГ 5 ПЕРВОГО ПУТИ — ОБЩИЙ ХВОСТ (переехал в _shared 35-5, 2026-08-31).
 //
-// 🔒 ПОРЯДОК ВЗЯТ ИЗ ЖИВОГО МАСТЕРА, А НЕ ВЫДУМАН. Владелец спросил: «если
-// следующий шаг про установку Claude, ссылка `https://claude.com/download`, нет?»
-// — и он прав. В `lib/launch.shared.ts` после `repo`/`key`/`upload` идёт
-// `claude-code`; первые три мы разделили на четыре шага, `key` исчез по 28-22,
-// значит пятым честно становится Claude Code.
+// 🔒 ФАЙЛ ОСТАЛСЯ, А ТЕЛО УЕХАЛО, И ЭТО НЕ ФОРМАЛЬНОСТЬ. Маршрут Next задаётся
+// расположением файла, поэтому страница обязана лежать здесь. Всё, что она
+// делает, — называет СВОЙ номер и СВОИ правила запрета; сама секция шага и все
+// его слова живут в `_shared/`, общие со вторым путём.
 //
-// 🔒 ЭТОТ ШАГ ЗАКРЫВАЕТ ЧЕЛОВЕК, И ИНАЧЕ НЕЛЬЗЯ. Claude Code живёт на его
-// машине; панель работает на сервере, и канала для вопроса «поставил ли» между
-// ними нет. Отсюда третий вид действия — сообщение факта, а не проверка и не
-// сохранение значения.
-//
-// 🔒 ССЫЛКА — `https://claude.com/download`, названа владельцем. Она отвечает на
-// тот же вопрос, что ссылки шагов 1 и 2: КУДА идти делать.
+// 🔒 ЗАЩИТА ОТ ПРЫЖКА СЧИТАЕТСЯ ЗДЕСЬ (28-13), потому что читает перечисление
+// шагов ЭТОГО пути. Открыт шаг, у которого закрыты все предыдущие; пройденный
+// остаётся открытым — вернуться и заменить значение человек вправе (28-18).
 
-import { getAdminStrings } from "@/lib/i18n/admin-strings";
 import { adminHref } from "@/lib/admin-nav";
-import { PageShell } from "../../../_components/page-shell";
-import { StepSection } from "../../../_components/launch/step-section";
+import { TailStepPage } from "../../_shared/tail-page";
 import { pathSteps, stepOpen, currentStep } from "../_steps";
-import { pathMapStrings } from "../_strings";
-import { StepLocked } from "../../../_components/launch/step-locked";
-import { StepCheck } from "../../../_components/launch/step-check.client";
-import { StepNav } from "../../../_components/launch/step-nav";
-import { flowMarked } from "@/lib/launch-flow";
-import { DEFAULT_TEMPLATE_TOTAL, DEFAULT_TEMPLATE_BUILT } from "../_strings";
-import { stepFiveStrings } from "../_step5";
+import { pathMapStrings, DEFAULT_TEMPLATE_TOTAL, DEFAULT_TEMPLATE_BUILT } from "../_strings";
 
 export const dynamic = "force-dynamic";
 
@@ -33,111 +20,32 @@ export default async function DefaultTemplateStepFive(
   { params }: { params: Promise<{ lang: string }> },
 ) {
   const { lang } = await params;
-  const s = getAdminStrings(lang);
-  const x = stepFiveStrings(lang);
+  const base = `${adminHref(lang, "project-start")}/default-template`;
 
-  // 🔒 ЗАЩИТА ОТ ПРЫЖКА ВПЕРЁД (28-13). Открыт шаг, у которого закрыты все
-  // предыдущие. Пройденный шаг остаётся открытым: вернуться и заменить значение
-  // человек вправе (28-18), и запертая дорога назад превратила бы путь в допрос.
   const flowSteps = pathSteps(lang);
-  if (!stepOpen(flowSteps, 5)) {
-    const back = currentStep(flowSteps);
-    const m = pathMapStrings(lang);
-    const backN = back ? back.n : 1;
-    return (
-      <PageShell
-        lang={lang}
-        slug="project-start"
-        s={s}
-        tail={[
-          { label: "default-template", href: `${adminHref(lang, "project-start")}/default-template` },
-          { label: "step-5" },
-        ]}
-        title={x.pageTitle}
-        hint={x.pageHint}
-      >
-        <StepLocked
-          title={x.title}
-          message={m.lockedMessage.replace("{n}", String(backN))}
-          backHref={`${adminHref(lang, "project-start")}/default-template/step-${backN}`}
-          backLabel={m.lockedBack.replace("{n}", String(backN))}
-        />
-      </PageShell>
-    );
-  }
-  const marked = flowMarked("claude-code");
+  const open = stepOpen(flowSteps, 5);
+  const back = currentStep(flowSteps);
+  const backN = back ? back.n : 1;
+  const m = pathMapStrings(lang);
 
   return (
-    <PageShell
+    <TailStepPage
       lang={lang}
-      slug="project-start"
-      s={s}
-      tail={[
-        { label: "default-template", href: `${adminHref(lang, "project-start")}/default-template` },
-        { label: "step-5" },
-      ]}
-      title={x.pageTitle}
-      hint={x.pageHint}
-    >
-      <StepSection
-        index={5}
-        total={DEFAULT_TEMPLATE_TOTAL}
-        stepOfTemplate={x.stepOf}
-        doneLabel={x.done}
-        done={marked}
-        badge={x.badge}
-        title={x.title}
-        lead={x.lead}
-        info={x.info}
-        important={x.important}
-        actionLead={x.actionLead}
-        bullets={x.bullets}
-        stepHref={(n) =>
-          n <= DEFAULT_TEMPLATE_BUILT
-            ? `${adminHref(lang, "project-start")}/default-template/step-${n}`
-            : undefined
-        }
-        // 🔒 СНИМОК ЧУЖОГО ЭКРАНА — прислан владельцем 2026-08-28 для этого шага
-        // (28-25). Страница загрузки Claude: как она выглядит и какие кнопки на
-        // ней есть. Ставится тем же вызовом, что на шагах 1 и 2, — элемент
-        // `StepShot` построен в 28-14 и не тронут ни одним байтом.
-        shot={{
-          src: "/images/launch/step-5-claude-download.png",
-          alt: x.shotAlt,
-          caption: x.shotCaption,
-        }}
-        link={{ href: "https://claude.com/download", label: x.linkLabel }}
-      >
-        {marked ? (
-          // Шестого шага ещё нет — вперёд вести некуда. Третье из положений,
-          // названных владельцем: только «назад».
-          <StepNav
-            prevHref={`${adminHref(lang, "project-start")}/default-template/step-4`}
-            nextHref={
-              DEFAULT_TEMPLATE_BUILT >= 6
-                ? `${adminHref(lang, "project-start")}/default-template/step-6`
-                : undefined
-            }
-            labels={{ goPrev: x.goPrev, goNext: x.goNext }}
-          />
-        ) : (
-          <StepCheck
-            index={5}
-            total={DEFAULT_TEMPLATE_TOTAL}
-            mark="claude-code"
-            marked={marked}
-            labels={{
-              checkLabel: x.checkLabel,
-              cta: x.cta,
-              busy: x.busy,
-              successTitle: x.successTitle,
-              successHint: x.successHint,
-              failureTitle: x.failureTitle,
-              failureFix: x.failureFix,
-            }}
-          />
-        )}
-      </StepSection>
-    </PageShell>
+      index={5}
+      tailIndex={0}
+      path={{
+        slug: "default-template",
+        base,
+        total: DEFAULT_TEMPLATE_TOTAL,
+        isBuilt: (k) => k >= 1 && k <= DEFAULT_TEMPLATE_BUILT,
+        locked: open
+          ? null
+          : {
+              message: m.lockedMessage.replace("{n}", String(backN)),
+              backHref: `${base}/step-${backN}`,
+              backLabel: m.lockedBack.replace("{n}", String(backN)),
+            },
+      }}
+    />
   );
 }

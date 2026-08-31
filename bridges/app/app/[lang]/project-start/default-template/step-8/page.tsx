@@ -1,41 +1,18 @@
-// ШАГ ВОСЬМОЙ: УСТАНОВКА ЗАВИСИМОСТЕЙ (28-29, 2026-08-28).
+// ШАГ 8 ПЕРВОГО ПУТИ — ОБЩИЙ ХВОСТ (переехал в _shared 35-5, 2026-08-31).
 //
-// 🔒 ШАГ РАЗРЕЗАН НАДВОЕ РЕШЕНИЕМ ВЛАДЕЛЬЦА 2026-08-28: «мы должны разделить этот
-// шаг на два дела… это прохождение установки NPM зависимости». Здесь остаётся
-// приезд проекта и привоз материалов; запуск, слово `localhost:3000` и галочка «я
-// вижу такой же проект» уезжают в шаг девятый (28-30).
+// 🔒 ФАЙЛ ОСТАЛСЯ, А ТЕЛО УЕХАЛО, И ЭТО НЕ ФОРМАЛЬНОСТЬ. Маршрут Next задаётся
+// расположением файла, поэтому страница обязана лежать здесь. Всё, что она
+// делает, — называет СВОЙ номер и СВОИ правила запрета; сама секция шага и все
+// его слова живут в `_shared/`, общие со вторым путём.
 //
-// 🔒 ЗДЕСЬ ПО-ПРЕЖНЕМУ СХЛОПНУТА ВЕРЕНИЦА ПРЕЖНИХ ШАГОВ, и это решение владельца, а
-// не упрощение по дороге: раньше человек вставлял репозиторий, разворачивал проект,
-// потом шёл за ключами в соседнюю вкладку. Сегодня `api/config/env-export` отдаёт
-// одним файлом всё — адрес слоя данных, ключи, доступ к серверу и переменные
-// слота вместе с адресом репозитория. Значит вкладок больше не нужно.
-//
-// 🔒 ГОЛУБАЯ ПОДСКАЗКА ЗДЕСЬ ОБЪЯСНЯЕТ ПРИЧИНУ, А НЕ АДРЕС. Прежняя — про разницу
-// локального и опубликованного — с этой страницы снята вместе с запуском:
-// объяснять разницу с опубликованным адресом нечему, пока проект не поднят.
-// Поэтому `publicSiteUrl()` отсюда ушёл, и вернётся он на девятом шаге, где живой
-// адрес действительно нужен.
-//
-// 🔒 ДЕЙСТВИЕ ШАГА ОДНО — ГАЛОЧКА. Кнопка выдачи, блок подсказки и снимок
-// действиями шага не являются: они дают материал, а закрывает шаг человек,
-// дождавшийся конца установки. Панель этого увидеть не может — у неё нет глаз на
-// его машине.
+// 🔒 ЗАЩИТА ОТ ПРЫЖКА СЧИТАЕТСЯ ЗДЕСЬ (28-13), потому что читает перечисление
+// шагов ЭТОГО пути. Открыт шаг, у которого закрыты все предыдущие; пройденный
+// остаётся открытым — вернуться и заменить значение человек вправе (28-18).
 
-import { getAdminStrings } from "@/lib/i18n/admin-strings";
 import { adminHref } from "@/lib/admin-nav";
-import { PageShell } from "../../../_components/page-shell";
-import { StepSection } from "../../../_components/launch/step-section";
+import { TailStepPage } from "../../_shared/tail-page";
 import { pathSteps, stepOpen, currentStep } from "../_steps";
-import { pathMapStrings } from "../_strings";
-import { StepLocked } from "../../../_components/launch/step-locked";
-import { StepCheck } from "../../../_components/launch/step-check.client";
-import { StepNav } from "../../../_components/launch/step-nav";
-import { StepGrabButton, StepCopyBlock } from "../../../_components/launch/step-grab.client";
-import { Small } from "@/components/ui/typography";
-import { flowMarked } from "@/lib/launch-flow";
-import { DEFAULT_TEMPLATE_TOTAL, DEFAULT_TEMPLATE_BUILT } from "../_strings";
-import { stepEightStrings } from "../_step8";
+import { pathMapStrings, DEFAULT_TEMPLATE_TOTAL, DEFAULT_TEMPLATE_BUILT } from "../_strings";
 
 export const dynamic = "force-dynamic";
 
@@ -43,131 +20,32 @@ export default async function DefaultTemplateStepEight(
   { params }: { params: Promise<{ lang: string }> },
 ) {
   const { lang } = await params;
-  const s = getAdminStrings(lang);
-  const x = stepEightStrings(lang);
+  const base = `${adminHref(lang, "project-start")}/default-template`;
 
-  // 🔒 ЗАЩИТА ОТ ПРЫЖКА ВПЕРЁД (28-13). Открыт шаг, у которого закрыты все
-  // предыдущие. Пройденный шаг остаётся открытым: вернуться и заменить значение
-  // человек вправе (28-18), и запертая дорога назад превратила бы путь в допрос.
   const flowSteps = pathSteps(lang);
-  if (!stepOpen(flowSteps, 8)) {
-    const back = currentStep(flowSteps);
-    const m = pathMapStrings(lang);
-    const backN = back ? back.n : 1;
-    return (
-      <PageShell
-        lang={lang}
-        slug="project-start"
-        s={s}
-        tail={[
-          { label: "default-template", href: `${adminHref(lang, "project-start")}/default-template` },
-          { label: "step-8" },
-        ]}
-        title={x.pageTitle}
-        hint={x.pageHint}
-      >
-        <StepLocked
-          title={x.title}
-          message={m.lockedMessage.replace("{n}", String(backN))}
-          backHref={`${adminHref(lang, "project-start")}/default-template/step-${backN}`}
-          backLabel={m.lockedBack.replace("{n}", String(backN))}
-        />
-      </PageShell>
-    );
-  }
-  // 🔒 ОТМЕТКА ОСТАЁТСЯ `local-run` И ПЕРЕИМЕНОВАНИЮ НЕ ПОДЛЕЖИТ: у тех, кто уже
-  // прошёл прежний восьмой шаг, она проставлена в окружении слота, и смена имени
-  // погасила бы пройденное. Девятому шагу даётся СВОЯ отметка (28-30).
-  const marked = flowMarked("local-run");
+  const open = stepOpen(flowSteps, 8);
+  const back = currentStep(flowSteps);
+  const backN = back ? back.n : 1;
+  const m = pathMapStrings(lang);
 
   return (
-    <PageShell
+    <TailStepPage
       lang={lang}
-      slug="project-start"
-      s={s}
-      tail={[
-        { label: "default-template", href: `${adminHref(lang, "project-start")}/default-template` },
-        { label: "step-8" },
-      ]}
-      title={x.pageTitle}
-      hint={x.pageHint}
-    >
-      <StepSection
-        index={8}
-        total={DEFAULT_TEMPLATE_TOTAL}
-        stepOfTemplate={x.stepOf}
-        doneLabel={x.done}
-        done={marked}
-        badge={x.badge}
-        title={x.title}
-        lead={x.lead}
-        // Голубая — почему проект нельзя открыть сразу и что такое зависимости.
-        info={x.info}
-        important={x.important}
-        actionLead={x.actionLead}
-        bullets={x.bullets}
-        shot={{
-          src: "/images/launch/step-8-install-deps.png",
-          alt: x.shotAlt,
-          caption: x.shotCaption,
-        }}
-        stepHref={(n) =>
-          n <= DEFAULT_TEMPLATE_BUILT
-            ? `${adminHref(lang, "project-start")}/default-template/step-${n}`
-            : undefined
-        }
-      >
-        {/* 🔒 ОСТРОВКАМ — ТОЛЬКО ИХ СЛОВА, ПЕРЕЧИСЛЕННЫЕ ПОИМЁННО. Тип не сужает
-            рантайм: объект целиком уехал бы по проводу со всем, что окажется в
-            нём завтра. ✗ оплачено дважды за шаг 25. */}
-        <div className="flex flex-col gap-4">
-          <StepGrabButton
-            href="/api/config/env-export"
-            label={x.grabLabel}
-            toastTitle={x.grabToastTitle}
-            toastBody={x.grabToastBody}
-            failureTitle={x.grabFailure}
-          />
-
-          <div className="flex flex-col gap-2">
-            <Small className="text-[var(--muted-foreground)]">{x.promptLead}</Small>
-            <StepCopyBlock
-              text={x.promptText}
-              label={x.copyLabel}
-              copiedLabel={x.copiedLabel}
-              toastTitle={x.copyToast}
-            />
-          </div>
-
-          {marked ? (
-            <StepNav
-              prevHref={`${adminHref(lang, "project-start")}/default-template/step-7`}
-              nextHref={
-                DEFAULT_TEMPLATE_BUILT >= 9
-                  ? `${adminHref(lang, "project-start")}/default-template/step-9`
-                  : undefined
-              }
-              labels={{ goPrev: x.goPrev, goNext: x.goNext }}
-            />
-          ) : (
-            <StepCheck
-              index={8}
-              total={DEFAULT_TEMPLATE_TOTAL}
-              mark="local-run"
-              marked={marked}
-              labels={{
-                checkLabel: x.checkLabel,
-                cta: x.cta,
-                busy: x.busy,
-                successTitle: x.successTitle,
-                successHint: x.successHint,
-                failureTitle: x.failureTitle,
-                failureFix: x.failureFix,
-              }}
-            />
-          )}
-        </div>
-      </StepSection>
-    </PageShell>
+      index={8}
+      tailIndex={3}
+      path={{
+        slug: "default-template",
+        base,
+        total: DEFAULT_TEMPLATE_TOTAL,
+        isBuilt: (k) => k >= 1 && k <= DEFAULT_TEMPLATE_BUILT,
+        locked: open
+          ? null
+          : {
+              message: m.lockedMessage.replace("{n}", String(backN)),
+              backHref: `${base}/step-${backN}`,
+              backLabel: m.lockedBack.replace("{n}", String(backN)),
+            },
+      }}
+    />
   );
 }
