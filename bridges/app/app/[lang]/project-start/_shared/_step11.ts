@@ -58,6 +58,11 @@ export type StepElevenStrings = {
   failureTitle: string;
   failureFix: string;
   goPrev: string;
+  /**
+   * 🔒 НА ПРОЩАНИИ ЭТО НЕ «СЛЕДУЮЩИЙ ШАГ», А ВЫХОД ИЗ ПУТИ (75-11). Шага дальше
+   * нет; кнопка с надписью «Следующий шаг» обещала бы одиннадцатый там, где путь
+   * кончился. Слово принадлежит шагу, а не элементу навигации.
+   */
   goNext: string;
 };
 
@@ -101,7 +106,7 @@ const ru: StepElevenStrings = {
   failureTitle: "Не получилось сохранить",
   failureFix: "Проверьте, отвечает ли панель, и нажмите ещё раз.",
   goPrev: "Предыдущий шаг",
-  goNext: "Следующий шаг",
+  goNext: "На главную",
 };
 
 const en: StepElevenStrings = {
@@ -144,7 +149,7 @@ const en: StepElevenStrings = {
   failureTitle: "Could not save",
   failureFix: "Check that the panel answers, then press again.",
   goPrev: "Previous step",
-  goNext: "Next step",
+  goNext: "To the dashboard",
 };
 
 const DICT: Record<string, StepElevenStrings> = { en, ru };

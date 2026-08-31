@@ -115,6 +115,18 @@ export default async function CustomFracteraRepoStepFourteen(
             <StepCheck
               index={12}
               total={ADOPT_PATH_TOTAL}
+              // 🔒 ПОСЛЕДНИЙ ШАГ ВЕДЁТ НА ГЛАВНУЮ ПАНЕЛИ, А НЕ ПОКАЗЫВАЕТ «НАЗАД» (75-11,
+
+              // решение владельца: «лучше после нажать завершить в последнем шаге делать
+
+              // redirect на главную страницу»). Путь пройден — возвращать человека внутрь
+
+              // пройденного нечего, а «назад» на прощании читается как «ты чего-то не
+
+              // доделал». `StepCheck` умел это с 28-9: ему просто не давали адреса.
+
+              nextHref={adminHref(lang, undefined)}
+
               mark="adopt-path-finished"
               marked={marked}
               labels={{
