@@ -117,6 +117,48 @@ export function adoptStepOneStrings(lang: string): StepStrings {
   return DICT[lang] ?? en;
 }
 
+// ── СЛОВА БЛОКА РЕКОМЕНДОВАННЫХ ДОНОРОВ (35-1а) ─────────────────────────────
+//
+// 🔒 ОБЕЩАНИЕ СФОРМУЛИРОВАНО КАК «СОБРАНО НАМИ», А НЕ «ЗАПУСТИТСЯ НА 100%».
+// Слово владельца пришлось ослабить, и это не редактура: наш собственный пример
+// упадёт при другой версии Node, при незаполненных ключах, при чужих настройках
+// сервера. Обещание, которого продукт не держит, человек проверяет в свой худший
+// день (✗ оплачено шагом 65).
+//
+// 🔒 СТРОКА ПРО СВОЁ ПОЛЕ ОБЯЗАТЕЛЬНА. Рекомендация ничего не запрещает, и это
+// надо сказать словами — иначе список наших проектов читается как перечень
+// допустимого, а человек со своим проектом решает, что пришёл не туда.
+
+export type DonorPickerStrings = {
+  title: string;
+  promise: string;
+  pick: string;
+  ownHint: string;
+};
+
+const PICKER: Record<string, DonorPickerStrings> = {
+  en: {
+    title: "Projects we assembled ourselves",
+    promise:
+      "Each of these was built by us from this template and checked: it is a whole project, not a demo. Start with one of them if you only want to see how the path works.",
+    pick: "Put this address in the field",
+    ownHint:
+      "Your own address is just as welcome — put any repository in the field below. These are a safe starting point, not a list of what is allowed.",
+  },
+  ru: {
+    title: "Проекты, собранные нами",
+    promise:
+      "Каждый из них собран нами из этого шаблона и проверен: это целый проект, а не витрина. Начните с одного из них, если хотите просто увидеть, как работает путь.",
+    pick: "Подставить этот адрес",
+    ownHint:
+      "Свой адрес принимается ровно так же — впишите в поле ниже любой репозиторий. Это безопасное начало, а не перечень допустимого.",
+  },
+};
+
+export function adoptPickerStrings(lang: string): DonorPickerStrings {
+  return PICKER[lang] ?? PICKER.en;
+}
+
 // ── СЛОВА ВХОДА В ПУТЬ ──────────────────────────────────────────────────────
 //
 // 🔒 ВХОД НЕ ПОКАЗЫВАЕТ СПИСОК ИЗ ЧЕТЫРНАДЦАТИ ПУНКТОВ. У первого пути карта

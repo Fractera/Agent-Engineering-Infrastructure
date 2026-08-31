@@ -24,7 +24,8 @@ import { PageShell } from "../../../_components/page-shell";
 import { StepSection } from "../../../_components/launch/step-section";
 import { StepForm } from "../../../_components/launch/step-form.client";
 import { flowDone, flowShown } from "@/lib/launch-flow";
-import { ADOPT_PATH_TOTAL, ADOPT_PATH_BUILT, adoptStepOneStrings } from "../_strings";
+import { ADOPT_PATH_TOTAL, ADOPT_PATH_BUILT, adoptStepOneStrings, adoptPickerStrings } from "../_strings";
+import { DONOR_EXAMPLES, exampleNote } from "../_examples";
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +35,12 @@ export default async function CustomFracteraRepoStepOne(
   const { lang } = await params;
   const s = getAdminStrings(lang);
   const x = adoptStepOneStrings(lang);
+  const pick = adoptPickerStrings(lang);
+
+  // 🔒 ЯЗЫК ВЫБИРАЕТСЯ ЗДЕСЬ, НА СЕРВЕРЕ, А В ОСТРОВОК УЕЗЖАЮТ ГОТОВЫЕ СТРОКИ.
+  // Отдать islands объект с языками значило бы увезти в браузер словарь — тот же
+  // закон, по которому словарь панели серверный.
+  const picks = DONOR_EXAMPLES.map((e) => ({ url: e.url, name: e.name, note: exampleNote(e, lang) }));
 
   return (
     <PageShell
@@ -94,6 +101,10 @@ export default async function CustomFracteraRepoStepOne(
             goNext: x.goNext,
             replace: x.replace,
           }}
+          // 🔒 ЭТОГО НЕТ У ПЕРВОГО ПУТИ, И ЭТО НЕ УПУЩЕНИЕ. Там человек называет
+          // СВОЙ пустой репозиторий — советовать ему чужой адрес бессмысленно.
+          picks={picks}
+          pickLabels={pick}
         />
       </StepSection>
     </PageShell>
