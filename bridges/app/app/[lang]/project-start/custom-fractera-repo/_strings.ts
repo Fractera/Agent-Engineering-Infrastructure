@@ -147,6 +147,14 @@ const ru: AdoptStepStrings = {
   replace: "Заменить адрес",
   linkLabel: "Что такое форк",
 
+  // 🔒 shotAlt называет СОДЕРЖИМОЕ снимка — его читают вслух те, кто его не
+  // увидит; shotCaption говорит, ЧЕЙ это экран и на что смотреть. Повторять друг
+  // друга им нельзя: тогда у незрячего человека остаётся половина смысла.
+  shotAlt:
+    "Страница GitHub «Create a new fork»: слева выпадающий список Owner с вашей учётной записью, справа поле Repository name с именем проекта и зелёной отметкой, что имя свободно. Ниже необязательное описание, галочка «Copy the main branch only» и зелёная кнопка Create fork в правом нижнем углу.",
+  shotCaption:
+    "Так это выглядит на GitHub: менять ничего не нужно — достаточно нажать Create fork.",
+
   form: {
     inputLabel: "Адрес вашего форка",
     inputPlaceholder: "https://github.com/ваше-имя/проект",
@@ -184,6 +192,11 @@ const en: AdoptStepStrings = {
   goNext: "Next step",
   replace: "Replace the address",
   linkLabel: "What a fork is",
+
+  shotAlt:
+    "The GitHub page «Create a new fork»: on the left an Owner dropdown with your account, on the right a Repository name field holding the project name and a green note that the name is available. Below it an optional description, a «Copy the main branch only» checkbox, and a green Create fork button in the bottom right corner.",
+  shotCaption:
+    "This is how it looks on GitHub: nothing needs changing — pressing Create fork is enough.",
 
   form: {
     inputLabel: "Your fork's address",
