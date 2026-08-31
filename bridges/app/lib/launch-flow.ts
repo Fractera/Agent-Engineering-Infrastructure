@@ -181,6 +181,10 @@ export const FLOW_MARKS = [
   "local-run",
   "project-seen",
   "deployed-seen",
+  // 🔒 ОДИННАДЦАТЫЙ ШАГ ЗАКРЫВАЕТСЯ СВОЕЙ ОТМЕТКОЙ (65-2). Заимствовать
+  // "deployed-seen" значило бы объявить путь пройденным тому, кто развернул
+  // проект и до прощания не дошёл.
+  "path-finished",
 ] as const;
 export type FlowMark = (typeof FLOW_MARKS)[number];
 
