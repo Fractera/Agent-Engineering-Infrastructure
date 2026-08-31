@@ -10,6 +10,7 @@
 // остаётся открытым — вернуться и заменить значение человек вправе (28-18).
 
 import { adminHref } from "@/lib/admin-nav";
+import { flowValue } from "@/lib/launch-flow";
 import { TailStepPage } from "../../_shared/tail-page";
 import { pathSteps, stepOpen, currentStep } from "../_steps";
 import { pathMapStrings, DEFAULT_TEMPLATE_TOTAL, DEFAULT_TEMPLATE_BUILT, defaultTemplatePathName } from "../_strings";
@@ -35,6 +36,8 @@ export default async function DefaultTemplateStepNine(
       tailIndex={4}
       path={{
         slug: "default-template",
+        // Адрес репозитория ЭТОГО пути — он уедет в подсказку агенту (75-9).
+        repoUrl: flowValue("repo-url"),
         // Имя пути — тоже СЛОВО, значит зависит от языка (75-5).
         pageTitle: defaultTemplatePathName(lang).title,
         pageHint: defaultTemplatePathName(lang).hint,

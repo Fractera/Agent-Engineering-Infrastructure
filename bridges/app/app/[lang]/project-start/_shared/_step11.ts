@@ -48,6 +48,7 @@ export type StepElevenStrings = {
   copyLabel: string;
   copiedLabel: string;
   copyToast: string;
+  copyFailed: string;
 
   checkLabel: string;
   cta: string;
@@ -90,6 +91,7 @@ const ru: StepElevenStrings = {
   copyLabel: "Скопировать фразу",
   copiedLabel: "Скопировано",
   copyToast: "Фраза скопирована",
+  copyFailed: "Скопировать не удалось — браузер не даёт доступ к буферу на незашифрованном адресе. Текст выделен: нажмите Ctrl+C.",
 
   checkLabel: "Я прочитал и готов работать сам",
   cta: "Завершить путь",
@@ -132,6 +134,7 @@ const en: StepElevenStrings = {
   copyLabel: "Copy the sentence",
   copiedLabel: "Copied",
   copyToast: "Sentence copied",
+  copyFailed: "Copying failed — the browser blocks clipboard access on an unencrypted address. The text is selected: press Ctrl+C.",
 
   checkLabel: "I have read this and I am ready to work on my own",
   cta: "Finish the way",

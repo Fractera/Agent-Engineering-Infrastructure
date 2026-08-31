@@ -37,6 +37,8 @@ export type AssignStrings = {
   copyLabel: string;
   copiedLabel: string;
   copyToast: string;
+  /** Что сказать, если скопировать не удалось ничем. */
+  copyFailed: string;
   checkLabel: string;
   cta: string;
   busy: string;
@@ -95,6 +97,7 @@ const ru: AssignStrings = {
   copyLabel: "Скопировать",
   copiedLabel: "Скопировано",
   copyToast: "Подсказка скопирована",
+  copyFailed: "Скопировать не удалось — браузер не даёт доступ к буферу на незашифрованном адресе. Текст выделен: нажмите Ctrl+C.",
 
   checkLabel: "Я открыл свой адрес и вижу проект со своими реквизитами",
   cta: "Отметить шаг закрытым",
@@ -135,6 +138,7 @@ const en: AssignStrings = {
   copyLabel: "Copy",
   copiedLabel: "Copied",
   copyToast: "Prompt copied",
+  copyFailed: "Copying failed — the browser blocks clipboard access on an unencrypted address. The text is selected: press Ctrl+C.",
 
   checkLabel: "I opened my address and I see the project with my own details",
   cta: "Mark the step as done",

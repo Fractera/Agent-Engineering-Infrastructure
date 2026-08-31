@@ -25,7 +25,7 @@
 // лежит ли файл у человека на диске. Записывать его как факт прохождения шага
 // было бы той самой ложью о состоянии, которую этот путь выкорчёвывает.
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Download, Copy, Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Small } from "@/components/ui/typography";
@@ -123,33 +123,101 @@ export function StepCopyBlock({
   label,
   copiedLabel,
   toastTitle,
+  failureLabel,
 }: {
   text: string;
   label: string;
   copiedLabel: string;
   toastTitle: string;
+  /**
+   * Что сказать, когда скопировать не удалось ничем.
+   *
+   * 🔒 ГОВОРИТ ДЕЙСТВИЕ, А НЕ НАЗВАНИЕ КНОПКИ. ✗ здесь стояла `label`, и человек
+   * читал в тосте «Скопировать» — то есть ровно то, что написано на кнопке, —
+   * и считал, что получилось.
+   */
+  failureLabel: string;
 }) {
   const [copied, setCopied] = useState(false);
+  const textRef = useRef<HTMLDivElement | null>(null);
+
+  // ✗ 🔒 КОПИРОВАНИЕ НЕ РАБОТАЛО НА ЖИВОЙ ПАНЕЛИ, И ЭТО НЕ РЕДКИЙ СЛУЧАЙ.
+  // `navigator.clipboard` существует ТОЛЬКО в защищённом контексте: https или
+  // localhost. Панель клиента открывается по `http://<IP>:3002` до того, как он
+  // назначит домен, — то есть в обычном режиме первых дней. Вызов уходил в
+  // `catch`, а там показывалась ПОДПИСЬ КНОПКИ («Скопировать») вместо объяснения:
+  // человек видел тост, читал в нём слово «Скопировать» и был уверен, что всё
+  // получилось. Владелец, дословно: «текст не копируется».
+  //
+  // 🔒 ЗАПАСНОЙ ПУТЬ — НЕ УКРАШЕНИЕ, А ЕДИНСТВЕННЫЙ РАБОЧИЙ НА HTTP.
+  // `document.execCommand("copy")` объявлен устаревшим и при этом работает там,
+  // где нового интерфейса нет вовсе. Здесь он не «на всякий случай», а основной.
+  //
+  // 🔒 И ЕСЛИ НЕ ВЫШЛО ДАЖЕ ТАК — ТЕКСТ ВЫДЕЛЯЕТСЯ САМ. Человеку остаётся одно
+  // нажатие, а сообщение говорит, ЧТО делать, а не повторяет надпись на кнопке.
+  function copyByExecCommand(value: string): boolean {
+    try {
+      const area = document.createElement("textarea");
+      area.value = value;
+      // Вне экрана, но в документе: невидимый или `display:none` элемент выделить нельзя.
+      area.setAttribute("readonly", "");
+      area.style.position = "fixed";
+      area.style.top = "-1000px";
+      area.style.opacity = "0";
+      document.body.appendChild(area);
+      area.select();
+      const ok = document.execCommand("copy");
+      document.body.removeChild(area);
+      return ok;
+    } catch {
+      return false;
+    }
+  }
+
+  function selectOnPage(): void {
+    try {
+      const node = textRef.current;
+      if (!node) return;
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      const sel = window.getSelection();
+      sel?.removeAllRanges();
+      sel?.addRange(range);
+    } catch { /* выделять нечем — сообщение всё равно скажет, что делать */ }
+  }
 
   async function copy() {
-    try {
-      await navigator.clipboard.writeText(text);
-    } catch {
-      // 🔒 БУФЕР МОЖЕТ БЫТЬ ЗАПРЕЩЁН (небезопасный контекст, отказ браузера), и
-      // тогда молчать нельзя: человек нажал и ждёт. Текст на экране — он выделит
-      // его руками, но знать об отказе обязан.
-      toast.error(label, { duration: 6000 });
+    let ok = false;
+
+    // Современный путь — только если браузер его вообще даёт.
+    if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+      try {
+        await navigator.clipboard.writeText(text);
+        ok = true;
+      } catch { /* запрещено — идём запасным путём */ }
+    }
+
+    if (!ok) ok = copyByExecCommand(text);
+
+    if (!ok) {
+      selectOnPage();
+      toast.error(failureLabel, { duration: 8000 });
       return;
     }
+
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
-    toast(toastTitle, { duration: 4000 });
+    toast.success(toastTitle, { duration: 4000 });
   }
 
   return (
     <div className="rounded-lg border border-[var(--border)] bg-[var(--muted)]/40">
       <div className="flex items-start justify-between gap-3 p-3">
-        <Small className="whitespace-pre-wrap leading-relaxed">{text}</Small>
+        {/* Ссылка стоит на обычном узле, а не на компоненте: тот может не
+            принимать её, и выделение молча перестало бы работать. */}
+        <div ref={textRef as React.RefObject<HTMLDivElement>}>
+          <Small className="whitespace-pre-wrap leading-relaxed">{text}</Small>
+        </div>
         <button
           type="button"
           onClick={copy}

@@ -10,6 +10,7 @@
 // общий файл не имеет права знать про один из путей больше, чем про другой.
 
 import { adminHref } from "@/lib/admin-nav";
+import { flowValue } from "@/lib/launch-flow";
 import { TailStepPage } from "../../_shared/tail-page";
 import { ADOPT_PATH_TOTAL, adoptStepBuilt, adoptPathName } from "../_strings";
 import { adoptLockedFor } from "../_steps";
@@ -29,6 +30,8 @@ export default async function CustomFracteraRepoStepEight(
       tailIndex={0}
       path={{
         slug: "custom-fractera-repo",
+        // Адрес репозитория ЭТОГО пути — он уедет в подсказку агенту (75-9).
+        repoUrl: flowValue("fork-url"),
         // Имя пути — тоже СЛОВО, значит зависит от языка (75-5).
         pageTitle: adoptPathName(lang).title,
         pageHint: adoptPathName(lang).hint,

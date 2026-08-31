@@ -83,6 +83,8 @@ export type StepEightStrings = {
   copyLabel: string;
   copiedLabel: string;
   copyToast: string;
+  /** Что сказать, если скопировать не удалось ничем. */
+  copyFailed: string;
 
   checkLabel: string;
   cta: string;
@@ -102,21 +104,9 @@ export type StepEightStrings = {
 // Оставленная «на всякий случай» копия разошлась бы с оригиналом на первой же
 // правке, и соседние страницы говорили бы человеку разное.
 
-const PROMPT_RU = `Создай проект из GitHub-репозитория. Его адрес и все нужные ключи лежат в переменных окружения, которые я тебе передал файлом.
 
-Это мой репозиторий и мой сервер, доступ у меня уже есть. Настраивать доступ по SSH, трогать ключи сервера и права не нужно — в этой задаче их не касайся. Работай только в папке проекта.
 
-Склонируй проект на эту машину по адресу из окружения, положи файл с переменными окружения в корень проекта и установи зависимости. Запускать проект пока не нужно.
 
-Когда установка закончится, ответь одной строкой: в какой папке лежит проект и сколько пакетов установлено.`;
-
-const PROMPT_EN = `Create the project from the GitHub repository. Its address and every key you need are in the environment variables I handed you as a file.
-
-This is my repository and my server, and I already have access. There is no need to set up SSH access or touch server keys and permissions — leave them alone in this task. Work inside the project folder only.
-
-Clone the project onto this machine using the address from the environment, put the environment file in the project root and install the dependencies. Do not start the project yet.
-
-When the installation is over, answer in one line: which folder holds the project and how many packages were installed.`;
 
 const ru: StepEightStrings = {
   pageTitle: "Стартовый шаблон",
@@ -153,10 +143,11 @@ const ru: StepEightStrings = {
   grabFailure: "Не удалось выдать файл окружения",
 
   promptLead: "Подсказка для агента — скопируйте её целиком:",
-  promptText: PROMPT_RU,
+  promptText: "",
   copyLabel: "Скопировать",
   copiedLabel: "Скопировано",
   copyToast: "Подсказка скопирована",
+  copyFailed: "Скопировать не удалось — браузер не даёт доступ к буферу на незашифрованном адресе. Текст выделен: нажмите Ctrl+C.",
 
   checkLabel: "Я установил зависимости",
   cta: "Отметить шаг пройденным",
@@ -205,10 +196,11 @@ const en: StepEightStrings = {
   grabFailure: "The environment file could not be issued",
 
   promptLead: "The prompt for your agent — copy it whole:",
-  promptText: PROMPT_EN,
+  promptText: "",
   copyLabel: "Copy",
   copiedLabel: "Copied",
   copyToast: "The prompt is copied",
+  copyFailed: "Copying failed — the browser blocks clipboard access on an unencrypted address. The text is selected: press Ctrl+C.",
 
   checkLabel: "I have installed the dependencies",
   cta: "Mark the step as done",
@@ -223,6 +215,69 @@ const en: StepEightStrings = {
 };
 
 const DICT: Record<string, StepEightStrings> = { en, ru };
+
+/**
+ * Подсказка агенту — С АДРЕСОМ РЕПОЗИТОРИЯ ВНУТРИ (75-9).
+ *
+ * ✗ 🔒 РАНЬШЕ ТЕКСТ БЫЛ СТАТИЧЕСКИМ и отсылал за адресом в окружение: «его адрес
+ * и все нужные ключи лежат в переменных окружения». Владелец назвал это дефектом
+ * дословно: «предполагалось что этот текст будет внутри себя содержать
+ * динамический блок который будет включать адрес репозитория… потому что без
+ * этой кнопки Claude Code не может начать установку».
+ *
+ * Он прав по существу: в выданном файле рядом лежат ТРИ адреса
+ * (`USER_FLOW_FORK_URL`, `USER_ADOPT_REPO_URL`, `REMOTE_DATA_URL`), и какой из
+ * них «проект» — агент выводит. Угадал он верно, но это везение конструкции.
+ *
+ * 🔒 ПРИЁМ НЕ ИЗОБРЕТЁН: ровно так же `whatDeployMeans()` и `localVsPublic()`
+ * подставляют живой адрес сервера, а `TailStep` уже умеет звать такую функцию.
+ *
+ * 🔒 ВЕТКА БЕЗ АДРЕСА НЕ ЗАПАСНАЯ, А РАВНОПРАВНАЯ. Шаг можно открыть, не сохранив
+ * адрес; текст обязан читаться связно и тогда. Тот же закон, что у объяснения
+ * развёртывания без адреса сервера.
+ *
+ * 🔒 АДРЕС В ТЕКСТЕ НЕ ОТМЕНЯЕТ АДРЕСА В ОКРУЖЕНИИ: первый читает человек и
+ * агент, читающий подсказку; второй нужен командам. Одно другого не заменяет.
+ */
+export function installPrompt(lang: string, repoUrl: string): string {
+  const ru = repoUrl
+    ? `Создай проект из этого GitHub-репозитория: ${repoUrl}
+
+Все нужные ключи лежат в переменных окружения, которые я тебе передал файлом.
+
+Это мой репозиторий и мой сервер, доступ у меня уже есть. Настраивать доступ по SSH, трогать ключи сервера и права не нужно — в этой задаче их не касайся. Работай только в папке проекта.
+
+Склонируй проект на эту машину, положи файл с переменными окружения в корень проекта и установи зависимости. Запускать проект пока не нужно.
+
+Когда установка закончится, ответь одной строкой: в какой папке лежит проект и сколько пакетов установлено.`
+    : `Создай проект из GitHub-репозитория. Его адрес и все нужные ключи лежат в переменных окружения, которые я тебе передал файлом.
+
+Это мой репозиторий и мой сервер, доступ у меня уже есть. Настраивать доступ по SSH, трогать ключи сервера и права не нужно — в этой задаче их не касайся. Работай только в папке проекта.
+
+Склонируй проект на эту машину по адресу из окружения, положи файл с переменными окружения в корень проекта и установи зависимости. Запускать проект пока не нужно.
+
+Когда установка закончится, ответь одной строкой: в какой папке лежит проект и сколько пакетов установлено.`;
+
+  const en = repoUrl
+    ? `Create the project from this GitHub repository: ${repoUrl}
+
+All the keys you need are in the environment variables I handed you as a file.
+
+This is my repository and my server, I already have access. There is no need to set up SSH access, touch the server keys or the permissions — leave them alone in this task. Work inside the project folder only.
+
+Clone the project onto this machine, put the environment file in the project root and install the dependencies. Do not start the project yet.
+
+When the install finishes, answer in one line: which folder the project is in and how many packages were installed.`
+    : `Create the project from a GitHub repository. Its address and all the keys you need are in the environment variables I handed you as a file.
+
+This is my repository and my server, I already have access. There is no need to set up SSH access, touch the server keys or the permissions — leave them alone in this task. Work inside the project folder only.
+
+Clone the project onto this machine using the address from the environment, put the environment file in the project root and install the dependencies. Do not start the project yet.
+
+When the install finishes, answer in one line: which folder the project is in and how many packages were installed.`;
+
+  return lang === "ru" ? ru : en;
+}
 
 export function stepEightStrings(lang: string): StepEightStrings {
   return DICT[lang] ?? en;
