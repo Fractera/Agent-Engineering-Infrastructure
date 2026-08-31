@@ -41,7 +41,24 @@ export type VerifyLabels = {
 
 const TOAST_MS = 5000;
 
-export function VerifyStep({ labels, endpoint = "/api/config/launch-flow/verify" }: { labels: VerifyLabels; endpoint?: string }) {
+export function VerifyStep({
+  labels,
+  endpoint = "/api/config/launch-flow/verify",
+  payload,
+}: {
+  labels: VerifyLabels;
+  endpoint?: string;
+  /**
+   * Что послать двери телом. Нужен второму пути запуска: механика вопроса к
+   * GitHub одна, а пара «адрес и токен», о которой спрашивают, у каждого пути
+   * своя (35-6).
+   *
+   * 🔒 НЕОБЯЗАТЕЛЕН, И ЭТО НАМЕРЕННО. Первый путь не посылает ничего и получает
+   * прежнее поведение: заставить его страницы называть себя по имени значило бы
+   * тронуть работающее без нужды.
+   */
+  payload?: Record<string, string>;
+}) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
 
@@ -51,6 +68,9 @@ export function VerifyStep({ labels, endpoint = "/api/config/launch-flow/verify"
       const r = await fetch(endpoint, {
         method: "POST",
         credentials: "include",
+        ...(payload
+          ? { headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }
+          : {}),
       });
       const d = (await r.json().catch(() => ({}))) as { ok?: boolean; reason?: string; repo?: string };
 

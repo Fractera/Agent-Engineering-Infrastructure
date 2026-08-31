@@ -3,7 +3,8 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import fs from "node:fs";
 import { requireAuth } from "@/lib/require-auth";
-import { flowValue, flowVerified, setFlowPushed, flowPushedAt } from "@/lib/launch-flow";
+import { flowValue, flowVerified, setFlowPushed, flowPushedAt, isLaunchPath, PATH_INPUTS } from "@/lib/launch-flow";
+import type { LaunchPath } from "@/lib/launch-flow";
 
 const run = promisify(execFile);
 
@@ -38,12 +39,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (!flowVerified()) {
+  // 🔒 ПУТЬ ПРИХОДИТ ТЕЛОМ, УМОЛЧАНИЕ — ПЕРВЫЙ (35-6).
+  const body = (await req.json().catch(() => null)) as { path?: unknown } | null;
+  const launchPath: LaunchPath = isLaunchPath(body?.path) ? body.path : "starter";
+  const inputs = PATH_INPUTS[launchPath];
+
+  if (!flowVerified(launchPath)) {
     return NextResponse.json({ ok: false, reason: "not-verified" }, { status: 422 });
   }
 
-  const url = flowValue("repo-url");
-  const token = flowValue("token");
+  const url = flowValue(inputs.url);
+  const token = flowValue(inputs.token);
   if (!url || !token) {
     return NextResponse.json({ ok: false, reason: "not-verified" }, { status: 422 });
   }
@@ -87,6 +93,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, reason }, { status: 502 });
   }
 
-  setFlowPushed(true);
-  return NextResponse.json({ ok: true, pushedAt: flowPushedAt() });
+  setFlowPushed(true, launchPath);
+  return NextResponse.json({ ok: true, pushedAt: flowPushedAt(launchPath) });
 }
