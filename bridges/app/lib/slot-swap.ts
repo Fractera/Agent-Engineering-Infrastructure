@@ -122,7 +122,27 @@ export function starterRepoUrl(): string {
   return DEFAULT_STARTER_REPO;
 }
 
-/** Всё содержимое папки, кроме служебного `.env.local`, который принадлежит машине, а не проекту. */
+/**
+ * Что переживает замену. Признак один: **принадлежит МАШИНЕ, а не проекту**.
+ *
+ * `.env.local` — ключи слоя данных и адрес сервера; чужой проект их не привозит,
+ * а без них не поднимется ни он, ни откат к шаблону.
+ *
+ * ✗ 🔒 `.next.last-good` ДОБАВЛЕН 35-9, И ЭТО ОПЛАЧЕНО ЖИВЫМ ИНЦИДЕНТОМ. Это
+ * копия последней РАБОЧЕЙ сборки этого сервера — единственное, к чему можно
+ * откатиться, когда новая сборка упала. Она сносилась той же заменой, после
+ * которой чаще всего и нужна: владелец подключил донора, сборка отказала, и в
+ * логе стояло «no previous good build stored — the artifact stays broken».
+ * Защита была выключена ровно тем действием, при котором она нужна.
+ *
+ * 🔒 `node_modules` СЮДА НЕ ВХОДИТ, И ЭТО РЕШЕНИЕ, А НЕ НЕДОСМОТР. Зависимости
+ * принадлежат ПРОЕКТУ: у донора свой `package.json`, и оставить пакеты
+ * предыдущего проекта значило бы собрать новый на чужих библиотеках. Их ставят
+ * заново — см. `installFirst` в `api/deploy`.
+ */
+const DEFAULT_KEEP: readonly string[] = [".env.local", ".next.last-good"];
+
+/** Всё содержимое папки, кроме того, что принадлежит машине. */
 function wipeContents(root: string, keep: readonly string[]): void {
   for (const name of fs.readdirSync(root)) {
     if (keep.includes(name)) continue;
@@ -143,7 +163,7 @@ export function replaceSlotContents(
   opts: { token?: string; keep?: readonly string[]; detach?: boolean } = {},
 ): SwapResult {
   const token = opts.token ?? "";
-  const keep = opts.keep ?? [".env.local"];
+  const keep = opts.keep ?? DEFAULT_KEEP;
   // 🔒 ОТВЯЗКА ВКЛЮЧЕНА ПО УМОЛЧАНИЮ, А НЕ ПО ПРОСЬБЕ ВЫЗЫВАЮЩЕГО. Оставить в
   // слоте чужой `.git` — дефект в любом из случаев: и для донора, и для
   // возврата стартового шаблона. Выключатель существует ровно затем, чтобы
