@@ -32,7 +32,7 @@ const ru: SwapStrings = {
   actionLead: "Что произойдёт по нажатию:",
   bullets: [
     "Проект скачается в отдельную папку рядом со слотом.",
-    "Содержимое слота будет заменено, а история донора отсечена: проект перестанет принадлежать чужому репозиторию.",
+    "Содержимое слота будет заменено содержимым вашего форка, а связь с ним сохранится: сервер будет знать, откуда брать обновления.",
     "Начнётся сборка. Она идёт минутами, и её ход виден прямо здесь.",
   ],
 
@@ -53,7 +53,7 @@ const ru: SwapStrings = {
     noDonor: "Сначала назовите адрес проекта-донора на первом шаге: заменять пока нечем.",
 
     okTitle: "Проект заменён и собран",
-    okHint: "Слот отвязан от репозитория донора: дальше проект ваш.",
+    okHint: "Связь с вашим форком сохранена: сервер знает, откуда брать обновления.",
 
     failTitle: "Замена не состоялась",
     slotIntact: "Ваш проект цел — ничего не заменялось.",
@@ -66,7 +66,8 @@ const ru: SwapStrings = {
       "no-donor-url": "Адрес донора не сохранён. Вернитесь на первый шаг.",
       "not-replaced": "Замена ещё не выполнялась — слот пока прежний. Нажмите «Заменить проект в слоте».",
       "slot-not-a-repo": "Слот не стал репозиторием. Замена оборвалась на полпути — напишите нам.",
-      "still-attached": "Слот всё ещё связан с репозиторием донора. Отвязка не сработала — напишите нам.",
+      "still-detached": "Слот не связан с вашим форком — значит будущие обновления брать неоткуда. Это дефект сервера, напишите нам.",
+      "wrong-remote": "Слот связан не с тем репозиторием, который вы назвали. Проверьте адрес форка на первом шаге и повторите замену.",
       "not-built": "Сборки в слоте нет. Подождите её окончания и обновите страницу.",
     },
     reasonUnknown: "Причина неизвестна. Повторите попытку, а если повторится — напишите нам.",
@@ -101,7 +102,7 @@ const en: SwapStrings = {
   actionLead: "What happens when you press:",
   bullets: [
     "The project is downloaded into a separate folder next to the slot.",
-    "The slot's contents are replaced and the donor's history is cut off: the project stops belonging to someone else's repository.",
+    "The slot's contents are replaced by your fork's contents, and the link to it is kept: the server will know where to take updates from.",
     "The build starts. It takes minutes, and its progress is visible right here.",
   ],
 
@@ -122,7 +123,7 @@ const en: SwapStrings = {
     noDonor: "Name the donor project's address on the first step: there is nothing to replace with yet.",
 
     okTitle: "The project is replaced and built",
-    okHint: "The slot is detached from the donor repository: from here on the project is yours.",
+    okHint: "The link to your fork is kept: the server knows where to take updates from.",
 
     failTitle: "The replacement did not happen",
     slotIntact: "Your project is intact — nothing was replaced.",
@@ -135,7 +136,8 @@ const en: SwapStrings = {
       "no-donor-url": "The donor address is not saved. Go back to the first step.",
       "not-replaced": "The replacement has not run yet — the slot is still the old one. Press \"Replace the project in the slot\".",
       "slot-not-a-repo": "The slot did not become a repository. The replacement broke halfway — write to us.",
-      "still-attached": "The slot is still linked to the donor repository. The detach did not work — write to us.",
+      "still-detached": "The slot is not linked to your fork — there would be nowhere to take future updates from. This is a server defect, write to us.",
+      "wrong-remote": "The slot is linked to a different repository than the one you named. Check the fork address on step one and run the replacement again.",
       "not-built": "There is no build in the slot. Wait for it to finish and reload the page.",
     },
     reasonUnknown: "The reason is unknown. Try again, and if it repeats — write to us.",
