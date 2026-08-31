@@ -30,6 +30,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Check } from "lucide-react";
 import { StepNav } from "./step-nav";
+import { DonorPicker, type DonorPick, type DonorPickerLabels } from "./donor-picker.client";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -79,6 +80,8 @@ export function StepForm({
   secret = false,
   flowStep,
   saved = "",
+  picks,
+  pickLabels,
 }: {
   index: number;
   total: number;
@@ -131,6 +134,19 @@ export function StepForm({
    * безопасность целиком, и путать эти два уровня опасно.
    */
   secret?: boolean;
+  /**
+   * Предложенные значения поля — их показывает блок над ним.
+   *
+   * 🔒 НЕОБЯЗАТЕЛЬНЫЙ, И ЭТО ПРЯМОЕ СЛЕДСТВИЕ ЗАКОНА АНАТОМИИ: порядок частей
+   * шага переставить снаружи нельзя, а любую часть можно НЕ ДАТЬ. Первый путь
+   * ничего не предлагает — человек называет СВОЙ пустой репозиторий, и советовать
+   * там нечего. Второй предлагает донора. Один и тот же файл обслуживает оба, и
+   * поэтому форма шага у них не разъезжается (✗ замер 28-2 и 28-20).
+   *
+   * Пусто или не дано — блока нет вовсе, поле и кнопка на месте.
+   */
+  picks?: readonly DonorPick[];
+  pickLabels?: DonorPickerLabels;
 }) {
   const router = useRouter();
   const [value, setValue] = useState("");
@@ -206,6 +222,20 @@ export function StepForm({
           <Check size={16} aria-hidden className="shrink-0 text-emerald-600 dark:text-emerald-400" />
           <Small className="truncate text-emerald-700 dark:text-emerald-300">{saved}</Small>
         </div>
+      )}
+
+      {/* 🔒 ПРЕДЛОЖЕНИЕ СТОИТ НАД ПОЛЕМ, А НЕ ПОД НИМ. Человек, который видит поле
+          первым, начинает придумывать, что в него ввести, — и рекомендацию под
+          полем читает уже как утешение. Порядок «сначала безопасный выбор, потом
+          своё» и есть то, ради чего блок вообще заведён. */}
+      {picks && pickLabels && (
+        <DonorPicker
+          picks={picks}
+          labels={pickLabels}
+          disabled={busy}
+          // Подставляет — и только: сохранение остаётся отдельным движением.
+          onPick={setValue}
+        />
       )}
 
       <label className="flex flex-col gap-2">
