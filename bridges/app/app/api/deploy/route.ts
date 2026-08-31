@@ -198,7 +198,18 @@ export async function isAuthorized(req: NextRequest): Promise<boolean> {
 // Exported so the automatic watch runs the SAME build as the button — with its lock, its coalescing,
 // its journal entry and its fallback to the last working artifact. A second implementation would be a
 // second set of those guarantees to keep in step.
-export function runBuild(description: string): string {
+/**
+ * Маркеры установки в логе сборки.
+ *
+ * 🔒 ПО НИМ ЧИТАЮЩИЙ ОТЛИЧАЕТ «НЕ ВСТАЛИ ЗАВИСИМОСТИ» ОТ «НЕ СОБРАЛСЯ ПРОЕКТ», и
+ * это не украшение лога: экран отказа обязан назвать ВЕРНУЮ причину. ✗ оплачено
+ * 35-9 — владельцу сказали, что его проект не той архитектуры, тогда как не
+ * встал `sharp`.
+ */
+export const DEPS_START_MARK = "[deploy] installing dependencies";
+export const DEPS_OK_MARK = "[deploy] dependencies installed";
+
+export function runBuild(description: string, opts: { installFirst?: boolean } = {}): string {
   const jobId = Date.now().toString();
   const logFile = `/tmp/fractera-deploy-${jobId}.log`;
   writeFileSync(LOCK_FILE, jobId);
@@ -221,10 +232,39 @@ export function runBuild(description: string): string {
   const logFd = openSync(logFile, "a");
   // Spawn the slot build with a SLOT-SCOPED env so the slot's own app/.env.local fully governs
   // every build-time variable it declares (languages, Stripe keys, any custom app var). → step 143.
-  const proc = spawn("npm", ["run", "build", "--prefix", APP_DIR], {
-    stdio: ["ignore", logFd, logFd],
-    env: slotBuildEnv(),
-  });
+  // 🔒 УСТАНОВКА ЗАВИСИМОСТЕЙ — ЧАСТЬ ТОЙ ЖЕ ЗАДАЧИ, А НЕ ОТДЕЛЬНАЯ ОПЕРАЦИЯ
+  // (35-9). Она идёт под тем же замком, в тот же журнал, с тем же откатом к
+  // последней рабочей сборке. Отдельный путь установки означал бы второй набор
+  // этих гарантий, который надо держать в согласии с первым.
+  //
+  // 🔒 ПО УМОЛЧАНИЮ ВЫКЛЮЧЕНА, И ЭТО НАМЕРЕННО. Обычный деплой меняет исходник,
+  // а `node_modules` на месте: минута установки на каждую правку — цена, которую
+  // никто не просил. Включает её тот, кто ЗАМЕНИЛ содержимое слота и потому
+  // знает, что зависимостей там больше нет.
+  //
+  // 🔒 НАТИВНЫЕ МОДУЛИ TAILWIND СТАВЯТСЯ ОТДЕЛЬНО И С `--no-save`. Приём взят у
+  // `lib/bootstrap.sh`, где он делается при рождении сервера. Донор мог быть
+  // собран на другой машине и не объявить их вовсе; `--no-save` — потому что
+  // `package.json` принадлежит ПРОЕКТУ ЧЕЛОВЕКА, и дописывать в него от своего
+  // имени мы не вправе: он уедет в его репозиторий.
+  const arch = process.arch === "arm64" ? "arm64" : "x64";
+  const nativeDeps = `lightningcss-linux-${arch}-gnu @tailwindcss/oxide-linux-${arch}-gnu`;
+  const buildCmd = `npm run build --prefix ${APP_DIR}`;
+  const installCmd =
+    `echo "${DEPS_START_MARK}" && ` +
+    `npm install --no-audit --no-fund --prefix ${APP_DIR} && ` +
+    `npm install --no-save --no-audit --no-fund --prefix ${APP_DIR} ${nativeDeps} && ` +
+    `echo "${DEPS_OK_MARK}"`;
+
+  const proc = opts.installFirst
+    ? spawn("sh", ["-c", `${installCmd} && ${buildCmd}`], {
+        stdio: ["ignore", logFd, logFd],
+        env: slotBuildEnv(),
+      })
+    : spawn("npm", ["run", "build", "--prefix", APP_DIR], {
+        stdio: ["ignore", logFd, logFd],
+        env: slotBuildEnv(),
+      });
   // Кто собирает — рядом с замком, чтобы следующий запрос мог это ПРОВЕРИТЬ, а не
   // поверить файлу (см. `buildIsRunning`).
   try { writeFileSync(LOCK_PID_FILE, String(proc.pid ?? "")); } catch {}

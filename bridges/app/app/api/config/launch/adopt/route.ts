@@ -70,7 +70,15 @@ export async function POST(req: NextRequest) {
 
   // Сборка — существующая очередь с замком, журналом и откатом. Она долгая, и
   // ответ её не ждёт: за ходом человек следит через `api/deploy/status`.
-  const jobId = runBuild(restore ? "restore starter template" : `adopt ${repoUrl}`);
+  // 🔒 ЗАМЕНА СНОСИТ `node_modules` — ЗНАЧИТ СБОРКЕ ИХ НАДО ПОСТАВИТЬ (35-9).
+  // ✗ Оплачено живым прогоном владельца: замена и отвязка сработали, а сборка
+  // упала на `Cannot find package 'sharp'`, и человеку сказали, что его проект
+  // не той архитектуры. Путь подключения не работал НИ РАЗУ — ни здесь, ни при
+  // возврате стартового шаблона, который идёт этой же дверью.
+  const jobId = runBuild(
+    restore ? "restore starter template" : `adopt ${repoUrl}`,
+    { installFirst: true },
+  );
 
   // `detached: false` при `ok: true` — не мелочь и не шум: проект подключён и
   // соберётся, но история чужая осталась, и отправка из такого слота ушла бы не

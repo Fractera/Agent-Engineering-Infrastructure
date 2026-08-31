@@ -72,6 +72,10 @@ const ru: StepTwoStrings = {
     },
     reasonUnknown: "Причина неизвестна. Повторите попытку, а если повторится — напишите нам.",
 
+    depsFailedTitle: "Не удалось подготовить проект к сборке",
+    depsFailedBody:
+      "Проект приехал целиком и лежит в слоте — с ним всё в порядке. Не удалось установить библиотеки, из которых он собирается: чаще всего это сеть или нехватка памяти на сервере. Это наша сторона, а не ваш проект: переделывать в нём ничего не нужно.",
+    depsRetry: "Повторить",
     buildFailedTitle: "Сборка не прошла",
     buildFailedBody:
       "Существует какое-то несоответствие архитектуры — или вы подключили проект, который не является частью архитектуры Fractera. Если ваш проект создан другим фреймворком, или же он создан на Next, но не по архитектуре Fractera, вам необходимо выбрать процесс миграции: он позволит использовать стартовый шаблон и с помощью специального алгоритма, навыков и инструментов пройти трансформацию вашего проекта в архитектуру Fractera.",
@@ -138,6 +142,10 @@ const en: StepTwoStrings = {
     },
     reasonUnknown: "The reason is unknown. Try again, and if it repeats — write to us.",
 
+    depsFailedTitle: "Could not prepare the project for building",
+    depsFailedBody:
+      "The project arrived whole and sits in the slot — nothing is wrong with it. What failed is installing the libraries it is built from: most often the network, or not enough memory on the server. This is our side, not your project: there is nothing to change in it.",
+    depsRetry: "Try again",
     buildFailedTitle: "The build did not pass",
     buildFailedBody:
       "There is some mismatch of architecture — or you connected a project that is not part of the Fractera architecture. If your project was made with another framework, or made on Next but not by the Fractera architecture, you need to choose the migration process: it lets you use the starter template and, with a special algorithm, skills and tools, transform your project into the Fractera architecture.",

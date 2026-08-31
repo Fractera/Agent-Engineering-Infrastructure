@@ -59,6 +59,10 @@ export type AdoptConfirmLabels = {
   slotIntact: string;
   reasons: Record<string, string>;
   reasonUnknown: string;
+  /** Отказ УСТАНОВКИ ЗАВИСИМОСТЕЙ — наша беда, не проекта человека. */
+  depsFailedTitle: string;
+  depsFailedBody: string;
+  depsRetry: string;
   /** Отказ СБОРКИ — та самая развилка к миграции. */
   buildFailedTitle: string;
   buildFailedBody: string;
@@ -70,7 +74,18 @@ export type AdoptConfirmLabels = {
   migrationCta: string;
 };
 
-type Stage = "idle" | "confirming" | "replacing" | "building" | "build-failed";
+type Stage = "idle" | "confirming" | "replacing" | "building" | "build-failed" | "deps-failed";
+
+/**
+ * Маркер, который сборка печатает в лог, поставив зависимости.
+ *
+ * 🔒 ПРИЧИНА ЧИТАЕТСЯ ИЗ ЛОГА, А НЕ УГАДЫВАЕТСЯ ПО КОДУ ВОЗВРАТА. Установка и
+ * сборка идут одной задачей — у неё один код выхода, и по нему «не встал sharp»
+ * неотличимо от «проект не той архитектуры». Отличает их факт: дошла ли работа
+ * до конца установки. Строка задана в `api/deploy` и импортом сюда не тянется:
+ * это клиентский файл, а тот модуль серверный.
+ */
+const DEPS_OK_MARK = "[deploy] dependencies installed";
 
 export function AdoptConfirm({
   donorUrl,
@@ -130,7 +145,12 @@ export function AdoptConfirm({
 
       stopWatch.current = watchBuild(String(d.jobId), async (outcome) => {
         if (!outcome.ok) {
-          setStage("build-failed");
+          // ✗ 🔒 РАЗВИЛКА, ОПЛАЧЕННАЯ ЖИВЫМ ПРОГОНОМ ВЛАДЕЛЬЦА (35-9). Раньше
+          // ЛЮБОЙ отказ сборки объявлялся отказом ПРОЕКТА и вёл в миграцию —
+          // и это было сказано человеку про наш собственный пример, собранный
+          // из этого же шаблона. Отказать может наша доставка, и тогда предлагать
+          // ему переделывать проект — ложь в самый неудачный момент.
+          setStage(outcome.log.includes(DEPS_OK_MARK) ? "build-failed" : "deps-failed");
           return;
         }
         // 🔒 Успех сборки — ещё не закрытый шаг. Спрашиваем сервер, и закрывает
@@ -173,6 +193,32 @@ export function AdoptConfirm({
     } finally {
       setRestoring(false);
     }
+  }
+
+  // ── РАЗВИЛКА ПОЛУТОРНАЯ: НЕ ВСТАЛИ ЗАВИСИМОСТИ ─────────────────────────────
+  //
+  // 🔒 ЭТО НЕ ОТКАЗ ПРОЕКТА, И ВЫХОД ЗДЕСЬ ДРУГОЙ. Слот заменён и цел, проект на
+  // месте; не хватило одного — установки. Правильное действие человека —
+  // повторить, а не идти в миграцию, и уж точно не переписывать свой проект.
+  if (stage === "deps-failed") {
+    return (
+      <div data-adopt-deps-failed className="flex flex-col gap-4">
+        <Callout tone="important">
+          <span className="font-medium">{labels.depsFailedTitle}</span>
+          <br />
+          {labels.depsFailedBody}
+        </Callout>
+
+        <Button
+          type="button"
+          onClick={() => setStage("confirming")}
+          data-adopt-retry
+          className="h-11 text-[length:var(--fs-small)]"
+        >
+          {labels.depsRetry}
+        </Button>
+      </div>
+    );
   }
 
   // ── РАЗВИЛКА ВТОРАЯ: СБОРКА НЕ ПРОШЛА ──────────────────────────────────────
