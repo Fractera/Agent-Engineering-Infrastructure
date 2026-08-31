@@ -71,7 +71,15 @@ function slotIsAdopted(): Check {
   if (donor === "") return { ok: false, reason: "no-donor-url" };
   if (getValue(ADOPT_URL_KEY).trim() !== donor) return { ok: false, reason: "not-replaced" };
   if (git(["rev-parse", "--is-inside-work-tree"]) !== "true") return { ok: false, reason: "slot-not-a-repo" };
-  if (git(["remote", "get-url", "origin"]) !== "") return { ok: false, reason: "still-attached" };
+  // ✗ 🔒 ПРИЗНАК ПЕРЕВЁРНУТ 75-3, И ЭТО НЕ ОПЕЧАТКА. Здесь стояло «remote обязан
+  // быть ПУСТ»: слот приезжал от чужого донора и отвязывался. С моделью форка
+  // всё наоборот — remote обязан БЫТЬ и указывать на форк человека. Не поправив
+  // эту строку, мы получили бы шаг, который невозможно закрыть в принципе.
+  const remote = git(["remote", "get-url", "origin"]).replace(/x-access-token:[^@]*@/, "");
+  if (remote === "") return { ok: false, reason: "still-detached" };
+  if (remote.replace(/.git$/, "") !== donor.replace(/.git$/, "")) {
+    return { ok: false, reason: "wrong-remote" };
+  }
   if (!fs.existsSync(resolve(SLOT_DIR, ".next"))) return { ok: false, reason: "not-built" };
   return { ok: true };
 }
