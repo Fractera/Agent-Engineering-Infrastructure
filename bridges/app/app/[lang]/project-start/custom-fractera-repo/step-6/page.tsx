@@ -13,8 +13,8 @@ import { StepSection } from "../../../_components/launch/step-section";
 import { VerifyStep } from "../../../_components/launch/verify-step.client";
 import { StepNav } from "../../../_components/launch/step-nav";
 import { flowVerified } from "@/lib/launch-flow";
-import { ADOPT_PATH_TOTAL, adoptStepBuilt } from "../_strings";
-import { adoptStepSixStrings } from "../_step6";
+import { ADOPT_PATH_TOTAL, adoptStepBuilt, stepBadge } from "../_strings";
+import { adoptVerifyStrings } from "../_verify";
 
 export const dynamic = "force-dynamic";
 
@@ -26,7 +26,7 @@ export default async function CustomFracteraRepoStepSix(
 ) {
   const { lang } = await params;
   const s = getAdminStrings(lang);
-  const x = adoptStepSixStrings(lang);
+  const x = adoptVerifyStrings(lang);
   const base = `${adminHref(lang, "project-start")}/custom-fractera-repo`;
   const done = flowVerified("adopt");
 
@@ -73,7 +73,7 @@ export default async function CustomFracteraRepoStepSix(
         stepOfTemplate={x.stepOf}
         doneLabel={x.done}
         done={done}
-        badge={x.badge}
+        badge={stepBadge(lang, 6)}
         title={x.title}
         lead={x.lead}
         info={x.info}

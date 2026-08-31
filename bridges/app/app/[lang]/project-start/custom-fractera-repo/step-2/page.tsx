@@ -1,22 +1,8 @@
-// ШАГ ВТОРОЙ ВТОРОГО ПУТИ: ЗАМЕНА СЛОТА СОДЕРЖИМЫМ ДОНОРА (35-3, 2026-08-31).
+// ШАГ 5 ВТОРОГО ПУТИ (35-6, 2026-08-31).
 //
-// 🔒 ЭТО САМЫЙ РАЗРУШИТЕЛЬНЫЙ ШАГ ОБОИХ ПУТЕЙ, И СТРАНИЦА УСТРОЕНА ПОД ЭТО.
-// Красная врезка стоит ровно одна и живёт внутри подтверждения, то есть на втором
-// движении: до него ещё ничего не решено, и тревожить нечем. Закон «один цвет
-// тревоги на шаг, и лучше ни одного» здесь исполняется буквально.
-//
-// 🔒 ТРЕТИЙ РОД ДЕЙСТВИЯ — И ЕГО ЗДЕСЬ НЕТ. Три рода: форма сохраняет введённое ·
-// кнопка проверки спрашивает сервер · отметка сообщает факт, которого панель не
-// видит. Замена слота — вторая: панель делает работу сама и сама же видит итог.
-// Отметки человека на этом шаге быть не может в принципе.
-//
-// 🔒 ОТМЕТКА ШАГА РИСУЕТСЯ ОТ ФАКТА НА СЕРВЕРЕ (`flowAdopted()`), а не от того,
-// что человек побывал на странице и нажал кнопку.
-//
-// 🔒 ЗАЩИТЫ ОТ ПРЫЖКА ЗДЕСЬ ПОКА НЕТ, как и на шаге 1: она читает перечисление
-// шагов пути, которого у второго пути ещё не существует (35-6). Но донора шаг
-// требует по-настоящему: без сохранённого адреса действие не рисуется вовсе, и
-// вместо него сказано, куда вернуться.
+// 🔒 МЕХАНИКА ВЗЯТА У ПЕРВОГО ПУТИ ЦЕЛИКОМ: та же форма, та же дверь, тот же
+// островок. Отличаются СОСТОЯНИЕ (свои ключи) и СЛОВА. Второй экземпляр этой
+// механики разошёлся бы с первым молча — тем же законом, что и в 35-5.
 
 import { getAdminStrings } from "@/lib/i18n/admin-strings";
 import { adminHref } from "@/lib/admin-nav";
@@ -24,23 +10,20 @@ import { PageShell } from "../../../_components/page-shell";
 import { StepLocked } from "../../../_components/launch/step-locked";
 import { adoptLockedFor } from "../_steps";
 import { StepSection } from "../../../_components/launch/step-section";
-import { AdoptConfirm } from "../../../_components/launch/adopt-confirm.client";
-import { StepNav } from "../../../_components/launch/step-nav";
-import { flowAdopted, flowValue } from "@/lib/launch-flow";
-import { ADOPT_PATH_TOTAL, adoptStepBuilt } from "../_strings";
-import { adoptStepTwoStrings } from "../_step2";
+import { StepForm } from "../../../_components/launch/step-form.client";
+import { StepLink } from "../../../_components/launch/step-link";
+import { flowDone, flowShown } from "@/lib/launch-flow";
+import { ADOPT_PATH_TOTAL, adoptStepBuilt, stepBadge } from "../_strings";
+import { adoptTokenStrings } from "../_token";
 
 export const dynamic = "force-dynamic";
 
-/** Куда писать, когда сборка не прошла. Тот же адрес, что у запроса консультации. */
-const SUPPORT_EMAIL = "admin@fractera.ai";
-
-export default async function CustomFracteraRepoStepTwo(
+export default async function CustomFracteraRepoStepFive(
   { params }: { params: Promise<{ lang: string }> },
 ) {
   const { lang } = await params;
   const s = getAdminStrings(lang);
-  const x = adoptStepTwoStrings(lang);
+  const x = adoptTokenStrings(lang);
   const base = `${adminHref(lang, "project-start")}/custom-fractera-repo`;
 
   // 🔒 ЗАЩИТА ОТ ПРЫЖКА ВПЕРЁД (35-6). Открыт шаг, у которого закрыты все
@@ -76,10 +59,7 @@ export default async function CustomFracteraRepoStepTwo(
       lang={lang}
       slug="project-start"
       s={s}
-      tail={[
-        { label: "custom-fractera-repo", href: base },
-        { label: "step-2" },
-      ]}
+      tail={[{ label: "custom-fractera-repo", href: base }, { label: "step-2" }]}
       title={x.pageTitle}
       hint={x.pageHint}
     >
@@ -88,41 +68,41 @@ export default async function CustomFracteraRepoStepTwo(
         total={ADOPT_PATH_TOTAL}
         stepOfTemplate={x.stepOf}
         doneLabel={x.done}
-        done={flowAdopted()}
-        badge={x.badge}
+        done={flowDone("adopt-token")}
+        badge={stepBadge(lang, 2)}
         title={x.title}
         lead={x.lead}
         info={x.info}
         important={x.important}
         actionLead={x.actionLead}
         bullets={x.bullets}
-        stepHref={(n) => (adoptStepBuilt(n) ? `${base}/step-${n}` : undefined)}
+        link={{ href: "https://github.com/settings/personal-access-tokens", label: x.linkLabel }}
+        stepHref={(k) => (adoptStepBuilt(k) ? `${base}/step-${k}` : undefined)}
       >
-        {/* 🔒 ОСТРОВКУ — ТОЛЬКО ЕГО СЛОВА, И ЗДЕСЬ ЭТО ВАЖНЕЕ ОБЫЧНОГО. По проводу
-            уезжает всё переданное, даже неотрисованное; в этом самом месте, на
-            этой самой двери, однажды в разметку уехала форма замены слота с
-            кнопкой «Да, заменить» на экран, где её быть не должно. Поэтому едет
-            `x.action` — ровно словарь действия, а не `x` целиком. */}
-        {/* ✗ 🔒 НАВИГАЦИИ ЗДЕСЬ НЕ БЫЛО ВОВСЕ, И ЭТО ОСТАВЛЯЛО ЧЕЛОВЕКА БЕЗ
-            ДОРОГИ В КОНЦЕ САМОГО ВАЖНОГО ДЕЙСТВИЯ ПУТИ (35-10): замена прошла,
-            шаг горит зелёным, а идти дальше не с чего.
-
-            🔒 ПРАВИЛО ОБЩЕЕ, А НЕ ЗАПЛАТА НА ЭТУ СТРАНИЦУ: действие уступает
-            место навигации, когда шаг закрыт. Так устроены все остальные шаги
-            обоих путей; здесь его просто не позвали. */}
-        {flowAdopted() ? (
-          <StepNav
-            prevHref={adoptStepBuilt(1) ? `${base}/step-1` : undefined}
-            nextHref={adoptStepBuilt(3) ? `${base}/step-3` : undefined}
-            labels={{ goPrev: x.goPrev, goNext: x.goNext }}
-          />
-        ) : (
-          <AdoptConfirm
-            donorUrl={flowValue("fork-url")}
-            email={SUPPORT_EMAIL}
-            labels={x.action}
-          />
-        )}
+        {/* Островку — только его слова, перечисленные поимённо. */}
+        <StepForm
+          index={2}
+          total={ADOPT_PATH_TOTAL}
+          flowStep="adopt-token"
+          saved={flowShown("adopt-token")}
+          secret={true}
+          prevHref={adoptStepBuilt(1) ? `${base}/step-1` : undefined}
+          nextHref={adoptStepBuilt(3) ? `${base}/step-3` : undefined}
+          labels={{
+            inputLabel: x.form.inputLabel,
+            inputPlaceholder: x.form.inputPlaceholder,
+            inputHint: x.form.inputHint,
+            cta: x.form.cta,
+            busy: x.form.busy,
+            successTitle: x.form.successTitle,
+            successHint: x.form.successHint,
+            failureTitle: x.form.failureTitle,
+            failureFix: x.form.failureFix,
+            goPrev: x.goPrev,
+            goNext: x.goNext,
+            replace: x.replace,
+          }}
+        />
       </StepSection>
     </PageShell>
   );

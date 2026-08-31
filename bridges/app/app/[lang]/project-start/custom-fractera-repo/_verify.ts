@@ -8,10 +8,9 @@
 // (`bad-token`, `no-repo`, `no-push`); человеку нужно следующее действие, а не код.
 // Список закрытый: незнакомое слово даёт общий текст, а не пустоту.
 
-export type VerifyStepStrings = {
+export type MachineStepStrings = {
   pageTitle: string;
   pageHint: string;
-  badge: string;
   title: string;
   lead: string;
   info: string;
@@ -32,11 +31,10 @@ export type VerifyStepStrings = {
   goNext: string;
 };
 
-const ru: VerifyStepStrings = {
+const ru: MachineStepStrings = {
   pageTitle: "Проверка связи с репозиторием",
   pageHint: "Панель спрашивает GitHub, видит ли она ваш репозиторий и может ли в него писать.",
 
-  badge: "Шаг шестой",
   title: "Проверить связь",
   lead: "Нажмите — и панель задаст GitHub настоящий вопрос: существует ли репозиторий по названному адресу и разрешает ли токен туда писать.",
   info:
@@ -72,11 +70,10 @@ const ru: VerifyStepStrings = {
   goNext: "Следующий шаг",
 };
 
-const en: VerifyStepStrings = {
+const en: MachineStepStrings = {
   pageTitle: "Checking the connection to the repository",
   pageHint: "The panel asks GitHub whether it sees your repository and may write into it.",
 
-  badge: "Step six",
   title: "Check the connection",
   lead: "Press it and the panel asks GitHub a real question: does a repository exist at the address you named, and does the token allow writing there.",
   info:
@@ -112,8 +109,8 @@ const en: VerifyStepStrings = {
   goNext: "Next step",
 };
 
-const DICT: Record<string, VerifyStepStrings> = { en, ru };
+const DICT: Record<string, MachineStepStrings> = { en, ru };
 
-export function adoptStepSixStrings(lang: string): VerifyStepStrings {
+export function adoptVerifyStrings(lang: string): MachineStepStrings {
   return DICT[lang] ?? en;
 }

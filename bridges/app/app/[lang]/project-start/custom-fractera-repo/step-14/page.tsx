@@ -27,7 +27,7 @@ import { StepCopyBlock } from "../../../_components/launch/step-grab.client";
 import { Small } from "@/components/ui/typography";
 import { flowMarked } from "@/lib/launch-flow";
 import { stepElevenStrings } from "../../_shared/_step11";
-import { ADOPT_PATH_TOTAL, adoptStepBuilt } from "../_strings";
+import { ADOPT_PATH_TOTAL, adoptStepBuilt, stepBadge } from "../_strings";
 import { adoptLockedFor } from "../_steps";
 
 export const dynamic = "force-dynamic";
@@ -78,7 +78,7 @@ export default async function CustomFracteraRepoStepFourteen(
         stepOfTemplate={x.stepOf}
         doneLabel={x.done}
         done={marked}
-        badge={x.badge}
+        badge={stepBadge(lang, 14)}
         title={x.title}
         lead={x.lead}
         info={x.info}

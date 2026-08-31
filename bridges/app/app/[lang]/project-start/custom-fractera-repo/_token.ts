@@ -1,4 +1,4 @@
-import type { StepStrings } from "../default-template/_strings";
+import type { AdoptStepStrings } from "./_strings";
 
 // ШАГ ПЯТЫЙ ВТОРОГО ПУТИ: ТОКЕН ДОСТУПА (35-6).
 //
@@ -9,11 +9,10 @@ import type { StepStrings } from "../default-template/_strings";
 // сохранённое отдаётся четырьмя последними знаками. Страница панели
 // открывается при коллегах, на проекторе и в записи экрана.
 
-const ru: StepStrings = {
+const ru: AdoptStepStrings = {
   pageTitle: "Токен доступа к вашему репозиторию",
   pageHint: "Ключ, которым панель отправит проект в ваш репозиторий.",
 
-  badge: "Шаг пятый",
   title: "Токен доступа GitHub",
   lead: "Панели нужен ключ, чтобы записать проект в ваш репозиторий. Без него она может только смотреть.",
   info:
@@ -46,11 +45,10 @@ const ru: StepStrings = {
   },
 };
 
-const en: StepStrings = {
+const en: AdoptStepStrings = {
   pageTitle: "Access token for your repository",
   pageHint: "The key the panel will use to send the project to your repository.",
 
-  badge: "Step five",
   title: "GitHub access token",
   lead: "The panel needs a key to write the project into your repository. Without it, it can only look.",
   info:
@@ -83,8 +81,8 @@ const en: StepStrings = {
   },
 };
 
-const DICT: Record<string, StepStrings> = { en, ru };
+const DICT: Record<string, AdoptStepStrings> = { en, ru };
 
-export function adoptStepFiveStrings(lang: string): StepStrings {
+export function adoptTokenStrings(lang: string): AdoptStepStrings {
   return DICT[lang] ?? en;
 }

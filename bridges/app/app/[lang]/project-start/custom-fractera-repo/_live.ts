@@ -14,10 +14,9 @@
 // ли они. Здесь он не писал ни строчки: он смотрит на ЧУЖОЙ проект, который стал
 // его, и главный вопрос другой — «это точно то, что я выбирал?».
 
-export type StepThreeStrings = {
+export type LiveStrings = {
   pageTitle: string;
   pageHint: string;
-  badge: string;
   title: string;
   lead: string;
   important: string;
@@ -62,11 +61,10 @@ export function whatYourAddressMeans(lang: string, siteUrl: string | null): stri
   return lang === "ru" ? ru : en;
 }
 
-const ru: StepThreeStrings = {
+const ru: LiveStrings = {
   pageTitle: "Проект открывается по вашему адресу",
   pageHint: "Первая возможность посмотреть на подключённый проект глазами постороннего.",
 
-  badge: "Шаг третий",
   title: "Откройте свой адрес и посмотрите",
   lead:
     "Замена прошла, сборка закончилась. Теперь по адресу вашего сервера отдаётся проект донора — откройте его и убедитесь, что это именно то, что вы выбирали.",
@@ -96,11 +94,10 @@ const ru: StepThreeStrings = {
   goNext: "Следующий шаг",
 };
 
-const en: StepThreeStrings = {
+const en: LiveStrings = {
   pageTitle: "The project opens at your address",
   pageHint: "The first chance to look at the connected project through an outsider's eyes.",
 
-  badge: "Step three",
   title: "Open your address and look",
   lead:
     "The replacement went through, the build has finished. Your server's address now serves the donor's project — open it and make sure it is exactly what you chose.",
@@ -130,8 +127,8 @@ const en: StepThreeStrings = {
   goNext: "Next step",
 };
 
-const DICT: Record<string, StepThreeStrings> = { en, ru };
+const DICT: Record<string, LiveStrings> = { en, ru };
 
-export function adoptStepThreeStrings(lang: string): StepThreeStrings {
+export function adoptLiveStrings(lang: string): LiveStrings {
   return DICT[lang] ?? en;
 }

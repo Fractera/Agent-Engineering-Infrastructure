@@ -30,9 +30,9 @@ import { Small } from "@/components/ui/typography";
 import { flowMarked } from "@/lib/launch-flow";
 import { publicSiteUrl } from "@/lib/public-site-url";
 import { whatDeployMeans } from "../../_shared/deploy-words";
-import { ADOPT_PATH_TOTAL, adoptStepBuilt } from "../_strings";
+import { ADOPT_PATH_TOTAL, adoptStepBuilt, stepBadge } from "../_strings";
 import { adoptLockedFor } from "../_steps";
-import { adoptStepThirteenStrings } from "../_step13";
+import { adoptAssignStrings } from "../_assign";
 
 export const dynamic = "force-dynamic";
 
@@ -41,7 +41,7 @@ export default async function CustomFracteraRepoStepThirteen(
 ) {
   const { lang } = await params;
   const s = getAdminStrings(lang);
-  const x = adoptStepThirteenStrings(lang);
+  const x = adoptAssignStrings(lang);
   const base = `${adminHref(lang, "project-start")}/custom-fractera-repo`;
 
   const locked = adoptLockedFor(lang, 13);
@@ -83,7 +83,7 @@ export default async function CustomFracteraRepoStepThirteen(
         stepOfTemplate={x.stepOf}
         doneLabel={x.done}
         done={marked}
-        badge={x.badge}
+        badge={stepBadge(lang, 13)}
         title={x.title}
         lead={x.lead}
         // Голубая — что такое развёртывание и какая фраза его запускает. Тот же

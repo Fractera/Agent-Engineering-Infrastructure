@@ -1,4 +1,4 @@
-import type { VerifyStepStrings } from "./_step6";
+import type { MachineStepStrings } from "./_verify";
 
 // ШАГ СЕДЬМОЙ ВТОРОГО ПУТИ: ОТПРАВКА ПРОЕКТА (35-6).
 //
@@ -11,11 +11,10 @@ import type { VerifyStepStrings } from "./_step6";
 // устроены одинаково: одна кнопка, ответ сервера, закрытый список причин отказа.
 // Отличаются они дверью и словами — ровно то, что и должно отличаться.
 
-const ru: VerifyStepStrings = {
+const ru: MachineStepStrings = {
   pageTitle: "Отправка проекта в ваш репозиторий",
   pageHint: "Проект, приехавший от донора, уезжает в ваш собственный репозиторий.",
 
-  badge: "Шаг седьмой",
   title: "Отправить проект",
   lead: "Панель отправит содержимое вашего сервера в репозиторий, который вы назвали. После этого проект будет и на сервере, и у вас в GitHub.",
   info:
@@ -47,11 +46,10 @@ const ru: VerifyStepStrings = {
   goNext: "Следующий шаг",
 };
 
-const en: VerifyStepStrings = {
+const en: MachineStepStrings = {
   pageTitle: "Sending the project to your repository",
   pageHint: "The project that arrived from the donor goes into your own repository.",
 
-  badge: "Step seven",
   title: "Send the project",
   lead: "The panel will send the contents of your server into the repository you named. After that the project lives both on the server and in your GitHub.",
   info:
@@ -83,8 +81,8 @@ const en: VerifyStepStrings = {
   goNext: "Next step",
 };
 
-const DICT: Record<string, VerifyStepStrings> = { en, ru };
+const DICT: Record<string, MachineStepStrings> = { en, ru };
 
-export function adoptStepSevenStrings(lang: string): VerifyStepStrings {
+export function adoptPushStrings(lang: string): MachineStepStrings {
   return DICT[lang] ?? en;
 }

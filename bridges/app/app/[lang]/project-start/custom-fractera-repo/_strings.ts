@@ -1,5 +1,19 @@
 import type { StepStrings } from "../default-template/_strings";
 
+/**
+ * Анатомия шага второго пути — та же, что у первого, **минус бейдж**.
+ *
+ * 🔒 БЕЙДЖ УБРАН ИЗ СЛОВ НАМЕРЕННО (75-2): он выводится из позиции шага
+ * (`stepBadge`), а не пишется руками в каждом модуле. Первый путь свои бейджи
+ * по-прежнему пишет словами, и трогать его тип нельзя: сделать поле
+ * необязательным значило бы разрешить первому пути молча потерять бейдж.
+ *
+ * 🔒 `Omit` ОТ ОБЩЕГО ТИПА, А НЕ ВТОРОЙ СПИСОК ПОЛЕЙ. Так правка анатомии
+ * доезжает до обоих путей сразу или не доезжает ни до одного — третьего исхода
+ * нет. Свой список полей разошёлся бы с первым на первой же правке формы шага.
+ */
+export type AdoptStepStrings = Omit<StepStrings, "badge">;
+
 // СЛОВА ВТОРОГО ПУТИ — «СВОЙ РЕПОЗИТОРИЙ FRACTERA» (35-1, переписаны 75-1).
 //
 // 🪦 ПЕРВЫЙ ШАГ СПРАШИВАЛ АДРЕС ЧУЖОГО ПРОЕКТА-ДОНОРА. Владелец назвал эту
@@ -50,16 +64,46 @@ export const ADOPT_PATH_TOTAL = 14;
  * 🔒 ИСТОЧНИК ОДИН. Шкала, навигация «вперёд/назад» и ссылки крошек читают эту
  * же строку: второй список разошёлся бы с первым в тот день, когда появятся 4–7.
  */
+// ── БЕЙДЖ ШАГА — ОДИН ИСТОЧНИК ВМЕСТО ШЕСТНАДЦАТИ (75-2) ────────────────────
+//
+// ✗ 🔒 БЕЙДЖИ БЫЛИ НАПИСАНЫ РУКАМИ В КАЖДОМ МОДУЛЕ СЛОВ: «Шаг третий», «Step
+// three» — шестнадцать строк на семь шагов. Пока путь строился подряд, это
+// работало; но шаг 75 двигает нумерацию ДВАЖДЫ (здесь и в 75-4), и каждый сдвиг
+// требовал бы переписать бейдж вручную в каждом задетом модуле. Забытый бейдж не
+// ломает сборку и не виден в замере разметки: страница просто называет себя
+// чужим номером, и человек верит ей.
+//
+// 🔒 БЕЙДЖ ВЫВОДИТСЯ ИЗ ПОЗИЦИИ, А ПОЗИЦИЯ ЖИВЁТ В ОДНОМ МЕСТЕ — в перечислении
+// шагов пути. Значит переставить шаги теперь можно, не трогая ни одного слова.
+//
+// 🔒 ПОРЯДКОВЫЕ ПИШУТСЯ СЛОВАМИ, А НЕ ЦИФРОЙ. «Шаг 3» и «Шаг третий» — разный
+// тон; второй выбран владельцем на первом пути, и второй путь обязан звучать так
+// же, иначе два пути одного продукта заговорят по-разному.
+const ORDINALS: Record<string, readonly string[]> = {
+  ru: ["первый", "второй", "третий", "четвёртый", "пятый", "шестой", "седьмой",
+       "восьмой", "девятый", "десятый", "одиннадцатый", "двенадцатый",
+       "тринадцатый", "четырнадцатый"],
+  en: ["one", "two", "three", "four", "five", "six", "seven",
+       "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen"],
+};
+
+/** Бейдж шага по его номеру. Номер вне списка — бейджа нет вовсе, а не «Шаг undefined». */
+export function stepBadge(lang: string, n: number): string | undefined {
+  const words = ORDINALS[lang] ?? ORDINALS.en;
+  const word = words[n - 1];
+  if (!word) return undefined;
+  return lang === "ru" ? `Шаг ${word}` : `Step ${word}`;
+}
+
 export const ADOPT_BUILT_STEPS: readonly number[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
 
 /** Построен ли шаг под этим номером. */
 export const adoptStepBuilt = (n: number): boolean => ADOPT_BUILT_STEPS.includes(n);
 
-const ru: StepStrings = {
+const ru: AdoptStepStrings = {
   pageTitle: "Свой репозиторий Fractera",
   pageHint: "Путь для проекта, который уже построен на Fractera: слот принимает его вместо шаблона.",
 
-  badge: "Шаг первый",
   title: "Форк проекта, который вы будете развивать",
   lead: "Найдите на GitHub проект на Fractera, который хотите взять за основу, и нажмите на его странице кнопку Fork. Потом назовите здесь адрес получившегося репозитория — вашего.",
   info:
@@ -94,11 +138,10 @@ const ru: StepStrings = {
   },
 };
 
-const en: StepStrings = {
+const en: AdoptStepStrings = {
   pageTitle: "Your own Fractera repository",
   pageHint: "The way for a project already built on Fractera: the slot takes it in place of the template.",
 
-  badge: "Step one",
   title: "A fork of the project you will develop",
   lead: "Find a Fractera project on GitHub you want to build on and press Fork on its page. Then name the address of the repository you get — your own.",
   info:
@@ -133,9 +176,9 @@ const en: StepStrings = {
   },
 };
 
-const DICT: Record<string, StepStrings> = { en, ru };
+const DICT: Record<string, AdoptStepStrings> = { en, ru };
 
-export function adoptStepOneStrings(lang: string): StepStrings {
+export function adoptStepOneStrings(lang: string): AdoptStepStrings {
   return DICT[lang] ?? en;
 }
 
