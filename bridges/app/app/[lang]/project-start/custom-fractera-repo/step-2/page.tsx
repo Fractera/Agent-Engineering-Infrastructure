@@ -118,7 +118,7 @@ export default async function CustomFracteraRepoStepTwo(
           />
         ) : (
           <AdoptConfirm
-            donorUrl={flowValue("donor-url")}
+            donorUrl={flowValue("fork-url")}
             email={SUPPORT_EMAIL}
             labels={x.action}
           />

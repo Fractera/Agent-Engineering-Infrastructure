@@ -1,7 +1,7 @@
 "use client";
 
-import { Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Sparkles, ExternalLink } from "lucide-react";
+import { buttonVariants } from "@/components/ui/button";
 import { Small } from "@/components/ui/typography";
 import { CommandCard } from "./command-card";
 
@@ -14,10 +14,14 @@ import { CommandCard } from "./command-card";
 // комментарий, объясняющий, почему ЗДЕСЬ нужно иначе, чем у соседа. Такого
 // комментария в этом файле нет, потому что иначе здесь не нужно.
 //
-// 🔒 НАЖАТИЕ ПОДСТАВЛЯЕТ, А НЕ СОХРАНЯЕТ. Сохранение остаётся отдельным
-// движением человека: карточка, молча записавшая адрес, лишает его возможности
-// передумать между выбором и решением. Тот же закон, по которому на шагах-
-// отметках разделены галочка и кнопка.
+// 🪦 КАРТОЧКА ПОДСТАВЛЯЛА АДРЕС В ПОЛЕ. С переходом на модель форка (75-1) это
+// стало невозможно, и не по вкусовой причине: в поле нужен адрес ЕГО форка, а
+// имени его учётной записи мы не знаем и знать не должны. Поэтому карточка даёт
+// ССЫЛКУ на кнопку Fork у GitHub, а поле человек заполняет сам, вернувшись.
+//
+// 🔒 ССЫЛКА ВЕДЁТ НАРУЖУ, ДЕЙСТВИЕ ЧЕЛОВЕК ДЕЛАЕТ ЗДЕСЬ — тот же закон, которым
+// оплачена ссылка-действие шага (28-11): она часть ИНФОРМАЦИИ шага, а не второе
+// его действие.
 //
 // 🔒 ОБЕЩАНИЕ ОСЛАБЛЕНО НАМЕРЕННО, И ЭТО НЕ РЕДАКТУРА СЛОВ ВЛАДЕЛЬЦА. Он сказал
 // «проект, который запустится на 100%». Наш собственный пример упадёт при другой
@@ -34,25 +38,20 @@ export type DonorPickerLabels = {
   title: string;
   /** Обещание — что именно мы утверждаем об этих адресах. */
   promise: string;
-  /** Подпись кнопки карточки. */
+  /** Подпись ссылки карточки — она ведёт на кнопку Fork у GitHub. */
   pick: string;
   /** Строка про своё поле: рекомендация ничего не запрещает. */
   ownHint: string;
 };
 
-export type DonorPick = { url: string; name: string; note: string };
+export type DonorPick = { url: string; name: string; note: string; forkHref: string };
 
 export function DonorPicker({
   picks,
   labels,
-  onPick,
-  disabled = false,
 }: {
   picks: readonly DonorPick[];
   labels: DonorPickerLabels;
-  /** Что делать с выбранным адресом. Подставить — и только. */
-  onPick: (url: string) => void;
-  disabled?: boolean;
 }) {
   // Пусто — блока нет вовсе. Не пустая рамка и не надпись «скоро»: названная,
   // но не обеспеченная возможность хуже её отсутствия.
@@ -73,17 +72,19 @@ export function DonorPicker({
             title={p.name}
             body={p.note}
             action={
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={disabled}
-                data-donor-pick={p.url}
-                onClick={() => onPick(p.url)}
-                className="h-8 text-[11px]"
+              // Ссылка остаётся ссылкой, а вид берёт у кнопки: форк открывается
+              // на GitHub, и адрес обязан копироваться и открываться средним
+              // щелчком, как всякий адрес.
+              <a
+                href={p.forkHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-donor-fork={p.url}
+                className={buttonVariants({ variant: "outline", size: "sm" }) + " h-8 text-[11px]"}
               >
                 {labels.pick}
-              </Button>
+                <ExternalLink size={12} aria-hidden />
+              </a>
             }
           />
         ))}

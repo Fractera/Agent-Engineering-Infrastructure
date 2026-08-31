@@ -47,7 +47,7 @@ export function adoptSteps(lang: string): AdoptStep[] {
   const all: AdoptStep[] = [
     // 1–3: свой проект в слоте. 4–5: сохранённое значение. 6: ответ GitHub.
     // 7: коммит на удалённой `main`. 8–12: отметки человека (общий хвост).
-    { n: 1, slug: "step-1", title: adoptStepOneStrings(lang).title, done: flowDone("donor-url") },
+    { n: 1, slug: "step-1", title: adoptStepOneStrings(lang).title, done: flowDone("fork-url") },
     { n: 2, slug: "step-2", title: adoptStepTwoStrings(lang).title, done: flowAdopted() },
     { n: 3, slug: "step-3", title: adoptStepThreeStrings(lang).title, done: flowMarked("adopt-live-seen") },
     { n: 4, slug: "step-4", title: adoptStepFourStrings(lang).title, done: flowDone("adopt-repo-url") },
