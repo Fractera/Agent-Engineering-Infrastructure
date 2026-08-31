@@ -53,19 +53,33 @@ export type AssignStrings = {
 // 🔒 ПОРУЧЕНИЕ, А НЕ ТЕХНИЧЕСКОЕ ЗАДАНИЕ. Человек копирует его не читая, поэтому
 // оно говорит, ЧТО должно стать правдой, и не описывает агенту, как искать.
 // Последняя строка — та самая фраза развёртывания, дословно.
-const PROMPT_RU = `Этот проект приехал из чужого репозитория, и в нём остались реквизиты прежнего владельца.
+const PROMPT_RU = `Этот проект приехал из чужого репозитория. Замени в нём реквизиты прежнего владельца на мои.
 
-Пройди по проекту и замени их на мои: название проекта, имя владельца или компании, адрес сайта, почту для связи, ссылки на социальные сети, копирайт в подвале. Ищи их везде — в настройках, в текстах страниц, в заголовках для поиска, в шаблонах писем. Спроси у меня то, чего не знаешь, одним списком, а не по одному вопросу.
+Реквизиты живут в конфигурации, а не разбросаны по коду — искать по всему проекту не нужно. Два файла:
+
+1. APP-CONFIG/app-config.json — сохранённые настройки сайта. Если он пуст ({}), значит прежний владелец ничего не сохранял, и всё берётся из умолчаний ниже.
+2. config/app-config.defaults.ts — умолчания: name, description, url, author (имя и почта), organization, seo (titleTemplate, siteName, соцсети), mailSupport, address, phone.
+
+Замени там: название проекта, имя владельца или компании, адрес сайта, почту для связи, ссылки на социальные сети. Схему полей смотри в config/app-config.schema.ts — она называет всё, что вообще бывает.
 
 Дизайн, раскладку и содержание страниц не трогай: я пришёл сюда именно за ними.
 
+Спроси у меня одним списком то, чего не знаешь, — а не по одному вопросу.
+
 Когда закончишь, запусти развёртывание на моём сервере. Когда оно закончится, ответь одной строкой: по какому адресу открывать проект в интернете.`;
 
-const PROMPT_EN = `This project came from someone else's repository, and the previous owner's details are still in it.
+const PROMPT_EN = `This project came from someone else's repository. Replace the previous owner's details with mine.
 
-Go through the project and replace them with mine: the project name, the owner or company name, the site address, the contact email, the social links, the copyright in the footer. Look everywhere — in the settings, in page texts, in the titles for search, in email templates. Ask me for anything you do not know in one list, not one question at a time.
+The details live in the configuration, not scattered through the code — there is no need to search the whole project. Two files:
 
-Do not touch the design, the layout or the contents of the pages: they are exactly what I came here for.
+1. APP-CONFIG/app-config.json — the saved site settings. If it is empty ({}), the previous owner saved nothing and everything comes from the defaults below.
+2. config/app-config.defaults.ts — the defaults: name, description, url, author (name and email), organization, seo (titleTemplate, siteName, social links), mailSupport, address, phone.
+
+Replace there: the project name, the owner or company name, the site address, the contact email, the social links. The field schema is in config/app-config.schema.ts — it names everything that can exist.
+
+Do not touch the design, the layout or the contents of the pages: they are exactly what I came for.
+
+Ask me in one list for anything you do not know — not one question at a time.
 
 When you are done, deploy this to my server. When the deployment finishes, answer in one line: at what address the project opens on the internet.`;
 
