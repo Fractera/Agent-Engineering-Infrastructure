@@ -26,8 +26,7 @@ import { adoptLockedFor } from "../_steps";
 import { StepSection } from "../../../_components/launch/step-section";
 import { StepForm } from "../../../_components/launch/step-form.client";
 import { flowDone, flowShown } from "@/lib/launch-flow";
-import { ADOPT_PATH_TOTAL, adoptStepBuilt, adoptStepOneStrings, adoptPickerStrings, stepBadge } from "../_strings";
-import { DONOR_EXAMPLES, exampleNote, forkHref } from "../_examples";
+import { ADOPT_PATH_TOTAL, adoptStepBuilt, adoptStepOneStrings, stepBadge } from "../_strings";
 
 export const dynamic = "force-dynamic";
 
@@ -37,18 +36,6 @@ export default async function CustomFracteraRepoStepOne(
   const { lang } = await params;
   const s = getAdminStrings(lang);
   const x = adoptStepOneStrings(lang);
-  const pick = adoptPickerStrings(lang);
-
-  // 🔒 ЯЗЫК ВЫБИРАЕТСЯ ЗДЕСЬ, НА СЕРВЕРЕ, А В ОСТРОВОК УЕЗЖАЮТ ГОТОВЫЕ СТРОКИ.
-  // Отдать islands объект с языками значило бы увезти в браузер словарь — тот же
-  // закон, по которому словарь панели серверный.
-  const picks = DONOR_EXAMPLES.map((e) => ({
-    url: e.url,
-    name: e.name,
-    note: exampleNote(e, lang),
-    // Адрес кнопки Fork считается у источника, а не собирается в разметке.
-    forkHref: forkHref(e),
-  }));
 
   // 🔒 ЗАЩИТА ОТ ПРЫЖКА ВПЕРЁД (35-6). Открыт шаг, у которого закрыты все
   // предыдущие; пройденный остаётся открытым — вернуться человек вправе (28-18).
@@ -148,10 +135,6 @@ export default async function CustomFracteraRepoStepOne(
             goNext: x.goNext,
             replace: x.replace,
           }}
-          // 🔒 ЭТОГО НЕТ У ПЕРВОГО ПУТИ, И ЭТО НЕ УПУЩЕНИЕ. Там человек называет
-          // СВОЙ пустой репозиторий — советовать ему чужой адрес бессмысленно.
-          picks={picks}
-          pickLabels={pick}
         />
       </StepSection>
     </PageShell>

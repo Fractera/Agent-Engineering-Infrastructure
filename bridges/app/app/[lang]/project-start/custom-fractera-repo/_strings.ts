@@ -204,47 +204,8 @@ export function adoptStepOneStrings(lang: string): AdoptStepStrings {
   return DICT[lang] ?? en;
 }
 
-// ── СЛОВА БЛОКА РЕКОМЕНДОВАННЫХ ДОНОРОВ (35-1а) ─────────────────────────────
-//
-// 🔒 ОБЕЩАНИЕ СФОРМУЛИРОВАНО КАК «СОБРАНО НАМИ», А НЕ «ЗАПУСТИТСЯ НА 100%».
-// Слово владельца пришлось ослабить, и это не редактура: наш собственный пример
-// упадёт при другой версии Node, при незаполненных ключах, при чужих настройках
-// сервера. Обещание, которого продукт не держит, человек проверяет в свой худший
-// день (✗ оплачено шагом 65).
-//
-// 🔒 СТРОКА ПРО СВОЁ ПОЛЕ ОБЯЗАТЕЛЬНА. Рекомендация ничего не запрещает, и это
-// надо сказать словами — иначе список наших проектов читается как перечень
-// допустимого, а человек со своим проектом решает, что пришёл не туда.
-
-export type DonorPickerStrings = {
-  title: string;
-  promise: string;
-  pick: string;
-  ownHint: string;
-};
-
-const PICKER: Record<string, DonorPickerStrings> = {
-  en: {
-    title: "Projects we assembled ourselves",
-    promise:
-      "Each of these was built by us from this template and checked: it is a whole project, not a demo. Start with one of them if you only want to see how the path works.",
-    pick: "Fork this project",
-    ownHint:
-      "Any other Fractera project works the same way: fork it on GitHub and put your fork's address in the field below. These are a safe starting point, not a list of what is allowed.",
-  },
-  ru: {
-    title: "Проекты, собранные нами",
-    promise:
-      "Каждый из них собран нами из этого шаблона и проверен: это целый проект, а не витрина. Начните с одного из них, если хотите просто увидеть, как работает путь.",
-    pick: "Сделать форк",
-    ownHint:
-      "Любой другой проект на Fractera подходит так же: сделайте его форк на GitHub и впишите адрес форка в поле ниже. Это безопасное начало, а не перечень допустимого.",
-  },
-};
-
-export function adoptPickerStrings(lang: string): DonorPickerStrings {
-  return PICKER[lang] ?? PICKER.en;
-}
+// 🪦 ЗДЕСЬ ЖИЛИ СЛОВА БЛОКА РЕКОМЕНДОВАННЫХ ПРОЕКТОВ (35-1а), УДАЛЁННОГО 75-6
+// вместе с самим блоком. Причина — в `step-form.client.tsx` рядом с надгробием.
 
 // ── СЛОВА ВХОДА В ПУТЬ ──────────────────────────────────────────────────────
 //
