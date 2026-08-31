@@ -11,7 +11,7 @@
 
 import { adminHref } from "@/lib/admin-nav";
 import { TailStepPage } from "../../_shared/tail-page";
-import { ADOPT_PATH_TOTAL, adoptStepBuilt } from "../_strings";
+import { ADOPT_PATH_TOTAL, adoptStepBuilt, ADOPT_PATH_TITLE, ADOPT_PATH_HINT } from "../_strings";
 import { adoptLockedFor } from "../_steps";
 
 export const dynamic = "force-dynamic";
@@ -29,6 +29,8 @@ export default async function CustomFracteraRepoStepTen(
       tailIndex={2}
       path={{
         slug: "custom-fractera-repo",
+        pageTitle: ADOPT_PATH_TITLE,
+        pageHint: ADOPT_PATH_HINT,
         base,
         total: ADOPT_PATH_TOTAL,
         isBuilt: adoptStepBuilt,

@@ -49,6 +49,17 @@ export type AdoptStepStrings = Omit<StepStrings, "badge">;
  * то, чего у первого нет вовсе: принять донора, отвязать его от чужого
  * репозитория, присвоить проект себе. Общий хвост при этом тот же.
  */
+/**
+ * Как называется путь. Показывается заголовком на КАЖДОМ его шаге.
+ *
+ * ✗ 🔒 ШЕСТЬ ШАГОВ ИЗ ДВЕНАДЦАТИ ПРЕДСТАВЛЯЛИСЬ «СТАРТОВЫМ ШАБЛОНОМ» — именем
+ * ПЕРВОГО пути (измерено 75-4: 14 совпадений на пути). Слова хвоста общие, и
+ * заголовок приходил вместе с ними. Теперь имя пути своё, а слова шага общие.
+ */
+export const ADOPT_PATH_TITLE = "Свой репозиторий Fractera";
+export const ADOPT_PATH_HINT =
+  "Путь для проекта, который уже построен на Fractera: вы делаете форк и работаете в нём.";
+
 export const ADOPT_PATH_TOTAL = 12;
 
 /**
@@ -236,11 +247,11 @@ export type AdoptPathStrings = { lead: string; startLabel: string };
 
 const PATH: Record<string, AdoptPathStrings> = {
   en: {
-    lead: "Fourteen steps: take in the donor project, free it from its previous owner, make it yours, and put it online at your address.",
+    lead: "Twelve steps: fork the project, put it on your server, make the details yours, and bring it online at your address.",
     startLabel: "Start from step one",
   },
   ru: {
-    lead: "Четырнадцать шагов: принять проект-донор, освободить его от прежнего владельца, присвоить себе и вывести в интернет по своему адресу.",
+    lead: "Двенадцать шагов: сделать форк проекта, поставить его на свой сервер, присвоить реквизиты и вывести в интернет по своему адресу.",
     startLabel: "Начать с первого шага",
   },
 };

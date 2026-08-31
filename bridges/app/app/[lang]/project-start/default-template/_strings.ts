@@ -316,6 +316,16 @@ export function pathMapStrings(lang: string): PathMapStrings {
   return lang === "ru" ? ruMap : enMap;
 }
 
+/**
+ * Как называется путь. Показывается заголовком на КАЖДОМ его шаге.
+ *
+ * 🔒 ЗНАЧЕНИЯ ВЗЯТЫ ИЗ ОБЩИХ СЛОВ ДОСЛОВНО (75-5): раньше заголовок шагов хвоста
+ * приходил оттуда, и путь обязан остаться прежним до байта.
+ */
+export const DEFAULT_TEMPLATE_TITLE = "Стартовый шаблон";
+export const DEFAULT_TEMPLATE_HINT =
+  "Путь от пустого репозитория до работающего сайта — по одному шагу за раз.";
+
 export const DEFAULT_TEMPLATE_TOTAL = 11;
 
 /**

@@ -7,6 +7,10 @@
 // Слова написаны владельцем; переписывать их «под второй путь» было бы правкой
 // его текста без его слова.
 //
+// 🔒 И ЗАГОЛОВОК ТОЖЕ СВОЙ (75-5). Слова прощания общие с первым путём, а имя
+// пути — нет: страница называет то место, ГДЕ ЧЕЛОВЕК НАХОДИТСЯ. Он находится в
+// конце пути форка, а не пути стартового шаблона.
+//
 // 🔒 ОТМЕТКА ПРИ ЭТОМ СВОЯ — `adopt-path-finished`. Слова общие, а ФАКТ разный:
 // «я прошёл путь стартового шаблона» и «я прошёл путь чужого проекта» — не одно
 // и то же. Общая отметка объявила бы второй путь пройденным тому, кто прошёл
@@ -27,7 +31,7 @@ import { StepCopyBlock } from "../../../_components/launch/step-grab.client";
 import { Small } from "@/components/ui/typography";
 import { flowMarked } from "@/lib/launch-flow";
 import { stepElevenStrings } from "../../_shared/_step11";
-import { ADOPT_PATH_TOTAL, adoptStepBuilt, stepBadge } from "../_strings";
+import { ADOPT_PATH_TOTAL, adoptStepBuilt, stepBadge, ADOPT_PATH_TITLE, ADOPT_PATH_HINT } from "../_strings";
 import { adoptLockedFor } from "../_steps";
 
 export const dynamic = "force-dynamic";
@@ -48,8 +52,8 @@ export default async function CustomFracteraRepoStepFourteen(
         slug="project-start"
         s={s}
         tail={[{ label: "custom-fractera-repo", href: base }, { label: "step-12" }]}
-        title={x.pageTitle}
-        hint={x.pageHint}
+        title={ADOPT_PATH_TITLE}
+        hint={ADOPT_PATH_HINT}
       >
         <StepLocked
           title={x.title}
@@ -69,8 +73,8 @@ export default async function CustomFracteraRepoStepFourteen(
       slug="project-start"
       s={s}
       tail={[{ label: "custom-fractera-repo", href: base }, { label: "step-12" }]}
-      title={x.pageTitle}
-      hint={x.pageHint}
+      title={ADOPT_PATH_TITLE}
+      hint={ADOPT_PATH_HINT}
     >
       <StepSection
         index={12}

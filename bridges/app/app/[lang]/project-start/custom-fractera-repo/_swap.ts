@@ -20,11 +20,11 @@ import type { AdoptConfirmLabels } from "../../_components/launch/adopt-confirm.
 
 const ru: SwapStrings = {
   pageTitle: "Замена проекта в слоте",
-  pageHint: "Содержимое слота будет заменено проектом из репозитория-донора.",
+  pageHint: "Содержимое слота будет заменено проектом из вашего форка.",
 
-  title: "Заменить проект содержимым донора",
+  title: "Заменить проект содержимым вашего форка",
   lead:
-    "Панель скачает названный вами проект и поставит его на место стартового шаблона. Это и есть то, ради чего вы выбрали этот путь.",
+    "Панель скачает ваш форк и поставит его на место стартового шаблона. Это и есть то, ради чего вы выбрали этот путь.",
   info:
     "Ничего не сносится, пока репозиторий не отозвался. Панель сначала убеждается, что адрес рабочий, скачивает проект в отдельную папку и только потом меняет местами. Опечатка в адресе не оставит вас без проекта. Файл .env.local замену переживает: в нём ключи слоя данных и адрес сервера — они принадлежат машине, а не проекту.",
   important:
@@ -50,7 +50,7 @@ const ru: SwapStrings = {
     confirmNo: "Отмена",
     running: "Заменяю…",
     buildWaiting: "Идёт сборка нового проекта — это занимает несколько минут",
-    noDonor: "Сначала назовите адрес проекта-донора на первом шаге: заменять пока нечем.",
+    noDonor: "Сначала назовите адрес вашего форка на первом шаге: заменять пока нечем.",
 
     okTitle: "Проект заменён и собран",
     okHint: "Связь с вашим форком сохранена: сервер знает, откуда брать обновления.",
@@ -58,12 +58,12 @@ const ru: SwapStrings = {
     failTitle: "Замена не состоялась",
     slotIntact: "Ваш проект цел — ничего не заменялось.",
     reasons: {
-      repo_not_set: "Адрес донора пуст. Вернитесь на первый шаг и назовите его.",
-      repo_not_found: "Репозитория по этому адресу нет. Проверьте адрес целиком, включая имя владельца.",
-      auth_failed: "Репозиторий закрыт, и прочитать его нечем. Сохраните токен доступа или выберите публичный проект.",
+      repo_not_set: "Адрес форка пуст. Вернитесь на первый шаг и назовите его.",
+      repo_not_found: "Репозитория по этому адресу нет. Проверьте адрес форка целиком, включая ваше имя на GitHub.",
+      auth_failed: "Форк закрыт, и прочитать его нечем. Сохраните токен доступа на втором шаге.",
       network: "Сеть не ответила. Попробуйте ещё раз через минуту.",
       slot_missing: "Папка слота не найдена. Это дефект сервера — напишите нам.",
-      "no-donor-url": "Адрес донора не сохранён. Вернитесь на первый шаг.",
+      "no-donor-url": "Адрес форка не сохранён. Вернитесь на первый шаг.",
       "not-replaced": "Замена ещё не выполнялась — слот пока прежний. Нажмите «Заменить проект в слоте».",
       "slot-not-a-repo": "Слот не стал репозиторием. Замена оборвалась на полпути — напишите нам.",
       "still-detached": "Слот не связан с вашим форком — значит будущие обновления брать неоткуда. Это дефект сервера, напишите нам.",
@@ -90,9 +90,9 @@ const ru: SwapStrings = {
 
 const en: SwapStrings = {
   pageTitle: "Replacing the project in the slot",
-  pageHint: "The contents of the slot will be replaced by the project from the donor repository.",
+  pageHint: "The contents of the slot will be replaced by the project from your fork.",
 
-  title: "Replace the project with the donor's contents",
+  title: "Replace the project with your fork's contents",
   lead:
     "The panel will download the project you named and put it in place of the starter template. This is what you chose this path for.",
   info:
@@ -120,7 +120,7 @@ const en: SwapStrings = {
     confirmNo: "Cancel",
     running: "Replacing…",
     buildWaiting: "Building the new project — this takes a few minutes",
-    noDonor: "Name the donor project's address on the first step: there is nothing to replace with yet.",
+    noDonor: "Name your fork's address on the first step: there is nothing to replace with yet.",
 
     okTitle: "The project is replaced and built",
     okHint: "The link to your fork is kept: the server knows where to take updates from.",
@@ -128,12 +128,12 @@ const en: SwapStrings = {
     failTitle: "The replacement did not happen",
     slotIntact: "Your project is intact — nothing was replaced.",
     reasons: {
-      repo_not_set: "The donor address is empty. Go back to the first step and name it.",
+      repo_not_set: "The fork address is empty. Go back to the first step and name it.",
       repo_not_found: "There is no repository at this address. Check the whole address, including the owner's name.",
       auth_failed: "The repository is private and there is nothing to read it with. Save an access token or pick a public project.",
       network: "The network did not answer. Try again in a minute.",
       slot_missing: "The slot folder was not found. This is a server defect — write to us.",
-      "no-donor-url": "The donor address is not saved. Go back to the first step.",
+      "no-donor-url": "The fork address is not saved. Go back to the first step.",
       "not-replaced": "The replacement has not run yet — the slot is still the old one. Press \"Replace the project in the slot\".",
       "slot-not-a-repo": "The slot did not become a repository. The replacement broke halfway — write to us.",
       "still-detached": "The slot is not linked to your fork — there would be nowhere to take future updates from. This is a server defect, write to us.",
