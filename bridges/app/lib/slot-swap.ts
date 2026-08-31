@@ -230,7 +230,47 @@ export function replaceSlotContents(
     try { gitIn(root, ["remote", "set-url", "origin", repoUrl]); } catch { /* remote нет — нечего чистить */ }
   }
 
+  // 🔒 ИСКЛЮЧЕНИЯ ПИШУТСЯ ВСЕГДА, А НЕ ТОЛЬКО ПРИ ОТВЯЗКЕ. Машинные артефакты
+  // этого сервера обязаны быть невидимы для проекта человека независимо от того,
+  // рвём мы историю или храним. ✗ оплачено сборкой, упавшей на собственном CSS.
+  if (!detach) writeLocalExcludes(root);
+
   return { ok: true, repoUrl, head, detached };
+}
+
+/**
+ * Записать локальные исключения в `.git/info/exclude`.
+ *
+ * ✗ 🔒 ЭТО ЖИЛО ВНУТРИ ОТВЯЗКИ И ПОТОМУ ИСЧЕЗЛО ВМЕСТЕ С НЕЙ (75-3). Цепочка из
+ * трёх моих правок, каждая верная по отдельности:
+ *   35-2 — исключения написаны ВНУТРИ `detachSlotHistory()`;
+ *   35-9 — `.next.last-good` начинает переживать замену;
+ *   75-3 — отвязка выключается для форка → исключения больше не пишутся.
+ * Итог: папка со СКОМПИЛИРОВАННЫМ CSS оказалась внутри проекта и не скрыта, а
+ * Tailwind ищет исходники по всему проекту, уважая правила игнорирования.
+ * Сборка падала на `CssSyntaxError: Missed semicolon` в собственном же выводе.
+ * ✓ Измерено: убрать папку из проекта — сборка `RC=0`; вернуть — падает снова.
+ *
+ * 🔒 ИСКЛЮЧЕНИЯ ГОВОРЯТ О МАШИНЕ, А НЕ ОБ ИСТОРИИ, И ПОТОМУ ЖИВУТ ОТДЕЛЬНО.
+ * `.gitkeep` — способ ai-workspace хранить пустой слот; `.next.last-good` — копия
+ * последней рабочей сборки ЭТОГО сервера. Ни то, ни другое не зависит от того,
+ * рвём мы историю или нет, — значит и вызов не имеет права от этого зависеть.
+ *
+ * 🔒 ПИШЕТСЯ В `.git/info/exclude`, А НЕ В `.gitignore`: последний принадлежит
+ * репозиторию человека и уедет в его форк.
+ */
+function writeLocalExcludes(root: string): void {
+  const excludeFile = path.join(root, ".git", "info", "exclude");
+  if (!fs.existsSync(path.dirname(excludeFile))) return;
+  const current = fs.existsSync(excludeFile) ? fs.readFileSync(excludeFile, "utf8") : "";
+  // 🔒 Перевод строки берётся кодовой точкой, а не литералом: этот файл правится
+  // скриптами, и экранирование обратного слэша в них уже дважды съедалось молча.
+  const NL = String.fromCharCode(10);
+  const already = current.split(NL).map((l) => l.trim());
+  const missing = LOCAL_EXCLUDES.filter((w) => !already.includes(w));
+  if (!missing.length) return;
+  const lead = !current || current.endsWith(NL) ? "" : NL;
+  fs.appendFileSync(excludeFile, lead + missing.join(NL) + NL, "utf8");
 }
 
 /**
@@ -282,20 +322,7 @@ export function detachSlotHistory(root: string, opts: { message?: string } = {})
     // едут в его `.gitignore`: `.gitkeep` — способ ai-workspace хранить пустой
     // слот в СВОЕЙ истории; `.next.last-good` — копия последней хорошей сборки
     // ЭТОГО сервера. Перечень взят у `api/config/git-push`, а не сочинён.
-    const excludeFile = path.join(root, ".git", "info", "exclude");
-    if (fs.existsSync(path.dirname(excludeFile))) {
-      const current = fs.existsSync(excludeFile) ? fs.readFileSync(excludeFile, "utf8") : "";
-      const missing = LOCAL_EXCLUDES.filter(
-        (w) => !current.split("\n").map((l) => l.trim()).includes(w),
-      );
-      if (missing.length) {
-        fs.appendFileSync(
-          excludeFile,
-          `${!current || current.endsWith("\n") ? "" : "\n"}${missing.join("\n")}\n`,
-          "utf8",
-        );
-      }
-    }
+    writeLocalExcludes(root);
 
     gitIn(root, ["add", "-A"]);
     gitIn(root, [
