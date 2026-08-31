@@ -67,7 +67,7 @@ function git(args: string[]): string {
 type Check = { ok: true } | { ok: false; reason: string };
 
 function slotIsAdopted(): Check {
-  const donor = flowValue("donor-url");
+  const donor = flowValue("fork-url");
   if (donor === "") return { ok: false, reason: "no-donor-url" };
   if (getValue(ADOPT_URL_KEY).trim() !== donor) return { ok: false, reason: "not-replaced" };
   if (git(["rev-parse", "--is-inside-work-tree"]) !== "true") return { ok: false, reason: "slot-not-a-repo" };

@@ -27,7 +27,7 @@
 // отдельная работа, и в 35-1а она не входит.
 
 export type DonorExample = {
-  /** Полный адрес репозитория — ровно то, что уедет в поле. */
+  /** Полный адрес репозитория — на него человек идёт делать форк. */
   url: string;
   /** Имя собственное проекта: не переводится. */
   name: string;
@@ -53,6 +53,23 @@ export const DONOR_EXAMPLES: readonly DonorExample[] = [
     },
   },
 ];
+
+/**
+ * Адрес кнопки «Fork» на GitHub.
+ *
+ * 🔒 СЧИТАЕТСЯ, А НЕ ХРАНИТСЯ ВТОРЫМ ПОЛЕМ. Правило GitHub одно на все
+ * репозитории: `<адрес>/fork`. Второе поле рядом с первым разошлось бы с ним при
+ * первой же опечатке — и разошлось бы молча, потому что ссылка всё равно
+ * открылась бы, просто не туда.
+ */
+export function forkHref(example: DonorExample): string {
+  // Без регулярных выражений намеренно: правило простое, а экранирование в
+  // регулярном выражении — лишний способ ошибиться в одну косую черту.
+  let clean = example.url.trim();
+  if (clean.endsWith(".git")) clean = clean.slice(0, -4);
+  while (clean.endsWith("/")) clean = clean.slice(0, -1);
+  return clean + "/fork";
+}
 
 /** Строка описания на языке страницы; английский — общий запасной. */
 export function exampleNote(example: DonorExample, lang: string): string {

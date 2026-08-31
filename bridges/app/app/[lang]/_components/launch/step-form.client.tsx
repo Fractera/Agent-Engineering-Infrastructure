@@ -228,15 +228,12 @@ export function StepForm({
           первым, начинает придумывать, что в него ввести, — и рекомендацию под
           полем читает уже как утешение. Порядок «сначала безопасный выбор, потом
           своё» и есть то, ради чего блок вообще заведён. */}
-      {picks && pickLabels && (
-        <DonorPicker
-          picks={picks}
-          labels={pickLabels}
-          disabled={busy}
-          // Подставляет — и только: сохранение остаётся отдельным движением.
-          onPick={setValue}
-        />
-      )}
+      {/* 🪦 БЛОК ПОДСТАВЛЯЛ АДРЕС В ЭТО ПОЛЕ. С переходом на модель форка (75-1)
+          подставлять нечего: в поле нужен адрес ФОРКА человека, а имени его
+          учётной записи мы не знаем. Теперь блок ведёт на кнопку Fork у GitHub,
+          а поле человек заполняет сам — и поэтому ему больше не нужны ни
+          `onPick`, ни `disabled`: он ничего не делает с формой. */}
+      {picks && pickLabels && <DonorPicker picks={picks} labels={pickLabels} />}
 
       <label className="flex flex-col gap-2">
         <Small className="text-foreground">{labels.inputLabel}</Small>

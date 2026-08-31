@@ -1,6 +1,17 @@
 import type { StepStrings } from "../default-template/_strings";
 
-// СЛОВА ВТОРОГО ПУТИ — «СВОЙ РЕПОЗИТОРИЙ FRACTERA» (35-1, 2026-08-31).
+// СЛОВА ВТОРОГО ПУТИ — «СВОЙ РЕПОЗИТОРИЙ FRACTERA» (35-1, переписаны 75-1).
+//
+// 🪦 ПЕРВЫЙ ШАГ СПРАШИВАЛ АДРЕС ЧУЖОГО ПРОЕКТА-ДОНОРА. Владелец назвал эту
+// модель неверной 2026-08-31: «предполагается что пользователь сделал Fork
+// существующего проекта а потом начал с ним работать уже сразу своим
+// репозитории». Теперь шаг спрашивает адрес ЕГО ФОРКА — то есть репозитория,
+// который уже принадлежит ему.
+//
+// 🔒 РАЗНИЦА НЕ В СЛОВАХ, А В ТОМ, ЧЕЙ РЕПОЗИТОРИЙ. Из донора проект надо было
+// вынимать и отвязывать; из форка — просто взять, потому что он уже свой. Отсюда
+// и исчезли два шага пути: заводить пустой репозиторий и отправлять в него
+// проект больше незачем.
 //
 // 🔒 ТИП БЕРЁТСЯ У ПЕРВОГО ПУТИ, А НЕ ПИШЕТСЯ ЗАНОВО. Анатомия шага одна на оба
 // пути: бейдж, заголовок, лид, подсказки, действие, навигация. Второй тип с теми
@@ -49,16 +60,17 @@ const ru: StepStrings = {
   pageHint: "Путь для проекта, который уже построен на Fractera: слот принимает его вместо шаблона.",
 
   badge: "Шаг первый",
-  title: "Адрес проекта-донора",
-  lead: "Репозиторий, из которого приедет проект. Это может быть чужой публичный проект на Fractera или ваш собственный, лежащий в другом месте.",
+  title: "Форк проекта, который вы будете развивать",
+  lead: "Найдите на GitHub проект на Fractera, который хотите взять за основу, и нажмите на его странице кнопку Fork. Потом назовите здесь адрес получившегося репозитория — вашего.",
   info:
-    "Проект приедет целиком, вместе со своим оформлением и настройками — за ним вы сюда и пришли. От прежнего владельца он будет освобождён: история и связь с его репозиторием отсекаются, и дальше проект ваш.",
+    "Что такое форк. Это ваша собственная копия чужого репозитория, которую GitHub делает одним нажатием. Она сразу лежит в вашей учётной записи, под вашим именем, и вы вправе менять в ней что угодно — исходный проект от этого не меняется. Именно поэтому дальше не понадобится ни заводить пустой репозиторий, ни отправлять туда проект: он уже ваш и уже на месте.",
   important:
-    "Сейчас ничего не заменяется. Этот шаг только запоминает адрес: замена — отдельный шаг, и он предупредит о себе отдельно.",
+    "Назовите адрес ВАШЕГО форка, а не исходного проекта. Отличить просто: в адресе форка стоит ваше имя на GitHub, а не чужое.",
   actionLead: "Что понадобится:",
   bullets: [
-    "Адрес репозитория целиком, вида https://github.com/владелец/проект.",
-    "Право читать его: публичный читается сразу, закрытый — по вашему токену, который спросит следующий шаг.",
+    "Учётная запись на GitHub — форк делается от вашего имени.",
+    "Адрес вашего форка целиком, вида https://github.com/ваше-имя/проект.",
+    "Форк можно сделать приватным: следующий шаг спросит токен, и панель прочитает его по нему.",
   ],
 
   stepOf: "Шаг {n} из {total}",
@@ -67,12 +79,12 @@ const ru: StepStrings = {
   goPrev: "Предыдущий шаг",
   goNext: "Следующий шаг",
   replace: "Заменить адрес",
-  linkLabel: "Открыть GitHub",
+  linkLabel: "Что такое форк",
 
   form: {
-    inputLabel: "Адрес репозитория-донора",
-    inputPlaceholder: "https://github.com/владелец/проект",
-    inputHint: "Полный адрес страницы репозитория. Скопируйте его из адресной строки браузера.",
+    inputLabel: "Адрес вашего форка",
+    inputPlaceholder: "https://github.com/ваше-имя/проект",
+    inputHint: "Откройте свой форк на GitHub и скопируйте адрес из адресной строки браузера.",
     cta: "Сохранить адрес",
     busy: "Сохраняю…",
     successTitle: "Адрес сохранён — шаг {n} из {total} закрыт",
@@ -87,16 +99,17 @@ const en: StepStrings = {
   pageHint: "The way for a project already built on Fractera: the slot takes it in place of the template.",
 
   badge: "Step one",
-  title: "Address of the donor project",
-  lead: "The repository the project will come from. It can be someone else's public Fractera project or your own, living elsewhere.",
+  title: "A fork of the project you will develop",
+  lead: "Find a Fractera project on GitHub you want to build on and press Fork on its page. Then name the address of the repository you get — your own.",
   info:
-    "The project arrives whole, with its look and its settings — that is what you came for. It will be freed from its previous owner: the history and the link to his repository are cut, and from then on the project is yours.",
+    "What a fork is. It is your own copy of someone else's repository, made by GitHub in one press. It sits in your account under your name straight away, and you may change anything in it — the original project is untouched. That is exactly why you will not need to create an empty repository or push the project into it later: it is yours already and already in place.",
   important:
-    "Nothing is replaced yet. This step only remembers the address: the swap is a separate step, and it will warn you on its own.",
+    "Name the address of YOUR fork, not of the original project. Telling them apart is easy: the fork address carries your GitHub name, not someone else's.",
   actionLead: "What you will need:",
   bullets: [
-    "The full repository address, of the form https://github.com/owner/project.",
-    "The right to read it: a public one reads straight away, a private one by your token, which the next step will ask for.",
+    "A GitHub account — the fork is made under your name.",
+    "The full address of your fork, of the form https://github.com/your-name/project.",
+    "The fork may be private: the next step asks for a token, and the panel reads it with that.",
   ],
 
   stepOf: "Step {n} of {total}",
@@ -105,12 +118,12 @@ const en: StepStrings = {
   goPrev: "Previous step",
   goNext: "Next step",
   replace: "Replace the address",
-  linkLabel: "Open GitHub",
+  linkLabel: "What a fork is",
 
   form: {
-    inputLabel: "Donor repository address",
-    inputPlaceholder: "https://github.com/owner/project",
-    inputHint: "The full address of the repository page. Copy it from your browser's address bar.",
+    inputLabel: "Your fork's address",
+    inputPlaceholder: "https://github.com/your-name/project",
+    inputHint: "Open your fork on GitHub and copy the address from your browser's address bar.",
     cta: "Save the address",
     busy: "Saving…",
     successTitle: "Address saved — step {n} of {total} is done",
@@ -150,17 +163,17 @@ const PICKER: Record<string, DonorPickerStrings> = {
     title: "Projects we assembled ourselves",
     promise:
       "Each of these was built by us from this template and checked: it is a whole project, not a demo. Start with one of them if you only want to see how the path works.",
-    pick: "Put this address in the field",
+    pick: "Fork this project",
     ownHint:
-      "Your own address is just as welcome — put any repository in the field below. These are a safe starting point, not a list of what is allowed.",
+      "Any other Fractera project works the same way: fork it on GitHub and put your fork's address in the field below. These are a safe starting point, not a list of what is allowed.",
   },
   ru: {
     title: "Проекты, собранные нами",
     promise:
       "Каждый из них собран нами из этого шаблона и проверен: это целый проект, а не витрина. Начните с одного из них, если хотите просто увидеть, как работает путь.",
-    pick: "Подставить этот адрес",
+    pick: "Сделать форк",
     ownHint:
-      "Свой адрес принимается ровно так же — впишите в поле ниже любой репозиторий. Это безопасное начало, а не перечень допустимого.",
+      "Любой другой проект на Fractera подходит так же: сделайте его форк на GitHub и впишите адрес форка в поле ниже. Это безопасное начало, а не перечень допустимого.",
   },
 };
 

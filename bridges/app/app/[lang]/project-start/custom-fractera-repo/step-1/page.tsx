@@ -27,7 +27,7 @@ import { StepSection } from "../../../_components/launch/step-section";
 import { StepForm } from "../../../_components/launch/step-form.client";
 import { flowDone, flowShown } from "@/lib/launch-flow";
 import { ADOPT_PATH_TOTAL, adoptStepBuilt, adoptStepOneStrings, adoptPickerStrings } from "../_strings";
-import { DONOR_EXAMPLES, exampleNote } from "../_examples";
+import { DONOR_EXAMPLES, exampleNote, forkHref } from "../_examples";
 
 export const dynamic = "force-dynamic";
 
@@ -42,7 +42,13 @@ export default async function CustomFracteraRepoStepOne(
   // 🔒 ЯЗЫК ВЫБИРАЕТСЯ ЗДЕСЬ, НА СЕРВЕРЕ, А В ОСТРОВОК УЕЗЖАЮТ ГОТОВЫЕ СТРОКИ.
   // Отдать islands объект с языками значило бы увезти в браузер словарь — тот же
   // закон, по которому словарь панели серверный.
-  const picks = DONOR_EXAMPLES.map((e) => ({ url: e.url, name: e.name, note: exampleNote(e, lang) }));
+  const picks = DONOR_EXAMPLES.map((e) => ({
+    url: e.url,
+    name: e.name,
+    note: exampleNote(e, lang),
+    // Адрес кнопки Fork считается у источника, а не собирается в разметке.
+    forkHref: forkHref(e),
+  }));
 
   // 🔒 ЗАЩИТА ОТ ПРЫЖКА ВПЕРЁД (35-6). Открыт шаг, у которого закрыты все
   // предыдущие; пройденный остаётся открытым — вернуться человек вправе (28-18).
@@ -93,7 +99,7 @@ export default async function CustomFracteraRepoStepOne(
         doneLabel={x.done}
         // Отметка рисуется от СОХРАНЁННОГО факта, а не от того, что человек
         // побывал на странице.
-        done={flowDone("donor-url")}
+        done={flowDone("fork-url")}
         badge={x.badge}
         title={x.title}
         lead={x.lead}
@@ -115,8 +121,8 @@ export default async function CustomFracteraRepoStepOne(
         <StepForm
           index={1}
           total={ADOPT_PATH_TOTAL}
-          flowStep="donor-url"
-          saved={flowShown("donor-url")}
+          flowStep="fork-url"
+          saved={flowShown("fork-url")}
           // ✗ 🔒 ЭТОГО ЗДЕСЬ НЕ БЫЛО, И ДЫРА БЫЛА ХУЖЕ ОТСУТСТВИЯ КНОПОК (35-10).
           // `StepForm` на закрытом шаге показывает навигацию ВМЕСТО кнопки
           // сохранения, а `StepNav` без единого адреса возвращает `null`. Человек,
