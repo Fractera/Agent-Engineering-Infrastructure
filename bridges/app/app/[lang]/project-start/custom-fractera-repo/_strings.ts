@@ -56,9 +56,20 @@ export type AdoptStepStrings = Omit<StepStrings, "badge">;
  * ПЕРВОГО пути (измерено 75-4: 14 совпадений на пути). Слова хвоста общие, и
  * заголовок приходил вместе с ними. Теперь имя пути своё, а слова шага общие.
  */
-export const ADOPT_PATH_TITLE = "Свой репозиторий Fractera";
-export const ADOPT_PATH_HINT =
-  "Путь для проекта, который уже построен на Fractera: вы делаете форк и работаете в нём.";
+const PATH_NAME: Record<string, { title: string; hint: string }> = {
+  ru: {
+    title: "Свой репозиторий Fractera",
+    hint: "Путь для проекта, который уже построен на Fractera: вы делаете форк и работаете в нём.",
+  },
+  en: {
+    title: "Your own Fractera repository",
+    hint: "The way for a project already built on Fractera: you fork it and work in your fork.",
+  },
+};
+
+export function adoptPathName(lang: string): { title: string; hint: string } {
+  return PATH_NAME[lang] ?? PATH_NAME.en;
+}
 
 export const ADOPT_PATH_TOTAL = 12;
 

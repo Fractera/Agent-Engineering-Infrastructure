@@ -11,7 +11,7 @@
 
 import { adminHref } from "@/lib/admin-nav";
 import { TailStepPage } from "../../_shared/tail-page";
-import { ADOPT_PATH_TOTAL, adoptStepBuilt, ADOPT_PATH_TITLE, ADOPT_PATH_HINT } from "../_strings";
+import { ADOPT_PATH_TOTAL, adoptStepBuilt, adoptPathName } from "../_strings";
 import { adoptLockedFor } from "../_steps";
 
 export const dynamic = "force-dynamic";
@@ -29,8 +29,9 @@ export default async function CustomFracteraRepoStepEight(
       tailIndex={0}
       path={{
         slug: "custom-fractera-repo",
-        pageTitle: ADOPT_PATH_TITLE,
-        pageHint: ADOPT_PATH_HINT,
+        // Имя пути — тоже СЛОВО, значит зависит от языка (75-5).
+        pageTitle: adoptPathName(lang).title,
+        pageHint: adoptPathName(lang).hint,
         base,
         total: ADOPT_PATH_TOTAL,
         isBuilt: adoptStepBuilt,

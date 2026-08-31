@@ -12,7 +12,7 @@
 import { adminHref } from "@/lib/admin-nav";
 import { TailStepPage } from "../../_shared/tail-page";
 import { pathSteps, stepOpen, currentStep } from "../_steps";
-import { pathMapStrings, DEFAULT_TEMPLATE_TOTAL, DEFAULT_TEMPLATE_BUILT, DEFAULT_TEMPLATE_TITLE, DEFAULT_TEMPLATE_HINT } from "../_strings";
+import { pathMapStrings, DEFAULT_TEMPLATE_TOTAL, DEFAULT_TEMPLATE_BUILT, defaultTemplatePathName } from "../_strings";
 
 export const dynamic = "force-dynamic";
 
@@ -35,8 +35,9 @@ export default async function DefaultTemplateStepFive(
       tailIndex={0}
       path={{
         slug: "default-template",
-        pageTitle: DEFAULT_TEMPLATE_TITLE,
-        pageHint: DEFAULT_TEMPLATE_HINT,
+        // Имя пути — тоже СЛОВО, значит зависит от языка (75-5).
+        pageTitle: defaultTemplatePathName(lang).title,
+        pageHint: defaultTemplatePathName(lang).hint,
         base,
         total: DEFAULT_TEMPLATE_TOTAL,
         isBuilt: (k) => k >= 1 && k <= DEFAULT_TEMPLATE_BUILT,
