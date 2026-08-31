@@ -98,7 +98,10 @@ export async function GET(req: NextRequest) {
   const { execFileSync } = await import("child_process");
   const git = (args: string[]): string => {
     try {
-      return execFileSync("git", ["-C", SLOT_DIR, ...args], {
+      // `safe.directory` обязателен: слот принадлежит несуществующему UID, и без
+      // исключения git отказывает — а отказ здесь ловится и выглядит как пустой
+      // ответ. Измерено на сервере 35-2: без него `detached` врал «false».
+      return execFileSync("git", ["-c", `safe.directory=${SLOT_DIR}`, "-C", SLOT_DIR, ...args], {
         encoding: "utf8", timeout: 10_000,
       }).toString().trim();
     } catch { return ""; }

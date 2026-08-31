@@ -77,6 +77,27 @@ function git(args: string[], cwd?: string): string {
   }).toString();
 }
 
+/**
+ * Git ВНУТРИ слота — всегда через это, и никогда напрямую.
+ *
+ * ✗ 🔒 ОПЛАЧЕНО ЗАМЕРОМ 35-2 НА ЖИВОМ СЕРВЕРЕ. `/opt/fractera/app` принадлежит
+ * `UNKNOWN:UNKNOWN` — UID, которого на машине нет: слот приезжает распаковкой, и
+ * владелец файлов не совпадает ни с кем. Git такой каталог считает чужим и
+ * отказывает: «fatal: detected dubious ownership in repository». Панель ходит
+ * туда от root и ловит ошибку молча — поэтому дверь `adopt` годами отдавала
+ * пустой `slotRemote`, и выглядело это как «remote не настроен», а не как отказ.
+ *
+ * 🔒 Отвязке это стоило бы всего: `.git` донора снесён, `git add` отказал —
+ * и слот остался бы ВООБЩЕ без репозитория. Локальный прогон такого не ловит:
+ * там папку создаёт тот же пользователь, что запускает тест.
+ *
+ * Исключение даётся ТОЧНЫМ путём, а не `*`: право «доверять любому каталогу»
+ * стоит дороже, чем оно здесь нужно.
+ */
+function gitIn(root: string, args: string[]): string {
+  return git(["-c", `safe.directory=${root}`, "-C", root, ...args]);
+}
+
 /** Адрес со встроенным токеном — только для команды, никогда в ответ и никогда в лог. */
 function authUrl(repoUrl: string, token: string): string {
   if (!token) return repoUrl;
@@ -218,10 +239,10 @@ export function detachSlotHistory(root: string, opts: { message?: string } = {})
     }
 
     fs.rmSync(path.join(root, ".git"), { recursive: true, force: true });
-    git(["init", "-q"], root);
+    gitIn(root, ["init", "-q"]);
     // `symbolic-ref`, а не `branch -M`: ветку переименовывать не в чем, пока нет
     // ни одного коммита. Тот же порядок, что в `bootstrap.sh`.
-    git(["symbolic-ref", "HEAD", "refs/heads/main"], root);
+    gitIn(root, ["symbolic-ref", "HEAD", "refs/heads/main"]);
 
     // Две машинные вещи, которые не принадлежат проекту человека и потому не
     // едут в его `.gitignore`: `.gitkeep` — способ ai-workspace хранить пустой
@@ -242,15 +263,12 @@ export function detachSlotHistory(root: string, opts: { message?: string } = {})
       }
     }
 
-    git(["add", "-A"], root);
-    git(
-      [
-        "-c", "user.email=admin@fractera.ai",
-        "-c", "user.name=Fractera Admin",
-        "commit", "-q", "-m", opts.message ?? "Fractera slot: project baseline",
-      ],
-      root,
-    );
+    gitIn(root, ["add", "-A"]);
+    gitIn(root, [
+      "-c", "user.email=admin@fractera.ai",
+      "-c", "user.name=Fractera Admin",
+      "commit", "-q", "-m", opts.message ?? "Fractera slot: project baseline",
+    ]);
   } catch (e) {
     // Файлы проекта на месте — упала только история. Говорим об этом прямо:
     // «отвязка не удалась» и «проекта нет» — разные беды, и лечатся по-разному.
@@ -258,7 +276,7 @@ export function detachSlotHistory(root: string, opts: { message?: string } = {})
   }
 
   const head = (() => {
-    try { return git(["rev-parse", "--short", "HEAD"], root).trim(); } catch { return "unknown"; }
+    try { return gitIn(root, ["rev-parse", "--short", "HEAD"]).trim(); } catch { return "unknown"; }
   })();
 
   return { ok: true, head };
