@@ -570,6 +570,12 @@ export type AdminStrings = {
     ruleTitle: string; rule: string;
     conflictTitle: string; conflict: string;
     seeAlso: string;
+    // Слова кнопок и тостов раздела «GitHub команды» (28-12, 2026-08-31): карточки
+    // перестали быть описаниями и стали действиями.
+    runPush: string; runPull: string; runDeploy: string; running: string;
+    confirm: string; confirmHint: string;
+    okPush: string; okPull: string; okDeploy: string; okHint: string;
+    failTitle: string; failHint: string;
   };
   env: {
     warning: string; unavailable: string;

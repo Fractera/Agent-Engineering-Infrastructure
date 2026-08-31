@@ -26,6 +26,9 @@ import { getAdminStrings } from "@/lib/i18n/admin-strings";
 import { adminHref } from "@/lib/admin-nav";
 import { PageShell } from "../../../_components/page-shell";
 import { StepSection } from "../../../_components/launch/step-section";
+import { pathSteps, stepOpen, currentStep } from "../_steps";
+import { pathMapStrings } from "../_strings";
+import { StepLocked } from "../../../_components/launch/step-locked";
 import { StepCheck } from "../../../_components/launch/step-check.client";
 import { StepNav } from "../../../_components/launch/step-nav";
 import { StepGrabButton, StepCopyBlock } from "../../../_components/launch/step-grab.client";
@@ -42,6 +45,36 @@ export default async function DefaultTemplateStepEight(
   const { lang } = await params;
   const s = getAdminStrings(lang);
   const x = stepEightStrings(lang);
+
+  // 🔒 ЗАЩИТА ОТ ПРЫЖКА ВПЕРЁД (28-13). Открыт шаг, у которого закрыты все
+  // предыдущие. Пройденный шаг остаётся открытым: вернуться и заменить значение
+  // человек вправе (28-18), и запертая дорога назад превратила бы путь в допрос.
+  const flowSteps = pathSteps(lang);
+  if (!stepOpen(flowSteps, 8)) {
+    const back = currentStep(flowSteps);
+    const m = pathMapStrings(lang);
+    const backN = back ? back.n : 1;
+    return (
+      <PageShell
+        lang={lang}
+        slug="project-start"
+        s={s}
+        tail={[
+          { label: "default-template", href: `${adminHref(lang, "project-start")}/default-template` },
+          { label: "step-8" },
+        ]}
+        title={x.pageTitle}
+        hint={x.pageHint}
+      >
+        <StepLocked
+          title={x.title}
+          message={m.lockedMessage.replace("{n}", String(backN))}
+          backHref={`${adminHref(lang, "project-start")}/default-template/step-${backN}`}
+          backLabel={m.lockedBack.replace("{n}", String(backN))}
+        />
+      </PageShell>
+    );
+  }
   // 🔒 ОТМЕТКА ОСТАЁТСЯ `local-run` И ПЕРЕИМЕНОВАНИЮ НЕ ПОДЛЕЖИТ: у тех, кто уже
   // прошёл прежний восьмой шаг, она проставлена в окружении слота, и смена имени
   // погасила бы пройденное. Девятому шагу даётся СВОЯ отметка (28-30).

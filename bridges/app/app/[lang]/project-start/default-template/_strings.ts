@@ -268,6 +268,50 @@ export function stepTwoStrings(lang: string): StepStrings {
  * человеку на десятом шаге ещё шесть впереди — счётчик, который врёт о длине
  * дороги, хуже отсутствующего: по нему меряют, сколько сил осталось потратить.
  */
+
+// ── СЛОВА КАРТЫ ПУТИ И ЗАКРЫТОГО ШАГА (28-13, 2026-08-31) ──────────────────
+//
+// 🔒 ЗДЕСЬ, А НЕ В СЛОВАРЕ ПАНЕЛИ, ПО ТОЙ ЖЕ ПРИЧИНЕ, ЧТО И ОСТАЛЬНЫЕ СЛОВА ПУТИ:
+// текст пути ещё меняется, а заезжать в `admin-translations.json` строка обязана
+// тогда, когда устоялась, — иначе восемьдесят переводов делаются дважды.
+export type PathMapStrings = {
+  lead: string;
+  stepWord: string;
+  doneWord: string;
+  continueLabel: string;
+  startLabel: string;
+  allDone: string;
+  lockedBack: string;
+  /** Фраза заглушки. `{n}` — номер шага, на который надо вернуться. */
+  lockedMessage: string;
+};
+
+const ruMap: PathMapStrings = {
+  lead: "Одиннадцать шагов. Открыт следующий незакрытый — остальные ждут своей очереди.",
+  stepWord: "Шаг",
+  doneWord: "закрыт",
+  continueLabel: "Продолжить",
+  startLabel: "Начать с первого шага",
+  allDone: "Все построенные шаги закрыты.",
+  lockedBack: "Вернуться к шагу {n}",
+  lockedMessage: "До этого шага вы ещё не добрались. Вернитесь на шаг {n} и завершите его, чтобы продолжить.",
+};
+
+const enMap: PathMapStrings = {
+  lead: "Eleven steps. The next unfinished one is open; the rest wait their turn.",
+  stepWord: "Step",
+  doneWord: "done",
+  continueLabel: "Continue",
+  startLabel: "Start from step one",
+  allDone: "Every built step is done.",
+  lockedBack: "Back to step {n}",
+  lockedMessage: "You have not reached this step yet. Go back to step {n} and finish it to continue.",
+};
+
+export function pathMapStrings(lang: string): PathMapStrings {
+  return lang === "ru" ? ruMap : enMap;
+}
+
 export const DEFAULT_TEMPLATE_TOTAL = 11;
 
 /**

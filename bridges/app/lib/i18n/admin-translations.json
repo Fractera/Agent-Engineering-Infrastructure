@@ -849,6 +849,18 @@
       "adoptReplaceCta": "Replace the slot with this project"
     },
     "githubAbout": {
+      "runPush": "Send",
+      "runPull": "Fetch",
+      "runDeploy": "Build",
+      "running": "Working…",
+      "confirm": "Press again to confirm",
+      "confirmHint": "Fetching overwrites what is on this server with what is in the repository.",
+      "okPush": "Sent to GitHub",
+      "okPull": "Fetched from GitHub",
+      "okDeploy": "Build started",
+      "okHint": "Open the deployments page to watch it.",
+      "failTitle": "Did not work",
+      "failHint": "Check the repository address and the access token on the connection page.",
       "intro": "Three buttons move your project between three places: this server, your repository on GitHub, and the live application your visitors see. Here is what each one does and in which direction.",
       "pushTitle": "Push — from this server to GitHub",
       "pushBody": "Sends what exists here to the repository. Used once at the start, to fill an empty repository with the starting point, and afterwards only when work was done in the panel itself.",
@@ -1527,7 +1539,7 @@
         "hint": "From an empty repository to your first change, live at your own address."
       },
       "github-about": {
-        "title": "About GitHub",
+        "title": "GitHub commands",
         "hint": "What the connection gives you and what each button does."
       },
       "deployments": {
@@ -4321,6 +4333,18 @@
       "adoptReplaceCta": "Заменить слот этим проектом"
     },
     "githubAbout": {
+      "runPush": "Отправить",
+      "runPull": "Забрать",
+      "runDeploy": "Собрать",
+      "running": "Работаю…",
+      "confirm": "Нажмите ещё раз для подтверждения",
+      "confirmHint": "«Забрать» заменит то, что лежит на этом сервере, тем, что лежит в репозитории.",
+      "okPush": "Отправлено в GitHub",
+      "okPull": "Забрано из GitHub",
+      "okDeploy": "Сборка запущена",
+      "okHint": "За ходом можно следить на странице развёртываний.",
+      "failTitle": "Не получилось",
+      "failHint": "Проверьте адрес репозитория и токен доступа на странице подключения.",
       "intro": "Три кнопки перемещают ваш проект между тремя местами: этим сервером, вашим репозиторием на GitHub и работающим приложением, которое видят посетители. Вот что делает каждая и в какую сторону.",
       "pushTitle": "Отправить — с этого сервера в GitHub",
       "pushBody": "Отправляет в репозиторий то, что есть здесь. Используется один раз в начале, чтобы наполнить пустой репозиторий отправной точкой, а дальше — только когда работа шла в самой панели.",
@@ -4999,7 +5023,7 @@
         "hint": "От пустого репозитория до первого изменения, увиденного на вашем собственном адресе."
       },
       "github-about": {
-        "title": "О GitHub",
+        "title": "GitHub команды",
         "hint": "Что даёт подключение и что делает каждая кнопка."
       },
       "deployments": {

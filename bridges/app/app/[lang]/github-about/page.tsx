@@ -13,6 +13,8 @@ import { ArrowUpFromLine, ArrowDownToLine, Rocket } from "lucide-react";
 import { getAdminStrings } from "@/lib/i18n/admin-strings";
 import { adminHref } from "@/lib/admin-nav";
 import { PageShell } from "../_components/page-shell";
+import { CommandCard } from "../_components/launch/command-card";
+import { CommandButton, type CommandId } from "./_components/commands.client";
 
 // 🔒 ДИНАМИЧЕСКАЯ НЕ РАДИ САМОЙ СТРАНИЦЫ, А РАДИ ШАПКИ (2026-08-11).
 // Шапка живёт в общем макете и считает ЖИВОЕ состояние: область предупреждений,
@@ -29,10 +31,13 @@ export default async function GitHubAboutPage({ params }: { params: Promise<{ la
   const s = getAdminStrings(lang);
   const a = s.githubAbout;
 
-  const buttons = [
-    { icon: ArrowUpFromLine, title: a.pushTitle, body: a.pushBody },
-    { icon: ArrowDownToLine, title: a.pullTitle, body: a.pullBody },
-    { icon: Rocket, title: a.deployTitle, body: a.deployBody },
+  // Три команды, и каждая называет СВОЮ дверь через островок. Порядок тот же,
+  // что был у описаний: отправить → забрать → собрать, то есть в сторону GitHub,
+  // из GitHub и внутри сервера.
+  const commands: { id: CommandId; icon: typeof ArrowUpFromLine; title: string; body: string; run: string; okTitle: string }[] = [
+    { id: "push", icon: ArrowUpFromLine, title: a.pushTitle, body: a.pushBody, run: a.runPush, okTitle: a.okPush },
+    { id: "pull", icon: ArrowDownToLine, title: a.pullTitle, body: a.pullBody, run: a.runPull, okTitle: a.okPull },
+    { id: "deploy", icon: Rocket, title: a.deployTitle, body: a.deployBody, run: a.runDeploy, okTitle: a.okDeploy },
   ];
 
   return (
@@ -40,13 +45,28 @@ export default async function GitHubAboutPage({ params }: { params: Promise<{ la
       <p className="text-[12px] leading-relaxed text-muted-foreground">{a.intro}</p>
 
       <div className="mt-3 space-y-2">
-        {buttons.map(({ icon: Icon, title, body }) => (
-          <div key={title} className="rounded-lg border border-border p-3">
-            <p className="flex items-center gap-1.5 text-[11px] font-medium text-foreground">
-              <Icon size={12} className="text-muted-foreground" />{title}
-            </p>
-            <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">{body}</p>
-          </div>
+        {commands.map((c) => (
+          <CommandCard
+            key={c.id}
+            icon={c.icon}
+            title={c.title}
+            body={c.body}
+            action={
+              <CommandButton
+                id={c.id}
+                labels={{
+                  run: c.run,
+                  running: a.running,
+                  confirm: a.confirm,
+                  confirmHint: a.confirmHint,
+                  okTitle: c.okTitle,
+                  okHint: a.okHint,
+                  failTitle: a.failTitle,
+                  failHint: a.failHint,
+                }}
+              />
+            }
+          />
         ))}
       </div>
 

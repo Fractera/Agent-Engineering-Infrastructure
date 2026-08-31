@@ -24,6 +24,9 @@ import { getAdminStrings } from "@/lib/i18n/admin-strings";
 import { adminHref } from "@/lib/admin-nav";
 import { PageShell } from "../../../_components/page-shell";
 import { StepSection } from "../../../_components/launch/step-section";
+import { pathSteps, stepOpen, currentStep } from "../_steps";
+import { pathMapStrings } from "../_strings";
+import { StepLocked } from "../../../_components/launch/step-locked";
 import { StepForm } from "../../../_components/launch/step-form.client";
 import { flowShown, flowDone } from "@/lib/launch-flow";
 import { stepOneStrings, DEFAULT_TEMPLATE_TOTAL, DEFAULT_TEMPLATE_BUILT } from "../_strings";
@@ -36,6 +39,36 @@ export default async function DefaultTemplateStepOne(
   const { lang } = await params;
   const s = getAdminStrings(lang);
   const x = stepOneStrings(lang);
+
+  // 🔒 ЗАЩИТА ОТ ПРЫЖКА ВПЕРЁД (28-13). Открыт шаг, у которого закрыты все
+  // предыдущие. Пройденный шаг остаётся открытым: вернуться и заменить значение
+  // человек вправе (28-18), и запертая дорога назад превратила бы путь в допрос.
+  const flowSteps = pathSteps(lang);
+  if (!stepOpen(flowSteps, 1)) {
+    const back = currentStep(flowSteps);
+    const m = pathMapStrings(lang);
+    const backN = back ? back.n : 1;
+    return (
+      <PageShell
+        lang={lang}
+        slug="project-start"
+        s={s}
+        tail={[
+          { label: "default-template", href: `${adminHref(lang, "project-start")}/default-template` },
+          { label: "step-1" },
+        ]}
+        title={x.pageTitle}
+        hint={x.pageHint}
+      >
+        <StepLocked
+          title={x.title}
+          message={m.lockedMessage.replace("{n}", String(backN))}
+          backHref={`${adminHref(lang, "project-start")}/default-template/step-${backN}`}
+          backLabel={m.lockedBack.replace("{n}", String(backN))}
+        />
+      </PageShell>
+    );
+  }
 
   return (
     <PageShell
