@@ -10,7 +10,7 @@ import { stepSevenStrings } from "../_shared/_step7";
 import { stepEightStrings } from "../_shared/_step8";
 import { stepNineStrings } from "../_shared/_step9";
 import { stepTenStrings } from "./_step10";
-import { stepElevenStrings } from "./_step11";
+import { stepElevenStrings } from "../_shared/_step11";
 
 // ЕДИНСТВЕННОЕ ПЕРЕЧИСЛЕНИЕ ШАГОВ ПУТИ (28-13, 2026-08-31).
 //

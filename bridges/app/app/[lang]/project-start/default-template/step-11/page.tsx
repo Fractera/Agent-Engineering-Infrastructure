@@ -25,7 +25,7 @@ import { StepCopyBlock } from "../../../_components/launch/step-grab.client";
 import { Small } from "@/components/ui/typography";
 import { flowMarked } from "@/lib/launch-flow";
 import { DEFAULT_TEMPLATE_TOTAL, DEFAULT_TEMPLATE_BUILT } from "../_strings";
-import { stepElevenStrings } from "../_step11";
+import { stepElevenStrings } from "../../_shared/_step11";
 
 export const dynamic = "force-dynamic";
 
