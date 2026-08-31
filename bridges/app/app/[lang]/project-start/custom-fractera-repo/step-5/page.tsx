@@ -1,4 +1,4 @@
-// ШАГ 4 ВТОРОГО ПУТИ (35-6, 2026-08-31).
+// ШАГ 6 ВТОРОГО ПУТИ (35-6, 2026-08-31).
 //
 // 🔒 МЕХАНИКА ВЗЯТА У ПЕРВОГО ПУТИ ЦЕЛИКОМ: та же форма, та же дверь, тот же
 // островок. Отличаются СОСТОЯНИЕ (свои ключи) и СЛОВА. Второй экземпляр этой
@@ -10,21 +10,25 @@ import { PageShell } from "../../../_components/page-shell";
 import { StepLocked } from "../../../_components/launch/step-locked";
 import { adoptLockedFor } from "../_steps";
 import { StepSection } from "../../../_components/launch/step-section";
-import { StepForm } from "../../../_components/launch/step-form.client";
-import { StepLink } from "../../../_components/launch/step-link";
-import { flowDone, flowShown } from "@/lib/launch-flow";
+import { VerifyStep } from "../../../_components/launch/verify-step.client";
+import { StepNav } from "../../../_components/launch/step-nav";
+import { flowVerified } from "@/lib/launch-flow";
 import { ADOPT_PATH_TOTAL, adoptStepBuilt, stepBadge } from "../_strings";
-import { adoptOwnRepoStrings } from "../_own-repo";
+import { adoptVerifyStrings } from "../_verify";
 
 export const dynamic = "force-dynamic";
 
-export default async function CustomFracteraRepoStepFour(
+// 🔒 Отметка ГАСНЕТ при смене адреса или токена: проверено было ТО, что стояло в
+// ту минуту.
+
+export default async function CustomFracteraRepoStepSix(
   { params }: { params: Promise<{ lang: string }> },
 ) {
   const { lang } = await params;
   const s = getAdminStrings(lang);
-  const x = adoptOwnRepoStrings(lang);
+  const x = adoptVerifyStrings(lang);
   const base = `${adminHref(lang, "project-start")}/custom-fractera-repo`;
+  const done = flowVerified("adopt");
 
   // 🔒 ЗАЩИТА ОТ ПРЫЖКА ВПЕРЁД (35-6). Открыт шаг, у которого закрыты все
   // предыдущие; пройденный остаётся открытым — вернуться человек вправе (28-18).
@@ -68,7 +72,7 @@ export default async function CustomFracteraRepoStepFour(
         total={ADOPT_PATH_TOTAL}
         stepOfTemplate={x.stepOf}
         doneLabel={x.done}
-        done={flowDone("adopt-repo-url")}
+        done={done}
         badge={stepBadge(lang, 5)}
         title={x.title}
         lead={x.lead}
@@ -76,33 +80,31 @@ export default async function CustomFracteraRepoStepFour(
         important={x.important}
         actionLead={x.actionLead}
         bullets={x.bullets}
-        link={{ href: "https://github.com/new", label: x.linkLabel }}
         stepHref={(k) => (adoptStepBuilt(k) ? `${base}/step-${k}` : undefined)}
       >
-        {/* Островку — только его слова, перечисленные поимённо. */}
-        <StepForm
-          index={5}
-          total={ADOPT_PATH_TOTAL}
-          flowStep="adopt-repo-url"
-          saved={flowShown("adopt-repo-url")}
-          secret={false}
-          prevHref={adoptStepBuilt(5) ? `${base}/step-5` : undefined}
-          nextHref={adoptStepBuilt(6) ? `${base}/step-6` : undefined}
-          labels={{
-            inputLabel: x.form.inputLabel,
-            inputPlaceholder: x.form.inputPlaceholder,
-            inputHint: x.form.inputHint,
-            cta: x.form.cta,
-            busy: x.form.busy,
-            successTitle: x.form.successTitle,
-            successHint: x.form.successHint,
-            failureTitle: x.form.failureTitle,
-            failureFix: x.form.failureFix,
-            goPrev: x.goPrev,
-            goNext: x.goNext,
-            replace: x.replace,
-          }}
-        />
+        {done ? (
+          <StepNav
+            prevHref={adoptStepBuilt(4) ? `${base}/step-4` : undefined}
+            nextHref={adoptStepBuilt(6) ? `${base}/step-6` : undefined}
+            labels={{ goPrev: x.goPrev, goNext: x.goNext }}
+          />
+        ) : (
+          <VerifyStep
+            endpoint="/api/config/launch-flow/verify"
+            // 🔒 Путь называется явно: механика двери одна, а пара «адрес и
+            // токен», о которой спрашивают, у каждого пути своя.
+            payload={{ path: "adopt" }}
+            labels={{
+              cta: x.cta,
+              busy: x.busy,
+              successTitle: x.successTitle,
+              successHint: x.successHint,
+              failureTitle: x.failureTitle,
+              reasons: x.reasons,
+              reasonUnknown: x.reasonUnknown,
+            }}
+          />
+        )}
       </StepSection>
     </PageShell>
   );

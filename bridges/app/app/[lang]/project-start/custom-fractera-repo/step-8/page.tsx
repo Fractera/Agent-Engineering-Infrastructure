@@ -1,6 +1,6 @@
-// ШАГ 8 ВТОРОГО ПУТИ — ОБЩИЙ ХВОСТ (35-5, 2026-08-31).
+// ШАГ 10 ВТОРОГО ПУТИ — ОБЩИЙ ХВОСТ (35-5, 2026-08-31).
 //
-// 🔒 ТЕ ЖЕ СЛОВА, ЧТО НА ШАГЕ 5 ПЕРВОГО ПУТИ, И ЭТО НЕ КОПИЯ. Обе страницы
+// 🔒 ТЕ ЖЕ СЛОВА, ЧТО НА ШАГЕ 7 ПЕРВОГО ПУТИ, И ЭТО НЕ КОПИЯ. Обе страницы
 // зовут один и тот же `TailStepPage` с одним и тем же `tailIndex`; отличаются
 // только номер и знаменатель шкалы. Правка текста доезжает до обоих путей сразу
 // или не доезжает ни до одного — третьего исхода нет.
@@ -16,7 +16,7 @@ import { adoptLockedFor } from "../_steps";
 
 export const dynamic = "force-dynamic";
 
-export default async function CustomFracteraRepoStepEight(
+export default async function CustomFracteraRepoStepTen(
   { params }: { params: Promise<{ lang: string }> },
 ) {
   const { lang } = await params;
@@ -26,7 +26,7 @@ export default async function CustomFracteraRepoStepEight(
     <TailStepPage
       lang={lang}
       index={8}
-      tailIndex={0}
+      tailIndex={2}
       path={{
         slug: "custom-fractera-repo",
         base,
