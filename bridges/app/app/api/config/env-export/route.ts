@@ -37,6 +37,30 @@ const EXCLUDE_KEYS = new Set([
   "FRACTERA_SSH_KEY_B64",
 ])
 
+/**
+ * Отметка прохождения пути запуска — то, что помнит ПАНЕЛЬ, а не то, что нужно
+ * ПРОЕКТУ.
+ *
+ * ✗ 🔒 ОНИ УЕЗЖАЛИ ЧЕЛОВЕКУ В ФАЙЛ (найдено проверкой 2026-08-31, 75-9).
+ * `USER_FLOW_ADOPTED_AT`, `USER_FLOW_MARK_CLAUDE_CODE_AT`,
+ * `USER_FLOW_MARK_FOLDER_AT`, `USER_FLOW_ADOPT_VERIFIED_AT` — шесть строк о том,
+ * какие галочки он поставил в панели. Они оседали в его `.env.local` навсегда и
+ * сбивали агента, который читает файл и ищет, что из этого нужно проекту.
+ *
+ * 🔒 ГРАНИЦА: В ФАЙЛ ЕДЕТ ТО, ЧТО НУЖНО ПРОЕКТУ, А НЕ ТО, ЧТО ПОМНИТ ПАНЕЛЬ.
+ * Адрес репозитория и токен нужны — ими клонируют, и они остаются. Время, когда
+ * человек нажал галочку, не нужно никому за пределами панели.
+ *
+ * 🔒 ПРАВИЛО, А НЕ СПИСОК КЛЮЧЕЙ. Список разошёлся бы с состоянием на первом же
+ * новом шаге — и разошёлся бы молча, выпустив наружу отметку, которой вчера не
+ * существовало. Признак отметки объективен: она либо `..._AT` (время события),
+ * либо `USER_FLOW_MARK_...` (галочка человека).
+ */
+function isFlowMark(key: string): boolean {
+  if (!key.startsWith("USER_FLOW_")) return false;
+  return key.endsWith("_AT") || key.startsWith("USER_FLOW_MARK_");
+}
+
 function readAllVars(file: string): Record<string, string> {
   try {
     const content = fs.existsSync(file) ? fs.readFileSync(file, "utf-8") : ""
@@ -163,7 +187,7 @@ export async function GET(req: NextRequest) {
   }
 
   // Append all remaining custom vars from app/.env.local
-  const customEntries = Object.entries(appVars).filter(([k]) => !EXCLUDE_KEYS.has(k))
+  const customEntries = Object.entries(appVars).filter(([k]) => !EXCLUDE_KEYS.has(k) && !isFlowMark(k))
   if (customEntries.length > 0) {
     lines.push(`# --- All other server env vars ---`)
     for (const [k, v] of customEntries) {
