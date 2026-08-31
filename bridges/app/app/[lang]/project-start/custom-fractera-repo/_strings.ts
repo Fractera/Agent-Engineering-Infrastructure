@@ -33,7 +33,7 @@ export const ADOPT_PATH_TOTAL = 14;
  * задуманное, а ссылками делает только построенное. ✗ оплачено 2026-08-27
  * нажатием на отрезок, уводившим на несуществующий шаг.
  */
-export const ADOPT_PATH_BUILT = 2;
+export const ADOPT_PATH_BUILT = 3;
 
 const ru: StepStrings = {
   pageTitle: "Свой репозиторий Fractera",
