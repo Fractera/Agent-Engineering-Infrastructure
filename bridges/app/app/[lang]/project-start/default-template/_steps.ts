@@ -10,6 +10,7 @@ import { stepSevenStrings } from "./_step7";
 import { stepEightStrings } from "./_step8";
 import { stepNineStrings } from "./_step9";
 import { stepTenStrings } from "./_step10";
+import { stepElevenStrings } from "./_step11";
 
 // ЕДИНСТВЕННОЕ ПЕРЕЧИСЛЕНИЕ ШАГОВ ПУТИ (28-13, 2026-08-31).
 //
@@ -54,6 +55,8 @@ export function pathSteps(lang: string): PathStep[] {
     { n: 8, slug: "step-8", title: stepEightStrings(lang).title, done: flowMarked("local-run") },
     { n: 9, slug: "step-9", title: stepNineStrings(lang).title, done: flowMarked("project-seen") },
     { n: 10, slug: "step-10", title: stepTenStrings(lang).title, done: flowMarked("deployed-seen") },
+    // 11: прощание. Своя отметка, не заимствованная у десятого.
+    { n: 11, slug: "step-11", title: stepElevenStrings(lang).title, done: flowMarked("path-finished") },
   ];
 
   // 🔒 КАРТА ПОКАЗЫВАЕТ ТО, ЧТО ПОСТРОЕНО, А НЕ ТО, ЧТО ЗАДУМАНО. Ссылка на
