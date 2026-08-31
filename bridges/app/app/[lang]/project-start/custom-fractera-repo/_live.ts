@@ -53,11 +53,11 @@ export type LiveStrings = {
  */
 export function whatYourAddressMeans(lang: string, siteUrl: string | null): string {
   const ru = siteUrl
-    ? `Этот адрес — ${siteUrl} — принадлежит вашему серверу, а не нам и не прежнему владельцу проекта. По нему теперь отдаётся то, что приехало из репозитория-донора: панель заменила содержимое слота и собрала проект заново. Проект приехал из вашего форка, и связь с ним сохранена — сервер знает, откуда брать обновления. Всё, что вы дальше измените в проекте, будет видно здесь же.`
-    : `Адрес, по которому открывается ваш проект, принадлежит вашему серверу, а не нам и не прежнему владельцу проекта. По нему теперь отдаётся то, что приехало из репозитория-донора: панель заменила содержимое слота и собрала проект заново. Проект приехал из вашего форка, и связь с ним сохранена — сервер знает, откуда брать обновления. Сейчас сервер своего внешнего адреса не знает: домен ему ещё не назначен, и назвать вам адрес наугад мы не станем.`;
+    ? `Этот адрес — ${siteUrl} — принадлежит вашему серверу, а не нам. По нему теперь отдаётся ваш форк: панель скачала его, заменила содержимое слота и собрала проект заново. Связь с форком сохранена — сервер знает, откуда брать обновления, а вы вправе менять в нём что угодно. Всё, что вы дальше измените, будет видно здесь же.`
+    : `Адрес, по которому открывается ваш проект, принадлежит вашему серверу, а не нам. По нему теперь отдаётся ваш форк: панель скачала его, заменила содержимое слота и собрала проект заново. Связь с форком сохранена — сервер знает, откуда брать обновления. Сейчас сервер своего внешнего адреса не знает: домен ему ещё не назначен, и назвать вам адрес наугад мы не станем.`;
   const en = siteUrl
-    ? `This address — ${siteUrl} — belongs to your server, not to us and not to the project's previous owner. It now serves what arrived from the donor repository: the panel replaced the slot's contents and built the project anew. The project came from your fork, and the link to it is kept — the server knows where to take updates from. Everything you change in the project from now on will show up right here.`
-    : `The address your project opens at belongs to your server, not to us and not to the project's previous owner. It now serves what arrived from the donor repository: the panel replaced the slot's contents and built the project anew. The project came from your fork, and the link to it is kept — the server knows where to take updates from. Right now the server does not know its own outside address: no domain has been assigned to it yet, and we will not guess one for you.`;
+    ? `This address — ${siteUrl} — belongs to your server, not to us. It now serves your fork: the panel downloaded it, replaced the slot's contents and built the project anew. The link to the fork is kept — the server knows where to take updates from, and you may change anything in it. Everything you change from now on will show up right here.`
+    : `The address your project opens at belongs to your server, not to us. It now serves your fork: the panel downloaded it, replaced the slot's contents and built the project anew. The link to the fork is kept — the server knows where to take updates from. Right now the server does not know its own outside address: no domain has been assigned to it yet, and we will not guess one for you.`;
   return lang === "ru" ? ru : en;
 }
 
@@ -67,12 +67,12 @@ const ru: LiveStrings = {
 
   title: "Откройте свой адрес и посмотрите",
   lead:
-    "Замена прошла, сборка закончилась. Теперь по адресу вашего сервера отдаётся проект донора — откройте его и убедитесь, что это именно то, что вы выбирали.",
+    "Замена прошла, сборка закончилась. Теперь по адресу вашего сервера отдаётся проект из вашего форка — откройте его и убедитесь, что это именно то, что вы выбирали.",
   important:
     "Эту отметку ставите вы, а не панель: у неё нет глаз на вашем браузере. Отметка снимается — если позже окажется, что открылось не то, вернитесь сюда и снимите её.",
   actionLead: "На что стоит посмотреть:",
   bullets: [
-    "Открывается ли главная страница, и та ли это страница, что была у донора.",
+    "Открывается ли главная страница, и та ли это страница, что была в форкнутом проекте.",
     "Работают ли переходы по разделам — проект приехал целиком, а не одной страницей.",
     "Ваши настройки на месте: файл .env.local замену пережил, а с ним ключи слоя данных.",
   ],
@@ -100,12 +100,12 @@ const en: LiveStrings = {
 
   title: "Open your address and look",
   lead:
-    "The replacement went through, the build has finished. Your server's address now serves the donor's project — open it and make sure it is exactly what you chose.",
+    "The replacement went through, the build has finished. Your server's address now serves the project from your fork — open it and make sure it is exactly what you chose.",
   important:
     "You place this mark, not the panel: it has no eyes on your browser. The mark can be removed — if it later turns out the wrong thing opened, come back here and take it off.",
   actionLead: "What is worth looking at:",
   bullets: [
-    "Whether the home page opens, and whether it is the page the donor had.",
+    "Whether the home page opens, and whether it is the page the forked project had.",
     "Whether moving between sections works — the project arrived whole, not as a single page.",
     "Your settings are in place: the .env.local file survived the swap, and the data-layer keys with it.",
   ],

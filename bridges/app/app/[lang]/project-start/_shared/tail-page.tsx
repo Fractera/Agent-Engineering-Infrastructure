@@ -44,6 +44,20 @@ export type TailLocked = {
 export type TailPathConfig = {
   /** Папка пути: `default-template` или `custom-fractera-repo`. */
   slug: string;
+  /**
+   * Как называется САМ ПУТЬ. Заголовок страницы и подзаголовок.
+   *
+   * ✗ 🔒 БРАЛОСЬ ИЗ ОБЩИХ СЛОВ, И ЭТО БЫЛ ДЕФЕКТ (найден замером 75-4, исправлен
+   * 75-5). Слова хвоста общие с первым путём, и `pageTitle` в них — «Стартовый
+   * шаблон». Человек, идущий путём форка, читал в заголовке имя ЧУЖОГО пути на
+   * шести шагах из двенадцати.
+   *
+   * 🔒 ГРАНИЦА ТА ЖЕ, ЧТО У ПРОЩАНИЯ (35-8): общими бывают слова ШАГА — что
+   * делать, чем закрыть, снимок, ссылка; своим у каждого пути остаётся то, что
+   * отвечает на вопрос «где я нахожусь». Имя пути отвечает именно на него.
+   */
+  pageTitle: string;
+  pageHint: string;
   /** Корень пути с языком: `${adminHref(lang,'project-start')}/${slug}`. */
   base: string;
   /** Сколько шагов у пути ЗАДУМАНО — знаменатель шкалы. */
@@ -78,7 +92,7 @@ export async function TailStepPage({
 
   if (path.locked) {
     return (
-      <PageShell lang={lang} slug="project-start" s={s} tail={tail} title={x.pageTitle} hint={x.pageHint}>
+      <PageShell lang={lang} slug="project-start" s={s} tail={tail} title={path.pageTitle} hint={path.pageHint}>
         <StepLocked
           title={x.title}
           message={path.locked.message}
@@ -96,7 +110,7 @@ export async function TailStepPage({
   const info = step.infoFromSite ? step.infoFromSite(lang, publicSiteUrl().url) : x.info;
 
   return (
-    <PageShell lang={lang} slug="project-start" s={s} tail={tail} title={x.pageTitle} hint={x.pageHint}>
+    <PageShell lang={lang} slug="project-start" s={s} tail={tail} title={path.pageTitle} hint={path.pageHint}>
       <StepSection
         index={index}
         total={path.total}

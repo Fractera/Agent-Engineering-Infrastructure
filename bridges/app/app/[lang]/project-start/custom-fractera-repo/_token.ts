@@ -11,10 +11,10 @@ import type { AdoptStepStrings } from "./_strings";
 
 const ru: AdoptStepStrings = {
   pageTitle: "Токен доступа к вашему репозиторию",
-  pageHint: "Ключ, которым панель отправит проект в ваш репозиторий.",
+  pageHint: "Ключ, которым панель прочитает ваш форк и сохранит в него правки.",
 
   title: "Токен доступа GitHub",
-  lead: "Панели нужен ключ, чтобы записать проект в ваш репозиторий. Без него она может только смотреть.",
+  lead: "Панели нужен ключ, чтобы прочитать ваш форк — и записывать в него позже. Без него приватный форк ей не виден.",
   info:
     "Что это за ключ. GitHub выдаёт токен вместо пароля: у него можно ограничить срок и права, и его можно отозвать, не меняя пароль. Нужно право записи в содержимое репозитория; больше ничего мы не просим и ничего другого этим токеном не делаем.",
   important:
@@ -47,10 +47,10 @@ const ru: AdoptStepStrings = {
 
 const en: AdoptStepStrings = {
   pageTitle: "Access token for your repository",
-  pageHint: "The key the panel will use to send the project to your repository.",
+  pageHint: "The key the panel will use to read your fork and save changes into it.",
 
   title: "GitHub access token",
-  lead: "The panel needs a key to write the project into your repository. Without it, it can only look.",
+  lead: "The panel needs a key to read your fork — and to write into it later. Without it, a private fork is invisible to it.",
   info:
     "What this key is. GitHub issues a token instead of a password: you can limit its lifetime and its rights, and you can revoke it without changing your password. Write access to repository contents is needed; we ask for nothing more and do nothing else with this token.",
   important:
