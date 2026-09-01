@@ -94,34 +94,90 @@ function channel() {
 }
 const pendingLinks = new Map();
 
-// ── The inbox: what the bot heard, kept for the application ─────────────────
+// ── The journal: the whole conversation, kept for as long as the server lives ──
 //
 // This service is the only reader of the bot (see the header), so an application
 // that wants to REACT to a message cannot poll Telegram itself. It reads this
-// instead: a ring of the last messages, written to disk so a restart does not
-// lose the ones nobody has read yet.
-const INBOX = process.env.CHANNELS_INBOX ?? path.resolve(__dirname, "inbox.json");
-const INBOX_MAX = 500;
+// instead. Both directions are written here: what the bot heard and what it said.
+//
+// 🔒 ЛИМИТА ХРАНЕНИЯ НЕТ, И ЭТО РЕШЕНИЕ ВЛАДЕЛЬЦА (2026-09-01): «мы используем
+// Telegram от начала жизненного цикла приложения до того момента пока сервер
+// будет безвозвратно удалён». Переписка — это данные человека, а не отладочный
+// след, и молчаливое удаление старого недопустимо.
+//
+// 🪦 ЗДЕСЬ БЫЛО КОЛЬЦО НА 500 ЗАПИСЕЙ (`INBOX_MAX`, `rows.shift()`). Пятьсот
+// первое сообщение удаляло первое НАВСЕГДА, и никто бы этого не заметил: журнал
+// не падает, он просто забывает начало разговора.
+//
+// 🔒 ФОРМАТ — СТРОКА НА СООБЩЕНИЕ (JSONL), И ЭТО ПРИЧИНА, ПО КОТОРОЙ ЛИМИТ БОЛЬШЕ
+// НЕ НУЖЕН. Прежний `inbox.json` переписывался ЦЕЛИКОМ на каждое сообщение: при
+// 500 записях незаметно, при десятках тысяч каждое новое сообщение переписывало
+// бы мегабайты. Снять лимит, не сменив формат, значило бы обменять потерю данных
+// на медленную деградацию, которая проявится через месяцы.
+// Здесь запись — это `appendFileSync` одной строки: её цена не зависит от того,
+// сколько уже записано.
+//
+// 🔒 БИТАЯ СТРОКА НЕ РОНЯЕТ ЖУРНАЛ. В формате «весь файл — один JSON» любая
+// повреждённая запись делала нечитаемым ВЕСЬ архив; здесь она пропускается, а
+// остальное читается.
+const INBOX = process.env.CHANNELS_INBOX ?? path.resolve(__dirname, "inbox.jsonl");
+const INBOX_LEGACY = process.env.CHANNELS_INBOX_LEGACY ?? path.resolve(__dirname, "inbox.json");
+
+// Последний выданный номер. Держится в памяти, чтобы не читать файл на запись;
+// восстанавливается при старте и после любого чтения.
+let inboxLastId = 0;
+
+/**
+ * 🔒 ПЕРЕНОС СТАРОГО ЖУРНАЛА ОДИН РАЗ И БЕЗ ПОТЕРЬ. Прежний `inbox.json`
+ * переписывается в новый формат при старте; исходный файл НЕ удаляется, а
+ * переименовывается в `.migrated` — на случай, если перенос окажется неверным.
+ */
+function migrateLegacyInbox() {
+  try {
+    if (!fs.existsSync(INBOX_LEGACY) || fs.existsSync(INBOX)) return;
+    const rows = JSON.parse(fs.readFileSync(INBOX_LEGACY, "utf8"));
+    if (!Array.isArray(rows)) return;
+    const body = rows.map((r) => JSON.stringify(r)).join("\n") + (rows.length ? "\n" : "");
+    fs.writeFileSync(INBOX, body, { mode: 0o600 });
+    fs.renameSync(INBOX_LEGACY, INBOX_LEGACY + ".migrated");
+    console.log("Inbox migrated to jsonl: " + rows.length + " messages kept");
+  } catch (e) {
+    console.log("Inbox migration skipped: " + ((e && e.message) || e));
+  }
+}
 
 function readInbox() {
   try {
-    const rows = JSON.parse(fs.readFileSync(INBOX, "utf8"));
-    return Array.isArray(rows) ? rows : [];
+    const raw = fs.readFileSync(INBOX, "utf8");
+    const rows = [];
+    for (const line of raw.split("\n")) {
+      const s = line.trim();
+      if (!s) continue;
+      try {
+        rows.push(JSON.parse(s));
+      } catch {
+        // Битая строка — пропускаем её одну, а не теряем весь журнал.
+      }
+    }
+    if (rows.length) inboxLastId = Math.max(inboxLastId, rows[rows.length - 1].id || 0);
+    return rows;
   } catch {
     return [];
   }
 }
 
 function pushInbox(entry) {
-  const rows = readInbox();
-  const id = (rows.length ? rows[rows.length - 1].id : 0) + 1;
-  rows.push(Object.assign({ id: id }, entry));
-  while (rows.length > INBOX_MAX) rows.shift();
+  const id = ++inboxLastId;
   try {
-    fs.writeFileSync(INBOX, JSON.stringify(rows, null, 2) + "\n", { mode: 0o600 });
+    fs.appendFileSync(INBOX, JSON.stringify(Object.assign({ id: id }, entry)) + "\n", {
+      mode: 0o600,
+    });
   } catch {}
   return id;
 }
+
+migrateLegacyInbox();
+readInbox();
 
 // The OpenAI key lives in the data service env, written there by the panel. This
 // service deliberately has no key of its own: one place to fill in, one place to
