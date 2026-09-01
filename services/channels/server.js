@@ -165,9 +165,37 @@ async function telegram(token, method, query, body) {
   }
 }
 
-function send(token, chatId, text) {
+// 🔒 ОДИН УЗКИЙ ПРОХОД ДЛЯ ВСЕГО ИСХОДЯЩЕГО ТЕКСТА, И ИМЕННО ПОЭТОМУ ЗАПИСЬ В
+// ЖУРНАЛ СТОИТ ЗДЕСЬ (77-11, 2026-09-01, заказ владельца: «я получил ответ, вижу
+// его в Telegram, но не вижу здесь»).
+//
+// Через `send` идут ВСЕ ответы, кем бы они ни были сочинены: ответ приложения
+// через дверь `/telegram/send`, собственный ответ службы в режиме `rag`,
+// приветствие и подтверждение привязки. Три отдельные записи в трёх местах
+// разошлись бы на первой же правке; одна здесь — не может.
+//
+// 🔒 ПИШЕМ ТОЛЬКО ТО, ЧТО TELEGRAM ПРИНЯЛ. Запись до отправки означала бы журнал,
+// в котором бот «сказал» то, чего собеседник никогда не видел.
+async function send(token, chatId, text) {
   // Telegram refuses messages longer than 4096 characters.
-  return telegram(token, "sendMessage", "", { chat_id: chatId, text: String(text).slice(0, 4000) });
+  const body = String(text).slice(0, 4000);
+  const r = await telegram(token, "sendMessage", "", { chat_id: chatId, text: body });
+  if (r && r.ok) {
+    pushInbox({
+      direction: "out",
+      at: new Date().toISOString(),
+      chatId: String(chatId),
+      who: null,
+      kind: "text",
+      text: body,
+      objectType: null,
+      fileId: null,
+      forwardedFrom: null,
+      lat: null,
+      lon: null,
+    });
+  }
+  return r;
 }
 
 // ── Voice: a note is a FILE, and a file has to be fetched before it is heard ──
@@ -352,6 +380,10 @@ async function loop() {
       // Everything the bot hears goes into the inbox whatever the mode: an
       // application that wants to react must be able to see it at all.
       const inboxId = pushInbox({
+        // 🔒 НАПРАВЛЕНИЕ ПИШЕТСЯ ЯВНО (77-11). Записи, сделанные до этой правки,
+        // поля не имеют — и читаются как входящие: журнал уже наполнен, и
+        // изменение формата не имеет права сделать старое невидимым или чужим.
+        direction: "in",
         at: new Date().toISOString(),
         chatId: String(chat.id),
         who: chat.username
@@ -642,6 +674,22 @@ const server = http.createServer(async (req, res) => {
       if (!d || d.ok !== true) {
         return json(res, 502, { error: "Telegram refused the file", telegram: (d && d.description) || null });
       }
+      // 🔒 ФАЙЛ ТОЖЕ ПОПАДАЕТ В ЖУРНАЛ (77-11): для человека «бот прислал запись» —
+      // такая же реплика разговора, как текст. Без этой строки лента показывала бы
+      // разговор с дырами ровно там, где продукт сделал самое заметное.
+      pushInbox({
+        direction: "out",
+        at: new Date().toISOString(),
+        chatId: String(chatId),
+        who: null,
+        kind: kind,
+        text: String(body.caption || ""),
+        objectType: kind,
+        fileId: null,
+        forwardedFrom: null,
+        lat: null,
+        lon: null,
+      });
       return json(res, 200, { ok: true, messageId: d.result && d.result.message_id });
     } catch (e) {
       return json(res, 502, { error: String((e && e.message) || e) });
