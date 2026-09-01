@@ -79,7 +79,21 @@ function LoginForm() {
         if (!sess?.user) return;
         const who = sess.user.name || sess.user.email || "there";
         const roles = (sess.user as { roles?: string[] }).roles ?? [];
-        const roleLabel = roles[0] ?? "user";
+        // 🔒 ПОКАЗЫВАЕМ РОЛЬ, КОТОРАЯ ОТВЕЧАЕТ НА ВОПРОС ЧЕЛОВЕКА, А НЕ ПЕРВУЮ
+        // ПОПАВШУЮСЯ. ✗ оплачено 2026-09-01: стояло `roles[0]`, у владельца 14
+        // ролей, `user` среди них ПЕРВАЯ по порядку выдачи — и экран писал «ваша
+        // роль: user» человеку с ролью архитектора. Сессия при этом была полной:
+        // врала надпись, и выглядело это как отказ в правах.
+        //
+        // Порядок предпочтения: та роль, ради которой сюда пришли (если она
+        // есть) → сильнейший тир платформы → хоть что-нибудь. Список ролей
+        // (`ALL_ROLES`) сгруппирован по смыслу, а не по силе, и брать «первую из
+        // него» было бы той же ошибкой с другого конца.
+        const roleLabel =
+          (requireRole && roles.includes(requireRole) ? requireRole : undefined) ??
+          ["architect", "admin"].find((r) => roles.includes(r)) ??
+          roles[0] ??
+          "user";
         toast.success(fill(t.welcomeToast, { who, role: roleLabel }));
         if (requireRole && !roles.includes(requireRole)) {
           toast.info(fill(t.roleNeededToast, { role: requireRole }));
