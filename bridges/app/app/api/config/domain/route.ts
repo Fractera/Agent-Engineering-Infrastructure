@@ -5,7 +5,8 @@ import { promisify } from "util";
 import { writeFileSync, mkdirSync, existsSync, rmSync } from "fs";
 import Database from "better-sqlite3";
 import { requireAuth } from "@/lib/require-auth";
-import { SUBDOMAINS } from "@/lib/server-ip";
+import { SUBDOMAINS, readServerIp } from "@/lib/server-ip";
+import { promises as dnsp } from "dns";
 
 const APP_DB = process.env.APP_DB_PATH ?? "/opt/fractera/app/data/app.db";
 
@@ -351,7 +352,31 @@ export async function POST(req: NextRequest) {
       // 2. Issue / renew one multi-SAN cert. The same `-d <host>` flag set
       //    keeps the same lineage (no new dir each run) so subsequent
       //    renewals via the system certbot cron just work.
-      const dFlags = SUBDOMAINS.map((p) => `-d ${hostFor(p, domain)}`).join(" ");
+      // 🛑 НЕОБЯЗАТЕЛЬНОЕ ИМЯ ВХОДИТ В ВЫПУСК, ТОЛЬКО ЕСЛИ ЕГО DNS УЖЕ УКАЗЫВАЕТ СЮДА.
+      //
+      // certbot просит ВСЕ имена одним пакетом: одно непройденное испытание HTTP-01 роняет
+      // выпуск ЦЕЛИКОМ, и домен остаётся неподключённым. Пока имён было пять и все пять были
+      // обязательными, это не имело значения. С appearance `chat` (шаг 96) появился первый
+      // хост, A-записи которого у человека может не быть вовсе — и добавление службы
+      // сломало бы подключение домена тем, кто о ней не знал.
+      //
+      // Обязательные имена НЕ фильтруются: их отсутствие и раньше было честной ошибкой.
+      const REQUIRED = new Set(["", "www", "auth", "admin", "data"]);
+      const serverIp = readServerIp();
+      const wanted: string[] = [];
+      for (const p of SUBDOMAINS) {
+        const host = hostFor(p, domain);
+        if (REQUIRED.has(p)) { wanted.push(host); continue; }
+        try {
+          const resolved = await dnsp.resolve4(host);
+          if (serverIp && resolved.includes(serverIp)) wanted.push(host);
+        } catch {
+          // Записи нет — имя просто не попадает в сертификат. Появится запись и
+          // повторный запуск мастера — попадёт: certbot --expand дописывает его в ту же
+          // родословную, ничего не пересоздавая.
+        }
+      }
+      const dFlags = wanted.map((h) => `-d ${h}`).join(" ");
       // --cert-name pins the lineage to the apex domain; --expand lets certbot
       // replace an existing certificate that covers only a subset of these
       // hostnames (e.g. an earlier apex+www cert) WITHOUT the interactive
