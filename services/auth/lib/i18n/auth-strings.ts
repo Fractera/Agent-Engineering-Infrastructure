@@ -61,6 +61,15 @@ export type AuthStrings = {
   signingOut: string;
   goToApp: string;
   goToAdmin: string;
+  /**
+   * Третья кнопка после входа — чат с ИИ-агентом (правка владельца 2026-09-02).
+   *
+   * 🛑 КЛЮЧ НЕОБЯЗАТЕЛЬНЫЙ, И ЭТО ЧЕСТНЫЙ ДОЛГ, А НЕ ЛЕНЬ. Здесь 82 языка;
+   * я пишу английский и русский, остальные восемьдесят приходят файлом от
+   * внешней модели. Объяви я ключ обязательным — файл перестал бы собираться у
+   * всех восьмидесяти, то есть правка одной кнопки уронила бы вход целиком.
+   */
+  goToChat?: string;
 };
 
 export const DEFAULT_AUTH_LANG = "en";
@@ -109,6 +118,7 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Sign out",
     goToApp: "Go to App",
     goToAdmin: "Go to Admin Panel",
+    goToChat: "Go to AI agent chat",
     signOutQuestion: "Are you sure you want to sign out?",
     signingOut: "Signing out…",
   },
@@ -1443,6 +1453,7 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Выйти",
     goToApp: "Перейти в приложение",
     goToAdmin: "Перейти в панель управления",
+    goToChat: "Перейти в чат с ИИ-агентом",
     signOutQuestion: "Вы действительно хотите выйти?",
     signingOut: "Выходим…",
   },

@@ -9,6 +9,9 @@ export default async function AuthRoot() {
   const nextauthUrl = process.env.NEXTAUTH_URL ?? "";
   const appUrl   = nextauthUrl.replace("://auth.", "://");
   const adminUrl = nextauthUrl.replace("://auth.", "://admin.");
+  // 🔒 АДРЕС ЧАТА СЧИТАЕТСЯ ТЕМ ЖЕ ПРИЁМОМ, ЧТО СОСЕДНИЕ ДВА: своя формула здесь
+  // разошлась бы с ними в тот день, когда сменится домен.
+  const chatUrl = nextauthUrl.replace("://auth.", "://chat.");
   const roles: string[] = (session.user as { roles?: string[] }).roles ?? [];
 
   return (
@@ -16,6 +19,7 @@ export default async function AuthRoot() {
       email={session.user.email ?? ""}
       appUrl={appUrl}
       adminUrl={adminUrl}
+      chatUrl={chatUrl}
       roles={roles}
     />
   );
