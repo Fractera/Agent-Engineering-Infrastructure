@@ -18,7 +18,7 @@ const DEFAULTS: RuntimeUrls = {
 
 // Service subdomain prefixes — used to recover the apex from any service host
 // (e.g. admin.aifa.dev → aifa.dev) in domain/Secure mode.
-const KNOWN_PREFIXES = ["www", "auth", "admin", "data"]; // step 500: hermes/chat/lightrag removed
+const KNOWN_PREFIXES = ["www", "auth", "admin", "data", "chat"]; // "chat" — восьмая служба, шаг 96
 
 function compute(): RuntimeUrls {
   if (typeof window === "undefined") return DEFAULTS;

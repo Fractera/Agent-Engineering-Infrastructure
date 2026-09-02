@@ -77,7 +77,10 @@ function restoreFromBackup(backupDir: string): void {
 }
 
 function writeStrictEnvs(domain: string): void {
-  const subs = ["www", "auth", "admin", "data"]; // step 500: hermes + lightrag removed
+  // 🛑 "chat" ЗДЕСЬ НЕ УКРАШЕНИЕ: этот список становится ALLOWED_ORIGINS службы входа. Хост,
+  // не названный тут, получает отказ по источнику — вход из чата по домену просто не прошёл бы,
+  // и выглядело бы это как поломка авторизации, а не как забытая строка (шаг 96).
+  const subs = ["www", "auth", "admin", "data", "chat"];
   const allowedOrigins = [domain, ...subs.map((s) => `${s}.${domain}`)]
     .map((h) => `https://${h}`)
     .join(",");

@@ -5,6 +5,7 @@ import { promisify } from "util";
 import { writeFileSync, mkdirSync, existsSync, rmSync } from "fs";
 import Database from "better-sqlite3";
 import { requireAuth } from "@/lib/require-auth";
+import { SUBDOMAINS } from "@/lib/server-ip";
 
 const APP_DB = process.env.APP_DB_PATH ?? "/opt/fractera/app/data/app.db";
 
@@ -35,13 +36,18 @@ const run = promisify(exec);
 // It gets its own A-record, its own cert SAN (certbot --expand picks it up from
 // this list), and an auth_request-gated nginx block. The legacy hermes/<domain>
 // /chat/ path stays working too (back-compat).
-const SUBDOMAINS = ["", "www", "auth", "admin", "data"] as const; // step 500: hermes, chat, lightrag removed
+// 🛑 СПИСОК ЖИВЁТ В ОДНОМ МЕСТЕ — `lib/server-ip.ts`, И ЗДЕСЬ ЕГО БОЛЬШЕ НЕТ (шаг 96).
+// Тот файл называет себя единственным источником, а этот держал СВОЮ копию: два списка
+// расходятся молча, и разошлись бы на первой же новой службе — мастер домена печатал бы блок
+// для хоста, которого проверка DNS не ждёт, и наоборот.
+
 const PROXY_PORTS: Record<string, number> = {
   "":         3000,
   "www":      3000,
   "auth":     3001,
   "admin":    3002,
   "data":     3300,
+  "chat":     3600,
 };
 
 // Where uploaded (non Let's Encrypt) certificates land. The same pair lives

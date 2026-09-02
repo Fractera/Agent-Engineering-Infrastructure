@@ -49,7 +49,10 @@ export function readServerIp(): string | null {
 // All hostnames Fractera serves over HTTPS once a custom domain is attached.
 // Single source of truth — wizard-state, health-check, dns-check, certbot
 // SAN list, and nginx server blocks all derive from this.
-export const SUBDOMAINS = ["", "www", "auth", "admin", "data"] as const; // step 500: hermes, chat, lightrag removed
+// 🔒 "chat" ДОБАВЛЕН 2026-09-02 (шаг 96) И ЗНАЧИТ ДРУГОЕ, ЧЕМ ПРЕЖНИЙ. Тот был веб-чатом Hermes
+// на :9120 и умер в шаге 500; этот — наша восьмая служба, движок Vercel на :3600 под своей
+// авторизацией. Служба, не названная здесь, живёт по IP и порту и по домену недостижима.
+export const SUBDOMAINS = ["", "www", "auth", "admin", "data", "chat"] as const;
 
 export function hostFor(prefix: string, domain: string): string {
   return prefix ? `${prefix}.${domain}` : domain;
