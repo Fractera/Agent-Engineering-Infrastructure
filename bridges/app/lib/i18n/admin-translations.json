@@ -383,7 +383,8 @@
         "www": "site (www alias)",
         "auth": "sign-in",
         "admin": "this panel",
-        "data": "media and database"
+        "data": "media and database",
+        "chat": "AI chat"
       },
       "step": "Step {n}",
       "done": "done",
@@ -3826,7 +3827,8 @@
         "www": "сайт (псевдоним www)",
         "auth": "вход",
         "admin": "эта панель",
-        "data": "медиа и база"
+        "data": "медиа и база",
+        "chat": "чат с ИИ-агентом"
       },
       "step": "Шаг {n}",
       "done": "готово",
