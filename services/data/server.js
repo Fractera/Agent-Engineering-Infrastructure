@@ -275,9 +275,44 @@ function cosine(a, b) {
 // One place where text becomes a vector. Callers may pass a ready `embedding`
 // instead and never touch OpenAI — the store itself has no opinion about who
 // produced the numbers, only that the dimensions match.
+/**
+ * КЛЮЧ МОДЕЛИ — ИЗ ЕДИНСТВЕННОГО ИСТОЧНИКА (правка владельца 2026-09-03).
+ *
+ * 🔒 ЕГО СЛОВА, И ОНИ СИЛЬНЕЕ ПРЕЖНЕГО УСТРОЙСТВА: «разве неправильно будет
+ * сказать — проверь так, чтобы все службы писали и читали ключ из одного места?
+ * из того, из которого всегда читал проект многие месяцы подряд». Прежний план
+ * агента — «разнести ключ по службам» — заводил бы ТРИ копии одного значения, а
+ * копии расходятся: человек меняет ключ в одном месте и месяц не понимает, почему
+ * половина системы отвечает старым.
+ *
+ * 🔒 ИСТОЧНИК — `.env.local` ПРОЕКТА. Именно туда пишет экран, на котором человек
+ * вводит ключ, и именно оттуда проект читает его месяцами.
+ *
+ * 🔒 ЧИТАЕТСЯ НА КАЖДЫЙ ВЫЗОВ, А НЕ ПРИ СТАРТЕ. Введённый ключ действует со
+ * следующего запроса, без перезапуска службы: «сохранено» и «применено»
+ * совпадают. Прежнее чтение через `process.env` требовало рестарта — и молчало
+ * об этом.
+ *
+ * ✗ ОПЛАЧЕНО В ТОТ ЖЕ ДЕНЬ: владелец ввёл ключ, чат заговорил, бот отвечал «ключа
+ * нет», а слой данных и граф знаний не имели его вовсе. Три службы, три ответа об
+ * одном значении.
+ */
+const APP_ENV_FILE = process.env.APP_ENV_FILE ?? '/opt/fractera/app/.env.local'
+
+function openAiKey() {
+  try {
+    const raw = readFileSync(APP_ENV_FILE, 'utf8')
+    const found = (raw.match(/^OPENAI_API_KEY=(.+)$/m) ?? [])[1]
+    if (found?.trim()) return found.trim()
+  } catch {
+    // Файла нет — это чужая машина или разработка: берём своё окружение.
+  }
+  return process.env.OPENAI_API_KEY ?? ''
+}
+
 async function embed(text) {
-  const key = process.env.OPENAI_API_KEY
-  if (!key) throw new Error('OPENAI_API_KEY is not set in the data service env')
+  const key = openAiKey()
+  if (!key) throw new Error('OPENAI_API_KEY is not set: add it on the bot screen of the project')
   const r = await fetch('https://api.openai.com/v1/embeddings', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
@@ -1121,7 +1156,7 @@ app.get('/vectors/status', (_req, res) => {
   const { n } = appDb.prepare('SELECT COUNT(*) AS n FROM vectors').get()
   res.json({
     ok: true,
-    configured: Boolean(process.env.OPENAI_API_KEY),
+    configured: Boolean(openAiKey()), // 🔒 тот же единственный источник, что у embed(): два способа узнать «есть ли ключ» дали бы экран, который врёт
     model: EMBED_MODEL,
     dims: EMBED_DIMS,
     index: annMode,          // 'partitioned' | 'flat' | 'scan'
