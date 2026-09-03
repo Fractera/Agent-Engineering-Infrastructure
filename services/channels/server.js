@@ -558,6 +558,15 @@ async function loopBot(tg) {
         else if (msg.audio) { objectType = "audio"; fileId = msg.audio.file_id; }
       }
       const voice = (msg && (msg.voice || msg.audio || msg.video_note)) || null;
+      // 🔒 У ГОЛОСА ТОЖЕ ЕСТЬ ФАЙЛ, И ОН ОБЯЗАН ДОЕХАТЬ (97-7, 2026-09-03,
+      // заказ владельца: «нужно для всех типов»). ✗ прежде запись превращалась
+      // в текст, и сама она пропадала: расшифровка — не замена голосу.
+      // Интонация, оговорка и второй голос на фоне есть в записи и отсутствуют
+      // в её пересказе, а переписка — это данные человека.
+      if (voice && voice.file_id && !fileId) {
+        objectType = msg.video_note ? "video" : "audio";
+        fileId = voice.file_id;
+      }
       if (!text && voice && voice.file_id) {
         kind = "voice";
         const heard = await voiceToText(tg.token, voice.file_id);
@@ -675,6 +684,11 @@ async function loopBot(tg) {
               id: inboxId,
               at: new Date().toISOString(),
               channel: "telegram",
+              // 🔒 КТО ПРИНЁС СООБЩЕНИЕ (99-3). Приложение забирает файл по
+              // `fileId` через дверь службы, и та должна знать, ЧЬИМ токеном
+              // его скачивать: у разных ботов один и тот же номер файла означает
+              // разные файлы.
+              bot: tg.id,
               chatId: String(chat.id),
               who: chat.username ? "@" + chat.username : String(chat.id),
               kind: kind,
