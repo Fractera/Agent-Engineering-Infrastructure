@@ -103,6 +103,64 @@ function channel() {
   }
   return tg;
 }
+
+// ── БОТОВ МОЖЕТ БЫТЬ НЕСКОЛЬКО (99-1, 2026-09-03) ────────────────────────────
+//
+// 🔒 ЗАКАЗ ВЛАДЕЛЬЦА ДОСЛОВНО: «нет никакой разницы, сколько подключится
+// телеграммов — каждый из них создаст просто свой чат и будет всегда оставаться
+// внутри своих чатов». Один бот на проект был свойством СТАРОЙ архитектуры, где
+// переписке негде было лежать раздельно; теперь она лежит в базе чата, разговор
+// на каждый `chat_id`, и ограничение потеряло причину.
+//
+// 🔒 ПЕРЕЕЗД ПРИ ЧТЕНИИ, А НЕ ПЕРЕПИСЫВАНИЕ ФАЙЛА. Старый конфиг с одиночным
+// `telegram` подставляется первым элементом списка на лету. Файл на диске не
+// трогается — значит откат стоит замены кода, а не восстановления данных, и ни
+// один уже работающий сервер не требует ручной правки.
+//
+// 🔒 У БОТА ВЕЧНЫЙ ИДЕНТИФИКАТОР (`b1`, `b2`), А НЕ ТОКЕН В РОЛИ ИМЕНИ. Токен
+// владелец меняет — при смене бота Telegram выдаёт новый, — а на идентификатор
+// завязаны привязка, счётчик обновлений и адресация дверей. Тот же приём, что у
+// продуктов проекта: `id` не значит ничего и не меняется никогда.
+const BOT_PREFIX = "b";
+
+/** Список ботов с подставленными умолчаниями. Пустой — ни один не настроен. */
+function bots() {
+  const cfg = readConfig();
+  const list = Array.isArray(cfg.telegramBots) ? cfg.telegramBots.slice() : [];
+
+  // Старая одиночная запись — первый бот, если списка ещё нет.
+  if (list.length === 0 && cfg.telegram && cfg.telegram.token) {
+    list.push(Object.assign({ id: BOT_PREFIX + "1" }, cfg.telegram));
+  }
+
+  const secret = appSecret();
+  return list.map((raw, i) => {
+    const b = Object.assign({}, raw);
+    if (!b.id) b.id = BOT_PREFIX + (i + 1);
+    b.hookSecret = b.hookSecret || secret;
+    if (b.hookSecret) {
+      b.hookUrl = b.hookUrl || APP_HOOK_URL;
+      b.tickUrl = b.tickUrl || APP_TICK_URL;
+      if (b.tickSeconds === undefined) b.tickSeconds = DEFAULT_TICK_SEC;
+      if (!b.mode) b.mode = "app";
+    }
+    return b;
+  });
+}
+
+/**
+ * Один бот по идентификатору.
+ *
+ * 🔒 ПУСТОЙ АДРЕСАТ — ПЕРВЫЙ БОТ, И ЭТО СОВМЕСТИМОСТЬ, А НЕ УДОБСТВО. Двери
+ * зовут панель, слот из прежнего стартера и наш собственный код; все они об
+ * идентификаторах не знают, и обязаны продолжать работать без правок.
+ */
+function botById(id) {
+  const list = bots();
+  if (!id) return list[0] || null;
+  return list.find((b) => b.id === id) || null;
+}
+
 const pendingLinks = new Map();
 
 // ── The journal: the whole conversation, kept for as long as the server lives ──
@@ -670,25 +728,41 @@ const server = http.createServer(async (req, res) => {
   const tg = channel();
 
   if (url.pathname === "/status") {
-    let botName = null;
-    if (tg.token) {
-      const me = await telegram(tg.token, "getMe");
-      botName = (me && me.result && me.result.username) || null;
-    }
-    return json(res, 200, {
-      ok: true,
-      telegram: {
-        configured: Boolean(tg.token),
+    // 🔒 СНИМОК ОДНОГО БОТА СЧИТАЕТСЯ ОДНОЙ ФУНКЦИЕЙ ДЛЯ СПИСКА И ДЛЯ ПРЕЖНЕГО
+    // ОДИНОЧНОГО ПОЛЯ. Две сборки одного и того же снимка разошлись бы, и экран
+    // показал бы одно, а список — другое.
+    const snapshot = async (b) => {
+      let botName = null;
+      if (b.token) {
+        const me = await telegram(b.token, "getMe");
+        botName = (me && me.result && me.result.username) || null;
+      }
+      return {
+        id: b.id,
+        configured: Boolean(b.token),
         reachable: Boolean(botName),
         bot: botName,
-        chatId: tg.chatId || null,
-        who: tg.who || null,
-        enabled: tg.enabled !== false,
-        mode: tg.mode || "rag",
-        hook: Boolean(tg.hookUrl),
-        tickSeconds: Number(tg.tickSeconds || 0),
+        chatId: b.chatId || null,
+        who: b.who || null,
+        enabled: b.enabled !== false,
+        mode: b.mode || "rag",
+        hook: Boolean(b.hookUrl),
+        tickSeconds: Number(b.tickSeconds || 0),
         voice: Boolean(openAiKey()),
-      },
+      };
+    };
+
+    const list = bots();
+    const all = [];
+    for (const b of list) all.push(await snapshot(b));
+
+    // 🔒 ПРЕЖНЕЕ ПОЛЕ `telegram` ОСТАЁТСЯ И ОПИСЫВАЕТ ПЕРВОГО БОТА. Его читают
+    // экран проекта и панель; убрав его вместе с добавлением списка, мы ослепили
+    // бы обе поверхности одной правкой службы — и узнали бы об этом от владельца.
+    return json(res, 200, {
+      ok: true,
+      telegram: all[0] || (await snapshot(tg)),
+      bots: all,
     });
   }
 
