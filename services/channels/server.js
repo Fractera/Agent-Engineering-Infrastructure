@@ -357,10 +357,17 @@ async function telegram(token, method, query, body) {
 //
 // 🔒 ПИШЕМ ТОЛЬКО ТО, ЧТО TELEGRAM ПРИНЯЛ. Запись до отправки означала бы журнал,
 // в котором бот «сказал» то, чего собеседник никогда не видел.
-async function send(token, chatId, text) {
+async function send(token, chatId, text, parseMode) {
   // Telegram refuses messages longer than 4096 characters.
   const body = String(text).slice(0, 4000);
-  const r = await telegram(token, "sendMessage", "", { chat_id: chatId, text: body });
+  const payload = { chat_id: chatId, text: body };
+  // 🔒 `parseMode` — НЕОБЯЗАТЕЛЬНЫЙ, И ЭТО НАМЕРЕННО (шаг 104, 2026-09-03): включать HTML
+  // глобально для ВСЕХ исходящих означало бы, что любой ответ модели с `<`/`>` внутри (код,
+  // сравнение) отказом Telegram «can't parse entities». Просит его только вызывающий, который
+  // сам экранирует текст и отвечает за разметку — сегодня это только пометка «Web Chat Input
+  // Message» у сообщений, зеркалируемых из веб-чата.
+  if (parseMode) payload.parse_mode = parseMode;
+  const r = await telegram(token, "sendMessage", "", payload);
   if (r && r.ok) {
     pushInbox({
       direction: "out",
@@ -1065,7 +1072,8 @@ const server = http.createServer(async (req, res) => {
     if (!chatId) return json(res, 422, { error: "No chat to send to — link one in the panel" });
     const text = String(body.text || "").trim();
     if (!text) return json(res, 400, { error: "text is required" });
-    const r = await send(tg.token, chatId, text);
+    const parseMode = body.parseMode === "HTML" ? "HTML" : undefined;
+    const r = await send(tg.token, chatId, text, parseMode);
     const id = r && r.result && r.result.message_id;
     if (!id) {
       return json(res, 502, { error: "Telegram refused the message", telegram: (r && r.description) || null });
