@@ -532,6 +532,28 @@ async function answer(question, lang) {
 const offsets = new Map();
 const looping = new Set();
 
+// Имя бота у Telegram («@RadaTest2_bot»), по одному запросу на бота за жизнь
+// процесса.
+//
+// 🔒 КЕШ ЗДЕСЬ НЕ ОПТИМИЗАЦИЯ, А ГРАНИЦА РАЗУМНОГО. Имя нужно приложению в
+// КАЖДОМ сообщении — оно попадает в заголовок разговора; спрашивать `getMe` на
+// каждое значило бы добавить внешний вызов в горячий путь ради значения,
+// которое меняется раз в год.
+//
+// 🛑 УСТАРЕТЬ ОНО МОЖЕТ: человек переименует бота в @BotFather, и до перезапуска
+// службы мы будем звать его старым именем. Цена названа и принята — заголовок
+// разговора не адресация, а подпись; адресует идентификатор бота, который не
+// меняется никогда.
+const botNames = new Map();
+
+async function botUsername(tg) {
+  if (botNames.has(tg.id)) return botNames.get(tg.id);
+  const me = await telegram(tg.token, "getMe");
+  const name = (me && me.result && me.result.username) || null;
+  if (name) botNames.set(tg.id, name);
+  return name;
+}
+
 async function loopBot(tg) {
   if (looping.has(tg.id)) return;
   looping.add(tg.id);
@@ -703,6 +725,10 @@ async function loopBot(tg) {
               // его скачивать: у разных ботов один и тот же номер файла означает
               // разные файлы.
               bot: tg.id,
+              // 🔒 И ЕГО ИМЯ — ДЛЯ ЗАГОЛОВКА РАЗГОВОРА. Один человек, писавший
+              // двум ботам, даёт два разговора с одинаковой подписью; различает
+              // их имя бота, а не порядковый номер.
+              botName: await botUsername(tg),
               chatId: String(chat.id),
               who: chat.username ? "@" + chat.username : String(chat.id),
               kind: kind,
