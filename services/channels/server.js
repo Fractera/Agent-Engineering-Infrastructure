@@ -161,6 +161,28 @@ function botById(id) {
   return list.find((b) => b.id === id) || null;
 }
 
+/**
+ * Записать полям одного бота новые значения.
+ *
+ * 🔒 ОДИН ПИСАТЕЛЬ НА КОНФИГ, И ОН ЖЕ ДЕЛАЕТ ПЕРЕЕЗД. Раньше каждое место
+ * собирало `now.telegram = Object.assign(...)` само; с появлением списка таких
+ * сборок стало бы несколько, и они разошлись бы на первой правке формы.
+ */
+function writeBotFields(id, fields) {
+  const next = readConfig();
+  const list = Array.isArray(next.telegramBots) ? next.telegramBots.slice() : [];
+  if (list.length === 0 && next.telegram && next.telegram.token) {
+    list.push(Object.assign({ id: BOT_PREFIX + "1" }, next.telegram));
+  }
+  const idx = list.findIndex((b) => b.id === id);
+  if (idx < 0) return false;
+  list[idx] = Object.assign({}, list[idx], fields);
+  next.telegramBots = list;
+  delete next.telegram;
+  writeConfig(next);
+  return true;
+}
+
 const pendingLinks = new Map();
 
 // ── The journal: the whole conversation, kept for as long as the server lives ──
@@ -588,19 +610,22 @@ async function loopBot(tg) {
 
       // Linking: the deep-link START carries our one-time code, and the very same
       // message carries the sender's chat id. One code, one id, nothing guessed.
+      // 🔒 КОД ПРИВЯЗКИ ПОМНИТ, ЧЬИМ БОТОМ ОН ВЫДАН (99-3). ✗ до этой правки
+      // карта хранила только время, и с двумя ботами код, выданный первым,
+      // закрывал бы привязку у того, кому человек написал вторым: сообщение
+      // приходит в СВОЙ цикл, а запись уходила в общее поле конфига.
       const linkMatch = /^\/start\s+(link[0-9a-f]+)$/.exec(text);
-      if (linkMatch && pendingLinks.has(linkMatch[1])) {
+      const pending = linkMatch ? pendingLinks.get(linkMatch[1]) : null;
+      if (pending && pending.bot === tg.id) {
         pendingLinks.delete(linkMatch[1]);
         const who = chat.username
           ? "@" + chat.username
           : [chat.first_name, chat.last_name].filter(Boolean).join(" ") || String(chat.id);
-        const now = readConfig();
-        now.telegram = Object.assign({}, now.telegram, {
+        writeBotFields(tg.id, {
           chatId: String(chat.id),
           who: who,
           linkedAt: new Date().toISOString(),
         });
-        writeConfig(now);
         await send(tg.token, chat.id, "Connected. Ask me anything about your knowledge base.");
         continue;
       }
@@ -812,42 +837,109 @@ const server = http.createServer(async (req, res) => {
 
   if (url.pathname === "/telegram/config" && req.method === "POST") {
     const body = await readBody(req);
+    const wantId = url.searchParams.get("bot") || body.bot || "";
+
+    // 🔒 СПИСОК МАТЕРИАЛИЗУЕТСЯ ПРИ ПЕРВОЙ ЗАПИСИ, И СТАРОЕ ПОЛЕ УДАЛЯЕТСЯ ТОГДА
+    // ЖЕ. Оставить оба значило бы завести две правды о первом боте: список и
+    // `telegram` разошлись бы на следующей правке, и никто бы не заметил, какая
+    // из них действует. До первой записи файл не трогается — переезд идёт при
+    // чтении (99-1), и откат стоит замены кода.
     const next = readConfig();
-    next.telegram = Object.assign({}, next.telegram);
+    const list = Array.isArray(next.telegramBots) ? next.telegramBots.slice() : [];
+    if (list.length === 0 && next.telegram && next.telegram.token) {
+      list.push(Object.assign({ id: BOT_PREFIX + "1" }, next.telegram));
+    }
+
+    // 🔒 НОВЫЙ БОТ ЗАВОДИТСЯ ЯВНЫМ СЛОВОМ `new`, А НЕ ОПЕЧАТКОЙ В АДРЕСЕ.
+    // Иначе `?bot=b7` вместо `b1` молча создавал бы седьмого бота вместо правки
+    // первого, и человек искал бы, почему настройка «не сохранилась».
+    let idx;
+    if (wantId === "new") {
+      // Номер продолжает максимальный существующий: переиспользованный номер
+      // удалённого бота унаследовал бы его привязку в чужих разговорах.
+      const maxN = list.reduce((m, b) => Math.max(m, Number(String(b.id || "").slice(1)) || 0), 0);
+      list.push({ id: BOT_PREFIX + (maxN + 1) });
+      idx = list.length - 1;
+    } else if (wantId) {
+      idx = list.findIndex((b) => b.id === wantId);
+      if (idx < 0) return json(res, 404, { error: "Нет бота с таким идентификатором" });
+    } else {
+      // Пустой адресат — первый бот: совместимость со старыми вызовами.
+      if (list.length === 0) list.push({ id: BOT_PREFIX + "1" });
+      idx = 0;
+    }
+
+    const bot = Object.assign({}, list[idx]);
+
     if (typeof body.token === "string") {
       const token = body.token.trim();
       if (token && !/^\d+:[A-Za-z0-9_-]+$/.test(token)) {
         return json(res, 400, { error: "That does not look like a bot token" });
       }
       // A new token means a new bot: the stored chat id belongs to somebody else.
-      if (token !== next.telegram.token) {
-        delete next.telegram.chatId;
-        delete next.telegram.who;
+      if (token !== bot.token) {
+        delete bot.chatId;
+        delete bot.who;
       }
-      next.telegram.token = token;
-      offset = 0;
+      bot.token = token;
+      // 🛑 СЧЁТЧИК ОБНОВЛЕНИЙ СБРАСЫВАЕТСЯ У ЭТОГО БОТА, А НЕ ГЛОБАЛЬНО.
+      // ✗ здесь стояло `offset = 0` — ссылка на переменную, удалённую в 99-2:
+      // синтаксис её пропускал, присваивание молча заводило глобальную и не
+      // делало НИЧЕГО. Смена токена без сброса счётчика означала бы, что новый
+      // бот начинает с чужого номера и теряет свои первые сообщения.
+      offsets.set(bot.id, 0);
     }
-    if (typeof body.enabled === "boolean") next.telegram.enabled = body.enabled;
+    if (typeof body.enabled === "boolean") bot.enabled = body.enabled;
     if (body.mode === "rag" || body.mode === "app" || body.mode === "both") {
-      next.telegram.mode = body.mode;
+      bot.mode = body.mode;
     }
+    if (typeof body.title === "string") bot.title = body.title.trim();
     // The application door. Empty string switches the push off without losing the
     // secret; null removes both.
-    if (typeof body.hookUrl === "string") next.telegram.hookUrl = body.hookUrl.trim();
-    if (typeof body.hookSecret === "string") next.telegram.hookSecret = body.hookSecret.trim();
-    if (typeof body.tickUrl === "string") next.telegram.tickUrl = body.tickUrl.trim();
+    if (typeof body.hookUrl === "string") bot.hookUrl = body.hookUrl.trim();
+    if (typeof body.hookSecret === "string") bot.hookSecret = body.hookSecret.trim();
+    if (typeof body.tickUrl === "string") bot.tickUrl = body.tickUrl.trim();
     // Шаг расписания в секундах. Ниже 30 не опускаем: чаще минуты напоминания не
     // нужны никому, а нагрузка растёт линейно и молча.
     if (body.tickSeconds !== undefined) {
       const n = Number(body.tickSeconds);
-      next.telegram.tickSeconds = Number.isFinite(n) && n > 0 ? Math.max(30, Math.min(3600, n)) : 0;
+      bot.tickSeconds = Number.isFinite(n) && n > 0 ? Math.max(30, Math.min(3600, n)) : 0;
     }
     if (body.hookUrl === null) {
-      delete next.telegram.hookUrl;
-      delete next.telegram.hookSecret;
+      delete bot.hookUrl;
+      delete bot.hookSecret;
     }
+
+    list[idx] = bot;
+    next.telegramBots = list;
+    delete next.telegram;
     writeConfig(next);
-    return json(res, 200, { ok: true });
+    return json(res, 200, { ok: true, bot: bot.id });
+  }
+
+  // 🔒 УДАЛЕНИЕ БОТА — ОТДЕЛЬНАЯ ДВЕРЬ, А НЕ ПУСТОЙ ТОКЕН В `config`. Пустой
+  // токен означает «бот пока без токена», и это законное состояние только что
+  // добавленной строки; удаление — другое намерение, и путать их нельзя.
+  //
+  // 🛑 ПЕРЕПИСКА НЕ ТРОГАЕТСЯ. Разговоры и сообщения живут в базе чата —
+  // единственном хранилище, — и удаление подключения не имеет к ним отношения.
+  if (url.pathname === "/telegram/remove" && req.method === "POST") {
+    const body = await readBody(req);
+    const id = url.searchParams.get("bot") || body.bot || "";
+    if (!id) return json(res, 400, { error: "Нужен идентификатор бота" });
+    const next = readConfig();
+    const list = Array.isArray(next.telegramBots) ? next.telegramBots.slice() : [];
+    if (list.length === 0 && next.telegram && next.telegram.token) {
+      list.push(Object.assign({ id: BOT_PREFIX + "1" }, next.telegram));
+    }
+    const idx = list.findIndex((b) => b.id === id);
+    if (idx < 0) return json(res, 404, { error: "Нет бота с таким идентификатором" });
+    list.splice(idx, 1);
+    next.telegramBots = list;
+    delete next.telegram;
+    writeConfig(next);
+    offsets.delete(id);
+    return json(res, 200, { ok: true, removed: id });
   }
 
   if (url.pathname === "/telegram/link/start" && req.method === "POST") {
@@ -856,20 +948,25 @@ const server = http.createServer(async (req, res) => {
     const bot = me && me.result && me.result.username;
     if (!bot) return json(res, 502, { error: "Telegram does not recognise this token" });
     for (const [code, born] of pendingLinks) {
-      if (Date.now() - born > LINK_TTL_MS) pendingLinks.delete(code);
+      if (Date.now() - born.at > LINK_TTL_MS) pendingLinks.delete(code);
     }
     const code = "link" + crypto.randomBytes(8).toString("hex");
-    pendingLinks.set(code, Date.now());
+    // Код помнит СВОЕГО бота — иначе привязка уйдёт не тому (см. цикл опроса).
+    pendingLinks.set(code, { at: Date.now(), bot: tg.id });
     return json(res, 200, { code: code, bot: bot, deepLink: "https://t.me/" + bot + "?start=" + code });
   }
 
   if (url.pathname === "/telegram/link/poll") {
     const code = (url.searchParams.get("code") || "").trim();
-    const fresh = readConfig().telegram || {};
-    if (fresh.chatId && !pendingLinks.has(code)) {
+    // 🔒 СПРАШИВАЕМ О ТОМ БОТЕ, ЧЕЙ ЭТО КОД. ✗ прежде читалось общее поле
+    // конфига: со вторым ботом экран показал бы «привязано» по чужой привязке,
+    // и человек ушёл бы с экрана, не привязав своего.
+    const pending = pendingLinks.get(code);
+    const fresh = botById(pending ? pending.bot : url.searchParams.get("bot")) || {};
+    if (fresh.chatId && !pending) {
       return json(res, 200, { status: "linked", chatId: fresh.chatId, who: fresh.who });
     }
-    if (!pendingLinks.has(code)) return json(res, 200, { status: "expired" });
+    if (!pending) return json(res, 200, { status: "expired" });
     return json(res, 200, { status: "waiting" });
   }
 
