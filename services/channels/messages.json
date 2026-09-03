@@ -418,5 +418,13 @@
     "my": "အသိပညာအခြေခံကို ပိတ်ထားပါသည်။ Agentic RAG ကို ဖွင့်ရန် ပိုင်ရှင်အား တောင်းဆိုပါ။",
     "km": "មូលដ្ឋានចំណេះដឹងត្រូវបានបិទ។ សូមស្នើសុំម្ចាស់បើក Agentic RAG។",
     "lo": "ຖານຄວາມຮູ້ຖືກປິດ. ຂໍໃຫ້ເຈົ້າຂອງເປີດ Agentic RAG."
+  },
+  "noKeyNoLink": {
+    "en": "The OpenAI key is not set up, so I cannot answer yet. Please set it up in the admin panel.",
+    "ru": "Ключ OpenAI не настроен, поэтому я пока не могу отвечать. Настройте его в административной панели."
+  },
+  "keyBadNoLink": {
+    "en": "The OpenAI key is not working — it may be invalid or the account may have no funds. Please check it in the admin panel.",
+    "ru": "Ключ OpenAI не работает — он может быть недействителен или на счёте нет средств. Проверьте его в административной панели."
   }
 }
