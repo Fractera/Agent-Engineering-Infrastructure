@@ -61,14 +61,25 @@ const APP_TICK_URL = process.env.APP_TICK_URL ?? "http://127.0.0.1:3000/api/tele
 const APP_ENV = process.env.APP_ENV_FILE ?? "/opt/fractera/app/.env.local";
 const DEFAULT_TICK_SEC = 60;
 
-function appSecret() {
+/**
+ * Значение ключа из `.env.local` проекта.
+ *
+ * 🔒 ОДИН ЧИТАТЕЛЬ ВМЕСТО ДВУХ (2026-09-03). Ниже `appSecret()` перебирал файл
+ * сам, и второй потребитель завёл бы вторую копию того же перебора — а копии
+ * расходятся на первой правке формата.
+ */
+function appEnv(key) {
   try {
     for (const line of fs.readFileSync(APP_ENV, "utf8").split(String.fromCharCode(10))) {
       const t = line.trim();
-      if (t.startsWith("TELEGRAM_HOOK_SECRET=")) return t.slice("TELEGRAM_HOOK_SECRET=".length).trim();
+      if (t.startsWith(key + "=")) return t.slice(key.length + 1).trim();
     }
   } catch {}
   return "";
+}
+
+function appSecret() {
+  return appEnv("TELEGRAM_HOOK_SECRET");
 }
 
 /**
@@ -287,10 +298,60 @@ async function voiceToText(token, fileId) {
   }
 }
 
+// ── Что бот говорит, когда ответить не может ─────────────────────────────────
+//
+// ✗ ОПЛАЧЕНО ВЛАДЕЛЬЦЕМ 2026-09-03, В ПЕРВУЮ ЖЕ МИНУТУ ПОСЛЕ ПРИВЯЗКИ БОТА. Он
+// написал «Привет» и получил «No relevant context found for the query». Его
+// слова: «это может означать что у меня в том числе неактивен ключ подписки
+// OpenAI либо ключ активен но в нём нет денег… данные сообщения вообще не
+// помогают понять суть проблемы».
+//
+// 🛑 И ПРИЧИНА БЫЛА ИМЕННО ТАКОЙ — ИЗМЕРЕНО В ТОТ ЖЕ ЧАС: ключа OpenAI на сервере
+// не было НИ У ОДНОГО из трёх потребителей (проект, слой данных, граф знаний).
+// Движок отвечал своей фразой про отсутствие контекста, и она пролетала мимо
+// фильтра ниже, потому что фильтр знал два других её варианта.
+//
+// 🔒 ОТСЮДА ЗАКОН: СНАЧАЛА ПРОВЕРЯЕТСЯ УСЛОВИЕ, БЕЗ КОТОРОГО ОТВЕТ НЕВОЗМОЖЕН, И
+// ТОЛЬКО ПОТОМ ТОЛКУЕТСЯ ОТВЕТ. Нет ключа — нет и разговора о пустой базе: база
+// может быть полна, а отвечать всё равно нечем. Ловить формулировки движка
+// бесконечно — их пишет чужой код и меняет с каждой версией.
+//
+// 🔒 ЯЗЫК БЕРЁТСЯ У СОБЕСЕДНИКА, А НЕ У СЛУЖБЫ. Telegram присылает
+// `language_code` того, кто пишет. Служба одноязычна по коду, но её ГОЛОС
+// обращён к человеку — и говорить с ним по-английски, когда он пишет по-русски,
+// значит прятать причину дважды.
+const MESSAGES = require("./messages.json");
+
+/** Строка на языке собеседника; неизвестный язык падает на английский. */
+function say(key, lang, vars) {
+  const dict = MESSAGES[key] || {};
+  const base = String(dict[String(lang || "").slice(0, 2)] || dict.en || "");
+  return base.replace(/\{url\}/g, (vars && vars.url) || "");
+}
+
+/**
+ * Куда послать человека проверять ключ.
+ *
+ * 🛑 АДРЕС НЕ СОБИРАЕТСЯ ПО ШАБЛОНУ ИЗ СОСЕДНЕГО. Закон проекта, оплаченный
+ * дважды: выведенный по догадке путь однажды перестаёт совпадать с настоящим и
+ * ведёт человека в никуда — а он в этот момент и так уже в тупике. Нет
+ * настроенного адреса — называем путь словами, и это честнее ложной ссылки.
+ *
+ * 🛑 ДОЛГ, НАЗВАННЫЙ ВСЛУХ: адреса самого проекта в окружении сервера нет вовсе
+ * (`.env.local` слота знает адрес панели, входа и медиа — своего не знает).
+ * Пока его туда не кладёт рождение сервера, ссылка будет отсутствовать у всех.
+ */
+function projectUrl() {
+  const direct = process.env.PROJECT_URL || appEnv("PROJECT_URL");
+  return direct ? direct.replace(/\/+$/, "") + "/architect/telegram?section=settings" : "";
+}
+
 // The answer itself. The bot is a mouth for the knowledge base: it asks agentic
 // RAG and repeats what comes back. When RAG is off or empty it says so plainly
 // instead of inventing something — a bot that guesses is worse than a silent one.
-async function answer(question) {
+async function answer(question, lang) {
+  // 🔒 УСЛОВИЕ ПРОВЕРЯЕТСЯ ДО ВЫЗОВА, А НЕ ПОСЛЕ ЕГО ПРОВАЛА.
+  if (!openAiKey()) return say("noKey", lang, { url: projectUrl() });
   try {
     const r = await fetch(RAG_URL + "/query", {
       method: "POST",
@@ -298,7 +359,7 @@ async function answer(question) {
       body: JSON.stringify({ query: question, mode: "hybrid" }),
       signal: AbortSignal.timeout(90000),
     });
-    if (!r.ok) return "The knowledge base is not answering right now. Please try again in a minute.";
+    if (!r.ok) return say("ragDown", lang);
     const d = await r.json();
     const text = String((d && (d.response || d.result)) || "").trim();
 
@@ -307,12 +368,21 @@ async function answer(question) {
     // forwarding that verbatim puts an implementation detail in front of somebody
     // who asked a question. An empty base is a legal state and deserves a sentence
     // that says WHICH state it is: nothing loaded, so nothing to answer from.
-    if (!text || text.toLowerCase().includes("[no-context]") || /^sorry, i.?m not able to provide an answer/i.test(text)) {
-      return "There is nothing in the knowledge base yet, so I have nothing to answer from. The owner adds documents in the panel.";
+    // 🔒 ТРЕТЬЯ ФОРМУЛИРОВКА ДВИЖКА ДОБАВЛЕНА ЗДЕСЬ 2026-09-03 — «no relevant
+    // context found». Их будет ещё: текст пишет чужой код. Поэтому главная
+    // защита стоит ВЫШЕ (проверка ключа), а этот список — вторая линия, а не
+    // первая.
+    if (
+      !text ||
+      text.toLowerCase().includes("[no-context]") ||
+      /no relevant context/i.test(text) ||
+      /^sorry, i.?m not able to provide an answer/i.test(text)
+    ) {
+      return say("emptyBase", lang);
     }
     return text;
   } catch {
-    return "The knowledge base is switched off. Ask the owner to turn on Agentic RAG.";
+    return say("ragOff", lang);
   }
 }
 
@@ -493,7 +563,10 @@ async function loop() {
       // inbox and replies through /telegram/send. `both` — the base answers and
       // the application still sees the message.
       const mode = tg.mode === "app" || tg.mode === "both" ? tg.mode : "rag";
-      if (mode !== "app") await send(tg.token, chat.id, await answer(text));
+      // Язык собеседника Telegram присылает у автора сообщения; у пересланного
+      // и у канала его может не быть вовсе — тогда английский.
+      const lang = (msg && msg.from && msg.from.language_code) || "";
+      if (mode !== "app") await send(tg.token, chat.id, await answer(text, lang));
     }
   } catch {
     // A bad poll must never stop the loop; the next tick tries again.

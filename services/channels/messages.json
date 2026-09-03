@@ -1,0 +1,22 @@
+{
+  "noKey": {
+    "en": "The OpenAI key is not set up, so I cannot answer yet. Check it here: {url}",
+    "ru": "Ключ OpenAI не настроен, поэтому я пока не могу отвечать. Проверьте его здесь: {url}"
+  },
+  "keyBad": {
+    "en": "The OpenAI key is not working — it may be invalid or the account may have no funds. Check it here: {url}",
+    "ru": "Ключ OpenAI не работает — он может быть недействителен или на счёте нет средств. Проверьте его здесь: {url}"
+  },
+  "emptyBase": {
+    "en": "There is nothing in the knowledge base yet, so I have nothing to answer from. The owner adds documents in the panel.",
+    "ru": "В базе знаний пока ничего нет, поэтому мне не из чего отвечать. Владелец добавляет документы в панели."
+  },
+  "ragDown": {
+    "en": "The knowledge base is not answering right now. Please try again in a minute.",
+    "ru": "База знаний сейчас не отвечает. Попробуйте ещё раз через минуту."
+  },
+  "ragOff": {
+    "en": "The knowledge base is switched off. Ask the owner to turn on Agentic RAG.",
+    "ru": "База знаний выключена. Попросите владельца включить Agentic RAG."
+  }
+}
