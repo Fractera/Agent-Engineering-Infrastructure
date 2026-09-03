@@ -133,14 +133,28 @@ function bots() {
     list.push(Object.assign({ id: BOT_PREFIX + "1" }, cfg.telegram));
   }
 
+  // 🔒 КУДА ДОСТАВЛЯТЬ — СВОЙСТВО ПРОЕКТА, А НЕ БОТА (97-8, 2026-09-03).
+  //
+  // ✗ ОПЛАЧЕНО ВЛАДЕЛЬЦЕМ В ТОТ ЖЕ ЧАС: он завёл второго бота, написал ему —
+  // служба сообщение ПРИНЯЛА (оно в журнале), а в чат оно не попало и разговор
+  // не появился. Причина: адрес двери и секрет были записаны ТОЛЬКО первому
+  // боту, вручную; новый унаследовал пустоту, и `if (tg.hookUrl)` в цикле
+  // молча ничего не делал. Ни ошибки, ни следа — снаружи это выглядит как
+  // «второй бот не работает».
+  //
+  // 🔒 ЛЕЧЕНИЕ — НАСЛЕДОВАНИЕ, А НЕ ЗАПОЛНЕНИЕ РУКАМИ. Дверь приложения одна на
+  // весь сервер: все боты стучат в неё одним секретом. Требовать настройки у
+  // каждого нового значило бы, что человек обязан помнить то, что система знает
+  // сама, — и забывать это будет каждый раз молча.
   const secret = appSecret();
+  const shared = list.find((b) => b && b.hookUrl && b.hookSecret) || {};
   return list.map((raw, i) => {
     const b = Object.assign({}, raw);
     if (!b.id) b.id = BOT_PREFIX + (i + 1);
-    b.hookSecret = b.hookSecret || secret;
+    b.hookSecret = b.hookSecret || shared.hookSecret || secret;
     if (b.hookSecret) {
-      b.hookUrl = b.hookUrl || APP_HOOK_URL;
-      b.tickUrl = b.tickUrl || APP_TICK_URL;
+      b.hookUrl = b.hookUrl || shared.hookUrl || APP_HOOK_URL;
+      b.tickUrl = b.tickUrl || shared.tickUrl || APP_TICK_URL;
       if (b.tickSeconds === undefined) b.tickSeconds = DEFAULT_TICK_SEC;
       if (!b.mode) b.mode = "app";
     }
