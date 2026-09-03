@@ -479,22 +479,36 @@ async function answer(question, lang) {
   }
 }
 
-let offset = 0;
-let looping = false;
+// ── СЧЁТЧИК ОБНОВЛЕНИЙ И ЗАМОК — У КАЖДОГО БОТА СВОИ (99-2, 2026-09-03) ───────
+//
+// 🛑 ЗДЕСЬ СТОЯЛИ ДВЕ ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ — `let offset = 0` И
+// `let looping = false`, — И ИМЕННО ОНИ ДЕЛАЛИ СЛУЖБУ ОДНОБОТОВОЙ. Telegram
+// ведёт очередь обновлений НА БОТА: попроси второго бота начать с чужого номера
+// — и его сообщения будут пропущены молча, потому что `getUpdates` считает всё
+// до `offset` подтверждённым и удаляет со своей стороны. Общий замок был бы не
+// лучше: пока один бот висит в 25-секундном ожидании, второй не опрашивается
+// вовсе.
+//
+// 🔒 ЗАКОН ОДНОГО ЧИТАТЕЛЯ ПРИ ЭТОМ НЕ НАРУШЕН, И РАЗНИЦА МЕХАНИЧЕСКАЯ. Опасно
+// опрашивать ОДИН токен двумя читателями — они молча съедают половину сообщений
+// друг друга. Здесь у каждого цикла СВОЙ токен, а очереди у Telegram разные,
+// значит циклы независимы по устройству, а не по договорённости.
+const offsets = new Map();
+const looping = new Set();
 
-async function loop() {
-  if (looping) return;
-  looping = true;
+async function loopBot(tg) {
+  if (looping.has(tg.id)) return;
+  looping.add(tg.id);
   try {
-    const tg = channel();
     if (!tg.token || tg.enabled === false) return;
 
+    const offset = offsets.get(tg.id) || 0;
     const query = "?timeout=25&offset=" + offset + "&allowed_updates=%5B%22message%22%5D";
     const upd = await telegram(tg.token, "getUpdates", query);
     const results = upd && Array.isArray(upd.result) ? upd.result : [];
 
     for (const u of results) {
-      offset = Math.max(offset, (u.update_id || 0) + 1);
+      offsets.set(tg.id, Math.max(offsets.get(tg.id) || 0, (u.update_id || 0) + 1));
       const msg = u.message;
       const chat = msg && msg.chat;
       if (!chat || chat.id == null) continue;
@@ -664,11 +678,27 @@ async function loop() {
   } catch {
     // A bad poll must never stop the loop; the next tick tries again.
   } finally {
-    looping = false;
+    looping.delete(tg.id);
   }
 }
 
-setInterval(loop, 2000);
+/**
+ * Проход по всем ботам.
+ *
+ * 🔒 ЦИКЛЫ ЗАПУСКАЮТСЯ ПАРАЛЛЕЛЬНО И НЕ ЖДУТ ДРУГ ДРУГА. `await` в этом месте
+ * означал бы, что второй бот молчит все 25 секунд, пока первый висит в
+ * долгом ожидании, — то есть один бот делал бы остальных неотзывчивыми.
+ *
+ * 🔒 ОТКАЗ ОДНОГО НЕ ТРОГАЕТ ОСТАЛЬНЫХ: своё исключение ловит каждый цикл,
+ * и `catch` здесь — только на случай сломанного конфига.
+ */
+function pollAll() {
+  try {
+    for (const b of bots()) loopBot(b);
+  } catch {}
+}
+
+setInterval(pollAll, 2000);
 
 // ── Тик по расписанию: планировщик, которого у платформы не было ────────────
 //
@@ -683,7 +713,12 @@ setInterval(loop, 2000);
 let lastTick = 0;
 
 async function tick() {
-  const tg = channel();
+  // 🔒 РАСПИСАНИЕ ПРИНАДЛЕЖИТ ПРОЕКТУ, А НЕ БОТУ, И ПОТОМУ ОНО ОДНО. Стучим в
+  // дверь приложения по времени; какой бот при этом настроен — безразлично.
+  // Берём первого: у него живут адрес двери и шаг расписания. ✗ читать здесь
+  // только старое поле `telegram` значило бы, что на сервере со списком ботов
+  // расписание выключится молча.
+  const tg = bots()[0] || channel();
   const every = Number(tg.tickSeconds || 0);
   // Ноль или пусто — расписание выключено. Это законное состояние: проект без
   // напоминаний не должен платить за пустые запросы каждую минуту.
@@ -725,7 +760,16 @@ function readBody(req) {
 
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, "http://" + HOST + ":" + PORT);
-  const tg = channel();
+
+  // 🛑 ДВЕРИ ЧИТАЮТ БОТА ЧЕРЕЗ СПИСОК, А НЕ ТОЛЬКО СТАРУЮ ФОРМУ КОНФИГА —
+  // ИНАЧЕ ОНИ СЛОМАЛИСЬ БЫ В ТОТ ДЕНЬ, КОГДА ПОЯВИТСЯ ВТОРОЙ БОТ. `channel()`
+  // смотрит в поле `telegram`; как только конфиг станет списком `telegramBots`,
+  // это поле опустеет — и все двери разом начали бы отвечать «бот не настроен»,
+  // хотя боты есть. Отказ был бы МОЛЧАЛИВЫМ и обнаружился бы у владельца.
+  //
+  // Адресат берётся из запроса (`?bot=b2`), пустой — первый бот; полная
+  // адресация отправки и привязки — подшаг 99-3.
+  const tg = botById(url.searchParams.get("bot")) || channel();
 
   if (url.pathname === "/status") {
     // 🔒 СНИМОК ОДНОГО БОТА СЧИТАЕТСЯ ОДНОЙ ФУНКЦИЕЙ ДЛЯ СПИСКА И ДЛЯ ПРЕЖНЕГО
