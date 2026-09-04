@@ -33,6 +33,8 @@ export type AdminStrings = {
   notSecure: string;
   notSecureTooltip: string;
   preview: string;
+  /** Подпись кнопки, ведущей в чат с ИИ-агентом (BACKLOG 96-9). */
+  chatPreview: string;
   signIn: string;
   menu: string;
   /** Корень пути в хлебных крошках. */

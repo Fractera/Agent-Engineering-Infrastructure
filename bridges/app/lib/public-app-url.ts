@@ -46,6 +46,30 @@ export function publicAppUrl(): { url: string; mode: "domain" | "ip"; reason?: s
   };
 }
 
+/**
+ * Адрес ЧАТА (`:3600`) снаружи — брат `publicAppUrl()` и построен по тому же правилу
+ * (BACKLOG 96-9, сделано 2026-09-04 по просьбе владельца).
+ *
+ * 🔒 АДРЕС ВЫВОДИТСЯ ИЗ ОДНОЙ БАЗЫ, А НЕ НАСТРАИВАЕТСЯ ОТДЕЛЬНО. Второе поле «адрес чата»
+ * в конфиге разошлось бы с доменом при первой же его смене — и разошлось бы молча, потому
+ * что кнопка продолжала бы вести куда-то. Поэтому здесь ровно те же два состояния, что у
+ * приложения: домен есть → поддомен `chat.`; домена нет → IP и порт службы.
+ *
+ * 🔒 ПОДДОМЕН `chat` НЕ ПРИДУМАН ЗДЕСЬ, а взят из `SUBDOMAINS` (`lib/server-ip.ts`) — того же
+ * списка, из которого берутся SAN-список сертификата, блоки nginx и проверка DNS. Вторая копия
+ * имени поддомена дала бы кнопку в никуда на сервере, где сертификат выписан по первому списку.
+ */
+export function publicChatUrl(): { url: string; mode: "domain" | "ip"; reason?: string } {
+  const base = publicAppUrl();
+  if (!base.url) return { url: "", mode: base.mode, reason: base.reason };
+  if (base.mode === "domain") {
+    // `https://example.com` → `https://chat.example.com`
+    return { url: base.url.replace(/^https:\/\//, "https://chat."), mode: "domain" };
+  }
+  // IP-режим: чат отвечает на своём порту того же адреса.
+  return { url: base.url.replace(/:3000$/, ":3600"), mode: "ip" };
+}
+
 // ---- addresses that follow the server, not the typist --------------------------------
 //
 // The address of the app is a FACT of this deployment, not an opinion: it is whatever the

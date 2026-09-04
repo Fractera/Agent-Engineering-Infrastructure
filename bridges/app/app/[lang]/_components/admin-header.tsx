@@ -17,7 +17,7 @@
 
 import Link from "next/link";
 import {
-  Menu, Globe, X as XIcon, LogOut, Palette, Languages, Columns3, SlidersHorizontal, PanelTop, PanelBottom,
+  Menu, Globe, MessageSquare, X as XIcon, LogOut, Palette, Languages, Columns3, SlidersHorizontal, PanelTop, PanelBottom,
   Cookie, Users, ImagePlus, Database, BrainCircuit, Brain, Map as MapIcon, Download, Upload,
   Link2, MessagesSquare, Sparkles, GitBranch, Info, History, Settings, BookOpen,
   HelpCircle, PackagePlus, FileText, Target, Boxes, Wrench, Network, BookMarked, GraduationCap,
@@ -25,7 +25,7 @@ import {
 import { NAV_GROUPS, NAV_BY_GROUP, adminHref, type AdminPageSlug } from "@/lib/admin-nav";
 import { warningsBySlug, type AdminWarning } from "@/lib/admin-warnings";
 import { hiddenSlugs } from "@/lib/platform-features";
-import { publicAppUrl } from "@/lib/public-app-url";
+import { publicAppUrl, publicChatUrl } from "@/lib/public-app-url";
 import { listProducts } from "@/lib/products-config";
 import type { AdminStrings } from "@/lib/i18n/admin-strings";
 
@@ -122,6 +122,8 @@ export function AdminHeader(
   // уронить шапку: она рисуется на каждой странице панели.
   let appUrl = "";
   try { appUrl = publicAppUrl().url; } catch { appUrl = ""; }
+  let chatUrl: string;
+  try { chatUrl = publicChatUrl().url; } catch { chatUrl = ""; }
 
   return (
     <>
@@ -372,6 +374,32 @@ export function AdminHeader(
             >
               <Globe className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">{s.preview}</span>
+            </span>
+          )}
+
+          {/* Кнопка в ЧАТ — сосед кнопки на сайт (BACKLOG 96-9, 2026-09-04).
+              Ведёт себя ровно так же, и это не совпадение: обе показывают одну
+              службу снаружи, и разные повадки у соседних кнопок читаются как
+              разная надёжность. Адрес берёт серверная `publicChatUrl()`, брат
+              `publicAppUrl()`; нет адреса — остаётся серая надпись, потому что
+              ссылка в никуда хуже честной заглушки. */}
+          {chatUrl ? (
+            <a
+              href={chatUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border px-3 text-xs text-foreground transition-colors hover:bg-muted"
+            >
+              <MessageSquare className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">{s.chatPreview}</span>
+            </a>
+          ) : (
+            <span
+              title={s.skeletonNotice}
+              className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border px-3 text-xs text-muted-foreground/60"
+            >
+              <MessageSquare className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">{s.chatPreview}</span>
             </span>
           )}
 

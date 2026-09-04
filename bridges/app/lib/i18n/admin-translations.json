@@ -3441,7 +3441,8 @@
       "ownerNoteSaved": "Description saved",
       "ownerNoteFailed": "Could not save the description",
       "ownerNoteVoiceHint": "Dictating is usually longer and more precise than typing — and length helps here."
-    }
+    },
+    "chatPreview": "Chat"
   },
   "ru": {
     "notSecure": "Не защищено",
@@ -6885,7 +6886,8 @@
       "ownerNoteSaved": "Описание сохранено",
       "ownerNoteFailed": "Не удалось сохранить описание",
       "ownerNoteVoiceHint": "Надиктовать обычно выходит подробнее, чем напечатать, — а подробность здесь и есть польза."
-    }
+    },
+    "chatPreview": "Чат"
   },
   "es": {
     "warnings": {
@@ -6897,7 +6899,8 @@
       "warnCta": {
         "auth-bypass": "Cerrar el bypass de autenticación"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "fr": {
     "warnings": {
@@ -6909,7 +6912,8 @@
       "warnCta": {
         "auth-bypass": "Fermer le contournement d'authentification"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "de": {
     "warnings": {
@@ -6921,7 +6925,8 @@
       "warnCta": {
         "auth-bypass": "Auth-Bypass schließen"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "it": {
     "warnings": {
@@ -6933,7 +6938,8 @@
       "warnCta": {
         "auth-bypass": "Chiudi il bypass di autenticazione"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "pt": {
     "warnings": {
@@ -6945,7 +6951,8 @@
       "warnCta": {
         "auth-bypass": "Fechar o bypass de autenticação"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "pl": {
     "warnings": {
@@ -6957,7 +6964,8 @@
       "warnCta": {
         "auth-bypass": "Zamknij obejście autoryzacji"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "tr": {
     "warnings": {
@@ -6969,7 +6977,8 @@
       "warnCta": {
         "auth-bypass": "Kimlik doğrulama atlamasını kapat"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "nl": {
     "warnings": {
@@ -6981,7 +6990,8 @@
       "warnCta": {
         "auth-bypass": "Auth-bypass sluiten"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "sv": {
     "warnings": {
@@ -6993,7 +7003,8 @@
       "warnCta": {
         "auth-bypass": "Stäng kringgåendet av autentisering"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "no": {
     "warnings": {
@@ -7005,7 +7016,8 @@
       "warnCta": {
         "auth-bypass": "Lukk autentiseringsomgåelsen"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "da": {
     "warnings": {
@@ -7017,7 +7029,8 @@
       "warnCta": {
         "auth-bypass": "Luk godkendelsesomgåelsen"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "fi": {
     "warnings": {
@@ -7029,7 +7042,8 @@
       "warnCta": {
         "auth-bypass": "Sulje todennuksen ohitus"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "is": {
     "warnings": {
@@ -7041,7 +7055,8 @@
       "warnCta": {
         "auth-bypass": "Loka auðkenningarsniðgöngunni"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "el": {
     "warnings": {
@@ -7053,7 +7068,8 @@
       "warnCta": {
         "auth-bypass": "Κλείσιμο παράκαμψης ελέγχου ταυτότητας"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "cs": {
     "warnings": {
@@ -7065,7 +7081,8 @@
       "warnCta": {
         "auth-bypass": "Zavřít obcházení ověřování"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "sk": {
     "warnings": {
@@ -7077,7 +7094,8 @@
       "warnCta": {
         "auth-bypass": "Zavrieť obchádzanie overovania"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "hu": {
     "warnings": {
@@ -7089,7 +7107,8 @@
       "warnCta": {
         "auth-bypass": "Hitelesítés megkerülésének lezárása"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "ro": {
     "warnings": {
@@ -7101,7 +7120,8 @@
       "warnCta": {
         "auth-bypass": "Închide ocolirea autentificării"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "hr": {
     "warnings": {
@@ -7113,7 +7133,8 @@
       "warnCta": {
         "auth-bypass": "Zatvori zaobilaženje autentifikacije"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "sl": {
     "warnings": {
@@ -7125,7 +7146,8 @@
       "warnCta": {
         "auth-bypass": "Zapri obhod avtentikacije"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "et": {
     "warnings": {
@@ -7137,7 +7159,8 @@
       "warnCta": {
         "auth-bypass": "Sulge autentimise vahelejätmine"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "lv": {
     "warnings": {
@@ -7149,7 +7172,8 @@
       "warnCta": {
         "auth-bypass": "Aizvērt autentifikācijas apiešanu"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "lt": {
     "warnings": {
@@ -7161,7 +7185,8 @@
       "warnCta": {
         "auth-bypass": "Uždaryti autentifikavimo apėjimą"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "mt": {
     "warnings": {
@@ -7173,7 +7198,8 @@
       "warnCta": {
         "auth-bypass": "Agħlaq l-evitar tal-awtentikazzjoni"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "ca": {
     "warnings": {
@@ -7185,7 +7211,8 @@
       "warnCta": {
         "auth-bypass": "Tanca el bypass d'autenticació"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "gl": {
     "warnings": {
@@ -7197,7 +7224,8 @@
       "warnCta": {
         "auth-bypass": "Pechar o bypass de autenticación"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "cy": {
     "warnings": {
@@ -7209,7 +7237,8 @@
       "warnCta": {
         "auth-bypass": "Cau'r osgoi dilysu"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "ga": {
     "warnings": {
@@ -7221,7 +7250,8 @@
       "warnCta": {
         "auth-bypass": "Dún an seachaint fíordheimhnithe"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "eu": {
     "warnings": {
@@ -7233,7 +7263,8 @@
       "warnCta": {
         "auth-bypass": "Itxi autentifikazioa saihesteko modua"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "uk": {
     "warnings": {
@@ -7245,7 +7276,8 @@
       "warnCta": {
         "auth-bypass": "Закрити обхід автентифікації"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "be": {
     "warnings": {
@@ -7257,7 +7289,8 @@
       "warnCta": {
         "auth-bypass": "Закрыць абыход аўтэнтыфікацыі"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "bg": {
     "warnings": {
@@ -7269,7 +7302,8 @@
       "warnCta": {
         "auth-bypass": "Затвори заобикалянето на удостоверяването"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "sr": {
     "warnings": {
@@ -7281,7 +7315,8 @@
       "warnCta": {
         "auth-bypass": "Затвори заобилажење аутентификације"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "bs": {
     "warnings": {
@@ -7293,7 +7328,8 @@
       "warnCta": {
         "auth-bypass": "Zatvori zaobilaženje autentifikacije"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "mk": {
     "warnings": {
@@ -7305,7 +7341,8 @@
       "warnCta": {
         "auth-bypass": "Затвори го заобиколувањето на автентикацијата"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "sq": {
     "warnings": {
@@ -7317,7 +7354,8 @@
       "warnCta": {
         "auth-bypass": "Mbyll anashkalimin e vërtetimit"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "kk": {
     "warnings": {
@@ -7329,7 +7367,8 @@
       "warnCta": {
         "auth-bypass": "Аутентификацияны айналып өтуді жабу"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "uz": {
     "warnings": {
@@ -7341,7 +7380,8 @@
       "warnCta": {
         "auth-bypass": "Autentifikatsiyani chetlab o'tishni yopish"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "ky": {
     "warnings": {
@@ -7353,7 +7393,8 @@
       "warnCta": {
         "auth-bypass": "Аутентификацияны айланып өтүүнү жабуу"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "tg": {
     "warnings": {
@@ -7365,7 +7406,8 @@
       "warnCta": {
         "auth-bypass": "Пӯшидани гузариш аз аутентификатсия"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "tk": {
     "warnings": {
@@ -7377,7 +7419,8 @@
       "warnCta": {
         "auth-bypass": "Autentifikasiýany dolanmagy ýapmak"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "az": {
     "warnings": {
@@ -7389,7 +7432,8 @@
       "warnCta": {
         "auth-bypass": "Autentifikasiyanın yan keçilməsini bağla"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "hy": {
     "warnings": {
@@ -7401,7 +7445,8 @@
       "warnCta": {
         "auth-bypass": "Փակել նույնականացման շրջանցումը"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "ka": {
     "warnings": {
@@ -7413,7 +7458,8 @@
       "warnCta": {
         "auth-bypass": "ავთენტიფიკაციის გვერდის ავლის დახურვა"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "mn": {
     "warnings": {
@@ -7425,7 +7471,8 @@
       "warnCta": {
         "auth-bypass": "Нэвтрэлтийг тойрч гарахыг хаах"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "ar": {
     "warnings": {
@@ -7437,7 +7484,8 @@
       "warnCta": {
         "auth-bypass": "إغلاق تجاوز المصادقة"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "he": {
     "warnings": {
@@ -7449,7 +7497,8 @@
       "warnCta": {
         "auth-bypass": "סגור את עקיפת האימות"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "fa": {
     "warnings": {
@@ -7461,7 +7510,8 @@
       "warnCta": {
         "auth-bypass": "بستن دور زدن احراز هویت"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "ku": {
     "warnings": {
@@ -7473,7 +7523,8 @@
       "warnCta": {
         "auth-bypass": "Derbaskirina rastandinê bigire"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "af": {
     "warnings": {
@@ -7485,7 +7536,8 @@
       "warnCta": {
         "auth-bypass": "Sluit die verifikasie-omseiling"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "sw": {
     "warnings": {
@@ -7497,7 +7549,8 @@
       "warnCta": {
         "auth-bypass": "Funga kupita uthibitishaji"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "ha": {
     "warnings": {
@@ -7509,7 +7562,8 @@
       "warnCta": {
         "auth-bypass": "Rufe ƙetare tantancewa"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "yo": {
     "warnings": {
@@ -7521,7 +7575,8 @@
       "warnCta": {
         "auth-bypass": "Ti yíyera fún ìfọwọ́sí"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "ig": {
     "warnings": {
@@ -7533,7 +7588,8 @@
       "warnCta": {
         "auth-bypass": "Mechie ịgafe nyocha"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "am": {
     "warnings": {
@@ -7545,7 +7601,8 @@
       "warnCta": {
         "auth-bypass": "የማረጋገጫ ማለፊያውን ዝጋ"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "zu": {
     "warnings": {
@@ -7557,7 +7614,8 @@
       "warnCta": {
         "auth-bypass": "Vala ukweqa ukuqinisekiswa"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "xh": {
     "warnings": {
@@ -7569,7 +7627,8 @@
       "warnCta": {
         "auth-bypass": "Vala ukutshipha kokuqinisekiswa"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "rw": {
     "warnings": {
@@ -7581,7 +7640,8 @@
       "warnCta": {
         "auth-bypass": "Funga kwirenga kwemeza"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "so": {
     "warnings": {
@@ -7593,7 +7653,8 @@
       "warnCta": {
         "auth-bypass": "Xir ka gudbidda xaqiijinta"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "zh": {
     "warnings": {
@@ -7605,7 +7666,8 @@
       "warnCta": {
         "auth-bypass": "关闭身份验证绕过"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "ja": {
     "warnings": {
@@ -7617,7 +7679,8 @@
       "warnCta": {
         "auth-bypass": "認証バイパスを閉じる"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "ko": {
     "warnings": {
@@ -7629,7 +7692,8 @@
       "warnCta": {
         "auth-bypass": "인증 우회 닫기"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "hi": {
     "warnings": {
@@ -7641,7 +7705,8 @@
       "warnCta": {
         "auth-bypass": "प्रमाणीकरण बायपास बंद करें"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "ur": {
     "warnings": {
@@ -7653,7 +7718,8 @@
       "warnCta": {
         "auth-bypass": "توثیق بائی پاس بند کریں"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "bn": {
     "warnings": {
@@ -7665,7 +7731,8 @@
       "warnCta": {
         "auth-bypass": "অথেন্টিকেশন বাইপাস বন্ধ করুন"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "te": {
     "warnings": {
@@ -7677,7 +7744,8 @@
       "warnCta": {
         "auth-bypass": "ప్రామాణీకరణ బైపాస్‌ను మూసివేయండి"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "mr": {
     "warnings": {
@@ -7689,7 +7757,8 @@
       "warnCta": {
         "auth-bypass": "प्रमाणीकरण बायपास बंद करा"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "kn": {
     "warnings": {
@@ -7701,7 +7770,8 @@
       "warnCta": {
         "auth-bypass": "ದೃಢೀಕರಣ ಬೈಪಾಸ್ ಮುಚ್ಚಿ"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "gu": {
     "warnings": {
@@ -7713,7 +7783,8 @@
       "warnCta": {
         "auth-bypass": "ઓથેન્ટિકેશન બાયપાસ બંધ કરો"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "ml": {
     "warnings": {
@@ -7725,7 +7796,8 @@
       "warnCta": {
         "auth-bypass": "ഓതന്റിക്കേഷൻ ബൈപാസ് അടയ്ക്കുക"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "ta": {
     "warnings": {
@@ -7737,7 +7809,8 @@
       "warnCta": {
         "auth-bypass": "அங்கீகார தவிர்ப்பை மூடு"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "ne": {
     "warnings": {
@@ -7749,7 +7822,8 @@
       "warnCta": {
         "auth-bypass": "प्रमाणीकरण बाइपास बन्द गर्नुहोस्"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "vi": {
     "warnings": {
@@ -7761,7 +7835,8 @@
       "warnCta": {
         "auth-bypass": "Đóng chế độ bỏ qua xác thực"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "th": {
     "warnings": {
@@ -7773,7 +7848,8 @@
       "warnCta": {
         "auth-bypass": "ปิดการข้ามการยืนยันตัวตน"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "id": {
     "warnings": {
@@ -7785,7 +7861,8 @@
       "warnCta": {
         "auth-bypass": "Tutup bypass autentikasi"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "ms": {
     "warnings": {
@@ -7797,7 +7874,8 @@
       "warnCta": {
         "auth-bypass": "Tutup pintasan pengesahan"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "tl": {
     "warnings": {
@@ -7809,7 +7887,8 @@
       "warnCta": {
         "auth-bypass": "Isara ang bypass sa pagpapatunay"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "my": {
     "warnings": {
@@ -7821,7 +7900,8 @@
       "warnCta": {
         "auth-bypass": "အထောက်အထားစိစစ်ခြင်းကျော်ဖြတ်မှုကို ပိတ်ရန်"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "km": {
     "warnings": {
@@ -7833,7 +7913,8 @@
       "warnCta": {
         "auth-bypass": "បិទការឆ្លងកាត់ការផ្ទៀងផ្ទាត់អត្តសញ្ញាណ"
       }
-    }
+    },
+    "chatPreview": "Chat"
   },
   "lo": {
     "warnings": {
@@ -7845,6 +7926,7 @@
       "warnCta": {
         "auth-bypass": "ປິດການຂ້າມການພິສູດຢືນຢັນຕົວຕົນ"
       }
-    }
+    },
+    "chatPreview": "Chat"
   }
 }
