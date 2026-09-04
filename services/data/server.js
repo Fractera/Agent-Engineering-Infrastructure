@@ -1297,9 +1297,21 @@ app.put('/panel-settings/:key', (req, res) => {
 const RAG_ENV_FILE  = process.env.RAG_ENV_PATH  ?? '/opt/fractera/services/rag/.env'
 const DATA_ENV_FILE = process.env.DATA_ENV_PATH ?? resolve(__dirname, '.env')
 
+// 🔒 `configured` ОПИСЫВАЕТ СПОСОБНОСТЬ, А НЕ ФАЙЛ, И ЭТО НЕ ПРИДИРКА.
+// Ровно этой подменой был оплачен шаг 107: плашка спрашивала «есть ли строка в
+// файле» вместо «может ли служба работать». У слоя данных порядок поиска ключа
+// ДВОЙНОЙ — `openAiKey()` выше читает файл слота первым и только потом своё
+// окружение. Поэтому у потребителя объявляется не один файл, а ПОРЯДОК ЧТЕНИЯ,
+// и «задан» значит «хотя бы один источник даёт ключ целиком».
 const KEY_CONSUMERS = [
   { id: 'app',   file: APP_ENV_FILE,  vars: ['OPENAI_API_KEY'] },
-  { id: 'data',  file: DATA_ENV_FILE, vars: ['OPENAI_API_KEY'] },
+  {
+    id: 'data',
+    file: DATA_ENV_FILE,
+    vars: ['OPENAI_API_KEY'],
+    // Пишем в своё, но признаём и слот: так делает сама служба.
+    reads: [{ file: APP_ENV_FILE, vars: ['OPENAI_API_KEY'] }, { file: DATA_ENV_FILE, vars: ['OPENAI_API_KEY'] }],
+  },
   { id: 'graph', file: RAG_ENV_FILE,  vars: ['LLM_BINDING_API_KEY', 'EMBEDDING_BINDING_API_KEY'] },
 ]
 
@@ -1343,14 +1355,13 @@ function openAiKeyState() {
   const out = {}
   for (const c of KEY_CONSUMERS) {
     const present = existsSync(c.file)
-    const values = c.vars.map((n) => envValueOf(c.file, n))
-    out[c.id] = {
-      present,
-      // 🔒 Одна из двух у графа — это работающая генерация при слепом встраивании,
-      // то есть тот же молчаливый отказ. Поэтому `every`, а не `some`.
-      configured: present && values.every(Boolean),
-      vars: c.vars,
-    }
+    // Порядок чтения: объявленный, либо собственный файл как единственный источник.
+    const sources = c.reads ?? [{ file: c.file, vars: c.vars }]
+    // 🔒 ВНУТРИ ИСТОЧНИКА — `every`: одна из двух у графа это работающая генерация
+    // при слепом встраивании, то есть тот же молчаливый отказ.
+    // 🔒 МЕЖДУ ИСТОЧНИКАМИ — `some`: служба ищет по очереди и берёт первый годный.
+    const configured = sources.some((s) => s.vars.map((n) => envValueOf(s.file, n)).every(Boolean))
+    out[c.id] = { present, configured, vars: c.vars }
   }
   return out
 }
