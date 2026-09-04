@@ -1275,6 +1275,107 @@ app.put('/panel-settings/:key', (req, res) => {
   res.json({ ok: true })
 })
 
+// ── ОДНА ДВЕРЬ ДЛЯ КЛЮЧА OPENAI (шаг 109, 2026-09-04) ────────────────────────
+//
+// ✗ ЧЕМ ОПЛАЧЕНА. Ключ вводится в ТРЁХ местах — панель, экран архитектора, чат, —
+// и каждое писало сама́ по своему списку имён. Они разошлись молча: экран писал
+// графу `OPENAI_API_KEY`, которую LightRAG не читает (он читает
+// `LLM_BINDING_API_KEY` и `EMBEDDING_BINDING_API_KEY`), чат не писал графу вовсе.
+// Плашка зеленела, граф оставался слепым, отказ у него молчаливый.
+//
+// 🔒 ЛЕЧЕНИЕ — НЕ «ПОПРАВИТЬ ТРИ СПИСКА», А УБРАТЬ ДВА. Здесь единственный на всю
+// платформу ответ на вопрос «кто потребляет ключ и какими именами его читает».
+// Три экрана становятся ЗВОНЯЩИМИ.
+//
+// 🔒 ПОЧЕМУ ИМЕННО ЭТА СЛУЖБА, А НЕ СЛОТ И НЕ ПАНЕЛЬ. Гостевой слот в покое ПУСТ
+// и сменяем — писатель, живущий в нём, исчезает вместе с ним. А гостевое
+// приложение не имеет права зависеть от панели в рантайме: с этой зависимостью
+// умирает право владельца уйти. Служба данных есть всегда и уже проверяет секрет.
+//
+// 🔒 ИМЯ ПЕРЕМЕННОЙ ПРИНАДЛЕЖИТ ПОТРЕБИТЕЛЮ. Четвёртый потребитель завтра читает
+// своё имя; список правится ЗДЕСЬ и нигде больше.
+const RAG_ENV_FILE  = process.env.RAG_ENV_PATH  ?? '/opt/fractera/services/rag/.env'
+const DATA_ENV_FILE = process.env.DATA_ENV_PATH ?? resolve(__dirname, '.env')
+
+const KEY_CONSUMERS = [
+  { id: 'app',   file: APP_ENV_FILE,  vars: ['OPENAI_API_KEY'] },
+  { id: 'data',  file: DATA_ENV_FILE, vars: ['OPENAI_API_KEY'] },
+  { id: 'graph', file: RAG_ENV_FILE,  vars: ['LLM_BINDING_API_KEY', 'EMBEDDING_BINDING_API_KEY'] },
+]
+
+/** Значение переменной из env-файла. `null` — нет файла, нет строки или строка пуста. */
+function envValueOf(file, name) {
+  try {
+    const raw = readFileSync(file, 'utf8')
+    const m = raw.match(new RegExp(`^${name}=(.*)$`, 'm'))
+    const v = m?.[1]?.trim()
+    return v ? v : null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Записать переменные ПОСТРОЧНО, сохранив всё остальное.
+ *
+ * 🔒 ФАЙЛ ЦЕЛИКОМ НЕ ПЕРЕПИСЫВАЕТСЯ: рядом лежат пароли, пути и настройки службы,
+ * и снимок затёр бы их при каждой правке ключа. Тот же закон, что у писателя
+ * `.env.local` в слое архитектора.
+ */
+function setEnvVars(file, pairs) {
+  if (!existsSync(file)) return { ok: false, reason: 'absent' }
+  try {
+    let raw = readFileSync(file, 'utf8')
+    for (const [name, value] of Object.entries(pairs)) {
+      const line = `${name}=${value}`
+      const re = new RegExp(`^${name}=.*$`, 'm')
+      raw = re.test(raw) ? raw.replace(re, line) : (raw.endsWith('\n') ? raw : raw + '\n') + line + '\n'
+    }
+    writeFileSync(file, raw, { mode: 0o600 })
+    return { ok: true }
+  } catch (e) {
+    return { ok: false, reason: String(e?.message ?? e) }
+  }
+}
+
+/** Состояние: у кого ключ есть. «Задан» = заполнены ВСЕ переменные потребителя. */
+function openAiKeyState() {
+  const out = {}
+  for (const c of KEY_CONSUMERS) {
+    const present = existsSync(c.file)
+    const values = c.vars.map((n) => envValueOf(c.file, n))
+    out[c.id] = {
+      present,
+      // 🔒 Одна из двух у графа — это работающая генерация при слепом встраивании,
+      // то есть тот же молчаливый отказ. Поэтому `every`, а не `some`.
+      configured: present && values.every(Boolean),
+      vars: c.vars,
+    }
+  }
+  return out
+}
+
+app.get('/platform/openai-key', (_req, res) => {
+  const state = openAiKeyState()
+  const tail = envValueOf(APP_ENV_FILE, 'OPENAI_API_KEY')
+  // 🔒 ЗНАЧЕНИЕ НАРУЖУ НЕ ВЫХОДИТ НИКОГДА — только хвост для узнавания.
+  res.json({ ok: true, state, tail: tail ? tail.slice(-4) : null })
+})
+
+app.post('/platform/openai-key', (req, res) => {
+  const key = String(req.body?.key ?? '').trim()
+  if (!key) return res.status(400).json({ error: 'key is required' })
+
+  const written = [], failed = [], skipped = []
+  for (const c of KEY_CONSUMERS) {
+    if (!existsSync(c.file)) { skipped.push(c.id); continue }  // служба не установлена — это НЕ отказ
+    const pairs = Object.fromEntries(c.vars.map((n) => [n, key]))
+    const r = setEnvVars(c.file, pairs)
+    ;(r.ok ? written : failed).push(c.id)
+  }
+  res.json({ ok: failed.length === 0, written, failed, skipped, state: openAiKeyState() })
+})
+
 // ── ONE DOOR: the loopback services, reachable through this one ───────────────
 //
 // (step 500) A developer working on their own machine gets the project's data
