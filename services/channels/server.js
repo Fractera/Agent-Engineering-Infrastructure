@@ -83,6 +83,26 @@ function appSecret() {
 }
 
 /**
+ * Куда доставлять входящее — из окружения СЛОТА, как и секрет.
+ *
+ * ✗ ОПЛАЧЕНО 2026-09-04, ЖИВЬЁМ. `APP_HOOK_URL` — переменная окружения ПРОЦЕССА,
+ * а эта служба запускается голым `pm2 start node -- server.js` и своего `.env` не
+ * читает вовсе. То есть рычаг существовал и не был подключён ни к чему: значение
+ * по умолчанию вело в старый хук слота, и после чистого развёртывания бот отвечал
+ * из пустого графа знаний, а чат оставался пуст. Ни ошибки, ни следа.
+ *
+ * 🔒 СЕКРЕТ И АДРЕС ЧИТАЮТСЯ ОДИНАКОВО, И ЭТО НЕ КОСМЕТИКА. Раньше секрет брался
+ * из окружения слота, а адрес — из окружения процесса: две разные дороги к одной
+ * настройке, и одна из них никуда не вела. Установщику достаточно написать обе
+ * строки в один файл, который он и так заполняет.
+ *
+ * 🔒 ПЕРЕМЕННАЯ ПРОЦЕССА ОСТАЁТСЯ ПЕРВОЙ — для машины, где её выставили намеренно.
+ */
+function appHookUrl() {
+  return process.env.APP_HOOK_URL || appEnv("CHANNELS_HOOK_URL") || APP_HOOK_URL;
+}
+
+/**
  * Настройка канала с подставленными умолчаниями.
  *
  * 🔒 РЕЖИМ ВЫВОДИТСЯ, А НЕ ХРАНИТСЯ ПО УМОЛЧАНИЮ. Дверь приложения есть — значит
@@ -96,7 +116,7 @@ function channel() {
   const wired = Boolean(secret);
   if (wired) {
     tg.hookSecret = secret;
-    tg.hookUrl = tg.hookUrl || APP_HOOK_URL;
+    tg.hookUrl = tg.hookUrl || appHookUrl();
     tg.tickUrl = tg.tickUrl || APP_TICK_URL;
     if (tg.tickSeconds === undefined) tg.tickSeconds = DEFAULT_TICK_SEC;
     if (!tg.mode) tg.mode = "app";
@@ -153,7 +173,7 @@ function bots() {
     if (!b.id) b.id = BOT_PREFIX + (i + 1);
     b.hookSecret = b.hookSecret || shared.hookSecret || secret;
     if (b.hookSecret) {
-      b.hookUrl = b.hookUrl || shared.hookUrl || APP_HOOK_URL;
+      b.hookUrl = b.hookUrl || shared.hookUrl || appHookUrl();
       b.tickUrl = b.tickUrl || shared.tickUrl || APP_TICK_URL;
       if (b.tickSeconds === undefined) b.tickSeconds = DEFAULT_TICK_SEC;
       if (!b.mode) b.mode = "app";
