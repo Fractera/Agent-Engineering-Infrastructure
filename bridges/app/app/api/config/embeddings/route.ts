@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { hardenSecretFile } from "@/lib/env-file";
-import fs from "fs";
 import { execSync } from "child_process";
 import { requireAuth } from "@/lib/require-auth";
 
@@ -12,22 +10,13 @@ import { requireAuth } from "@/lib/require-auth";
 // sharing that service's database, backup and auth. So the key it needs is the
 // data service's own OPENAI_API_KEY — nothing else changes.
 
-const DATA_ENV = process.env.DATA_ENV_PATH ?? "/opt/fractera/services/data/.env";
-const RAG_ENV  = process.env.RAG_ENV_PATH  ?? "/opt/fractera/services/rag/.env";
-const APP_ENV  = process.env.APP_ENV_PATH  ?? "/opt/fractera/app/.env.local";
 const DATA_URL = process.env.DATA_INTERNAL_URL ?? "http://127.0.0.1:3300";
 
-function parseEnv(content: string): Record<string, string> {
-  const out: Record<string, string> = {};
-  for (const line of content.split("\n")) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("#")) continue;
-    const eq = trimmed.indexOf("=");
-    if (eq < 0) continue;
-    out[trimmed.slice(0, eq).trim()] = trimmed.slice(eq + 1);
-  }
-  return out;
-}
+// 🪦 ЗДЕСЬ СТОЯЛИ ПУТИ ТРЁХ ФАЙЛОВ ОКРУЖЕНИЯ И РАЗБОРЩИК `.env`.
+// УДАЛЕНЫ ШАГОМ 109-4: панель больше не знает, у кого какие файлы и какие имена
+// переменных — это знание живёт в службе данных и нигде больше. Вернув сюда
+// список путей «чтобы не ходить лишний раз», вы вернёте и дефект: три копии
+// списка разошлись молча и оставили граф знаний слепым.
 
 // GET — is the store usable, which model, how many records. Asks the data
 // service itself rather than guessing from the env file, so a key that is
@@ -60,62 +49,44 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Expected an OpenAI key starting with sk-" }, { status: 400 });
   }
 
-  try {
-    const current = fs.existsSync(DATA_ENV) ? parseEnv(fs.readFileSync(DATA_ENV, "utf-8")) : {};
-    current.OPENAI_API_KEY = apiKey;
-    fs.writeFileSync(
-      DATA_ENV,
-      Object.entries(current).map(([k, v]) => `${k}=${v}`).join("\n") + "\n",
-      { mode: 0o600 },
-    );
-    // Права ставим ОТДЕЛЬНО: mode у writeFileSync действует только при создании
-    // файла, а этот файл создал установщик — см. hardenSecretFile (шаг 501).
-    hardenSecretFile(DATA_ENV);
-  } catch (e) {
-    return NextResponse.json({ error: `Could not write ${DATA_ENV}: ${String(e)}` }, { status: 500 });
-  }
-
-  // Fan out to the OTHER knowledge store. (step 500) There is ONE OpenAI key in
-  // the product; agentic RAG needs it under three names, and its failure without
-  // them is silent — ingest answers 200 and then embeds nothing (the exact defect
-  // that cost a day the first time round). Writing them here keeps a single entry
-  // point instead of asking the architect to type the key twice.
-  let ragUpdated = false;
-  try {
-    if (fs.existsSync(RAG_ENV)) {
-      const rag = parseEnv(fs.readFileSync(RAG_ENV, "utf-8"));
-      rag.LLM_BINDING_API_KEY = apiKey;
-      rag.EMBEDDING_BINDING_API_KEY = apiKey;
-      rag.OPENAI_API_KEY = apiKey; // LightRAG's OpenAI client reads this exact name
-      const body = Object.entries(rag).map(([k, v]) => `${k}=${v}`).join("\n") + "\n";
-      fs.writeFileSync(RAG_ENV, body, { mode: 0o600 });
-      hardenSecretFile(RAG_ENV);
-      ragUpdated = true;
-    }
-  } catch {
-    ragUpdated = false; // reported, never fatal — the key is already saved
-  }
-
-  // ГОСТЕВОЕ ПРИЛОЖЕНИЕ — ТРЕТИЙ ПОТРЕБИТЕЛЬ (2026-08-11). Голосовой ввод и
-  // перевод полей живут в слоте и читают ключ из ЕГО окружения: до этой правки
-  // ключ доезжал до слоя данных и до графа, а приложение честно отвечало
-  // «ключа нет» — и человек, только что сохранивший ключ, видел отказ.
+  // 🪦 ЗДЕСЬ ПАНЕЛЬ ПИСАЛА ТРИ ФАЙЛА САМА. ОТМЕНЕНО ШАГОМ 109-4 (2026-09-04).
   //
-  // Файл в .gitignore слота, поэтому ключ не уедет в репозиторий пользователя.
-  // Перезапуск не нужен: маршруты слота читают файл на каждый вызов.
-  let appUpdated = false;
+  // ✗ ЧЕМ ОПЛАЧЕН ПЕРЕЕЗД. Ключ вводится в трёх местах — здесь, на экране
+  // архитектора и в чате, — и каждое держало СВОЙ список потребителей и имён.
+  // Они разошлись молча: экран писал графу `OPENAI_API_KEY`, которую LightRAG не
+  // читает, чат не писал графу вовсе. Плашка зеленела, граф оставался слепым.
+  // Эта дверь была из трёх самой правильной — и именно поэтому её правда переехала
+  // в службу данных целиком, а не была продублирована в четвёртый раз.
+  //
+  // 🔒 ДВА ПОБОЧНЫХ УЛУЧШЕНИЯ, КОТОРЫЕ ДАЛ ПЕРЕЕЗД:
+  // 1. дверь правит СТРОКУ, а не пересобирает файл из разобранных пар — комментарии
+  //    и пустые строки в `.env` служб больше не теряются;
+  // 2. `OPENAI_API_KEY` графу больше не пишется. Измерено 2026-09-03: LightRAG
+  //    работает от `LLM_BINDING_API_KEY` и `EMBEDDING_BINDING_API_KEY`; что он
+  //    читает ещё и третье имя — было предположением, и лишняя переменная делает
+  //    плашку зелёной по признаку, которого служба может не смотреть.
+  let written: string[] = [];
   try {
-    if (fs.existsSync(APP_ENV)) {
-      const app = parseEnv(fs.readFileSync(APP_ENV, "utf-8"));
-      app.OPENAI_API_KEY = apiKey;
-      const appBody = Object.entries(app).map(([k, v]) => `${k}=${v}`).join("\n") + "\n";
-      fs.writeFileSync(APP_ENV, appBody, { mode: 0o600 });
-      hardenSecretFile(APP_ENV);
-      appUpdated = true;
+    const r = await fetch(`${DATA_URL}/platform/openai-key`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-data-secret": process.env.DATA_SECRET ?? "" },
+      body: JSON.stringify({ key: apiKey }),
+      cache: "no-store",
+    });
+    if (!r.ok) {
+      return NextResponse.json({ error: `Key door answered ${r.status}` }, { status: 500 });
     }
-  } catch {
-    appUpdated = false; // сообщается, но не фатально — ключ уже сохранён
+    const d = (await r.json()) as { ok?: boolean; written?: string[]; failed?: string[] };
+    if (!d.ok) {
+      return NextResponse.json({ error: `Key not delivered: ${(d.failed ?? []).join(", ")}` }, { status: 500 });
+    }
+    written = d.written ?? [];
+  } catch (e) {
+    return NextResponse.json({ error: `Key door unreachable: ${String(e)}` }, { status: 500 });
   }
+
+  const ragUpdated = written.includes("graph");
+  const appUpdated = written.includes("app");
 
   // Best-effort: a failed restart must not lose the key that is already saved.
   let restarted = true;
