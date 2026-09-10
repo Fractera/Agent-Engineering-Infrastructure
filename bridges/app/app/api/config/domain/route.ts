@@ -42,6 +42,13 @@ const run = promisify(exec);
 // расходятся молча, и разошлись бы на первой же новой службе — мастер домена печатал бы блок
 // для хоста, которого проверка DNS не ждёт, и наоборот.
 
+// 🔒 ВТОРАЯ ПОЛОВИНА ОДНОГО ФАКТА: `SUBDOMAINS` говорит, КАКИЕ имена мы держим,
+// а эта карта — на какой порт каждое из них ходит. Разъехавшись, они дают
+// nginx-блок с `undefined` вместо порта: имя есть, сертификат выпущен, а сайт
+// по нему не отвечает.
+// ✗ ПОЙМАНО 2026-09-10 ПРИ ДОБАВЛЕНИИ `memory`: я вписал имя в `SUBDOMAINS` и
+// собрал панель, не тронув эту карту. Сторож ниже заведён тем же движением —
+// чтобы следующий такой промах остановил сборку, а не дошёл до сервера.
 const PROXY_PORTS: Record<string, number> = {
   "":         3000,
   "www":      3000,
@@ -49,7 +56,21 @@ const PROXY_PORTS: Record<string, number> = {
   "admin":    3002,
   "data":     3300,
   "chat":     3600,
+  "memory":   3700,
 };
+
+// 🛑 СТОРОЖ ПАРЫ: каждое имя из `SUBDOMAINS` обязано знать свой порт.
+// Проверка стоит на загрузке модуля, а не в отдельном скрипте: гейт, который
+// надо специально позвать, зовут не всегда, а этот файл читается при первом же
+// обращении к двери домена — то есть до того, как кто-то нажмёт «выпустить».
+for (const prefix of SUBDOMAINS) {
+  if (typeof PROXY_PORTS[prefix] !== "number") {
+    throw new Error(
+      `поддомен «${prefix || "@"}» назван в SUBDOMAINS, но его порт не назван в PROXY_PORTS: ` +
+      `nginx-блок вышел бы без порта, и имя отвечало бы ошибкой при живом сертификате`,
+    );
+  }
+}
 
 // Where uploaded (non Let's Encrypt) certificates land. The same pair lives
 // in /etc/letsencrypt/live/<domain>/{fullchain.pem,privkey.pem} when issued
@@ -313,7 +334,12 @@ export async function PATCH(req: NextRequest) {
   return NextResponse.json({ ok: true, status: "idle" });
 }
 
-// POST — auto mode: certbot issues a single multi-SAN cert for all 8 hostnames.
+// POST — auto mode: certbot issues a single multi-SAN cert for every hostname in
+// `SUBDOMAINS`.
+// 🔒 ЧИСЛА ЗДЕСЬ БОЛЬШЕ НЕТ, И ЭТО ЛЕЧЕНИЕ, А НЕ НЕБРЕЖНОСТЬ. Стояло «all 8
+// hostnames» при шести именах в списке, а к 2026-09-10 их стало семь — то есть
+// комментарий врал дважды подряд и ни разу не был замечен. Рукописное число не
+// двигается само; там, где его можно не писать, его не пишут.
 // Body: { domain: string }
 export async function POST(req: NextRequest) {
   const ok = await requireAuth(req.headers.get("cookie") ?? "");
