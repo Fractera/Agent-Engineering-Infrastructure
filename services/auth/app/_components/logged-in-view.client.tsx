@@ -11,10 +11,11 @@ type Props = {
   appUrl: string;
   adminUrl: string;
   chatUrl: string;
+  memoryUrl: string;
   roles: string[];
 };
 
-export function LoggedInView({ email, appUrl, adminUrl, chatUrl, roles }: Props) {
+export function LoggedInView({ email, appUrl, adminUrl, chatUrl, memoryUrl, roles }: Props) {
   const isAdmin = roles.includes("architect");
 
   // Same language mechanic as the login / register forms: every language is
@@ -43,7 +44,7 @@ export function LoggedInView({ email, appUrl, adminUrl, chatUrl, roles }: Props)
         {/* Destinations: stacked vertically under a separator, carrying the same
             weight as the sign-in button on the login form. Base UI's Button has
             no asChild, so the anchors wear buttonVariants() directly. */}
-        {(appUrl || (isAdmin && (adminUrl || chatUrl))) && (
+        {(appUrl || (isAdmin && (adminUrl || chatUrl || memoryUrl))) && (
           <div className="flex flex-col gap-3 pt-6 border-t border-border">
             {appUrl && (
               <a href={appUrl} className={cn(buttonVariants(), "w-full")}>
@@ -63,6 +64,16 @@ export function LoggedInView({ email, appUrl, adminUrl, chatUrl, roles }: Props)
             {isAdmin && chatUrl && (
               <a href={chatUrl} className={cn(buttonVariants(), "w-full")}>
                 {s.goToChat ?? "Go to AI agent chat"}
+              </a>
+            )}
+            {/* 🔒 ПАМЯТЬ — ТОЛЬКО АРХИТЕКТОРУ, ПО ТОМУ ЖЕ ДОВОДУ, ЧТО ПАНЕЛЬ И
+                ЧАТ: её страница сама требует роль `architect`, и предлагать
+                дорогу тому, кого там развернут, значит обещать несуществующее.
+                🛑 Подпись через запасной английский: ключ есть у двух языков из
+                82, остальные восемьдесят придут файлом переводов. */}
+            {isAdmin && memoryUrl && (
+              <a href={memoryUrl} className={cn(buttonVariants(), "w-full")}>
+                {s.goToMemory ?? "Go to Memory"}
               </a>
             )}
           </div>

@@ -12,6 +12,11 @@ export default async function AuthRoot() {
   // 🔒 АДРЕС ЧАТА СЧИТАЕТСЯ ТЕМ ЖЕ ПРИЁМОМ, ЧТО СОСЕДНИЕ ДВА: своя формула здесь
   // разошлась бы с ними в тот день, когда сменится домен.
   const chatUrl = nextauthUrl.replace("://auth.", "://chat.");
+  // 🔒 АДРЕС ПАМЯТИ СЧИТАЕТСЯ ТЕМ ЖЕ ПРИЁМОМ, ЧТО ТРИ СОСЕДНИХ (2026-09-10,
+  // правка владельца: «после авторизации предлагается в числе прочих открыть
+  // память»). Своя формула здесь разошлась бы с ними в тот день, когда сменится
+  // домен, — и разошлась бы МОЛЧА, потому что заметить это можно только войдя.
+  const memoryUrl = nextauthUrl.replace("://auth.", "://memory.");
   const roles: string[] = (session.user as { roles?: string[] }).roles ?? [];
 
   return (
@@ -20,6 +25,7 @@ export default async function AuthRoot() {
       appUrl={appUrl}
       adminUrl={adminUrl}
       chatUrl={chatUrl}
+      memoryUrl={memoryUrl}
       roles={roles}
     />
   );

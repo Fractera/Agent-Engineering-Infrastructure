@@ -70,6 +70,16 @@ export type AuthStrings = {
    * всех восьмидесяти, то есть правка одной кнопки уронила бы вход целиком.
    */
   goToChat?: string;
+  /**
+   * Четвёртая кнопка после входа — служба памяти (правка владельца 2026-09-10:
+   * «после авторизации предлагается в числе прочих открыть память»).
+   *
+   * 🛑 КЛЮЧ НЕОБЯЗАТЕЛЬНЫЙ ПО ТОЙ ЖЕ ПРИЧИНЕ, ЧТО И `goToChat` ВЫШЕ: языков 82,
+   * агент пишет английский и русский, остальные приходят файлом. Обязательный
+   * ключ уронил бы сборку у всех восьмидесяти — то есть правка одной кнопки
+   * сломала бы вход целиком.
+   */
+  goToMemory?: string;
 };
 
 export const DEFAULT_AUTH_LANG = "en";
@@ -119,6 +129,7 @@ export const STRINGS: Record<string, AuthStrings> = {
     goToApp: "Go to App",
     goToAdmin: "Go to Admin Panel",
     goToChat: "Go to AI agent chat",
+    goToMemory: "Go to Memory",
     signOutQuestion: "Are you sure you want to sign out?",
     signingOut: "Signing out…",
   },
@@ -1454,6 +1465,7 @@ export const STRINGS: Record<string, AuthStrings> = {
     goToApp: "Перейти в приложение",
     goToAdmin: "Перейти в панель управления",
     goToChat: "Перейти в чат с ИИ-агентом",
+    goToMemory: "Открыть память",
     signOutQuestion: "Вы действительно хотите выйти?",
     signingOut: "Выходим…",
   },
