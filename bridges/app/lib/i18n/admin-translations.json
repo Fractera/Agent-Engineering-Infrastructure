@@ -374,7 +374,7 @@
       "modeIp": "IP, plain HTTP",
       "certLabel": "certificate until",
       "certNotLive": "issued — switches on at step 4",
-      "dnsIntro": "Add all five A-records below at your DNS provider — your registrar's own panel, not Cloudflare. Each one points to the same address:",
+      "dnsIntro": "Add all {n} A-records below at your DNS provider — your registrar's own panel, not Cloudflare. Each one points to the same address:",
       "dnsType": "Type",
       "dnsName": "Name",
       "dnsValue": "Value",
@@ -384,7 +384,8 @@
         "auth": "sign-in",
         "admin": "this panel",
         "data": "media and database",
-        "chat": "AI chat"
+        "chat": "AI chat",
+        "memory": "memory service journal"
       },
       "step": "Step {n}",
       "done": "done",
@@ -3819,7 +3820,7 @@
       "modeIp": "IP, обычный HTTP",
       "certLabel": "сертификат до",
       "certNotLive": "выпущен — включится на шаге 4",
-      "dnsIntro": "Добавьте у своего поставщика DNS все пять A-записей ниже — в панели регистратора, не в Cloudflare. Каждая указывает на один и тот же адрес:",
+      "dnsIntro": "Добавьте у своего поставщика DNS все {n} A-записей ниже — в панели регистратора, не в Cloudflare. Каждая указывает на один и тот же адрес:",
       "dnsType": "Тип",
       "dnsName": "Имя",
       "dnsValue": "Значение",
@@ -3829,7 +3830,8 @@
         "auth": "вход",
         "admin": "эта панель",
         "data": "медиа и база",
-        "chat": "чат с ИИ-агентом"
+        "chat": "чат с ИИ-агентом",
+        "memory": "журнал службы памяти"
       },
       "step": "Шаг {n}",
       "done": "готово",
