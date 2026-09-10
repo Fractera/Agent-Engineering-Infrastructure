@@ -8,13 +8,15 @@ mistakes described below costs longer than that to undo.
 
 ## 1. How this is put together
 
-Your server runs several processes at once. Four of them answer from the outside, and each has one job:
+Your server runs several processes at once. Six of them answer from the outside, and each has one job:
 
 - **3000 — your application.** The pages your visitors see. This is the one you work on, every day.
 - **3001 — authorization.** Accounts, sessions, roles. Configured from this panel, never edited by you.
 - **3002 — this control panel.** Same: configured, not edited.
 - **3300 — the data layer.** Rows, uploaded files, vectors — and the single door through which everything
   else is reached. Your application talks to it.
+- **3600 — chat.** Your Telegram bot and its pages, at `chat.<your domain>`.
+- **3700 — memory.** The service that remembers what you told it, at `memory.<your domain>`.
 
 Three more services run alongside them, and none of them is a door of its own:
 
